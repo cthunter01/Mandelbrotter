@@ -1,4 +1,4 @@
-#include "Mandelbrotter/render_settings.h"
+#include "Mandelbrotter/RenderSettings.h"
 
 #include <algorithm>
 #include <cmath>

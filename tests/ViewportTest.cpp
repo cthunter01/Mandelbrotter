@@ -1,10 +1,9 @@
-#include "Mandelbrotter/viewport.h"
-
 #include <cmath>
 #include <limits>
 
 #include <gtest/gtest.h>
 
+#include "Mandelbrotter/Viewport.h"
 #include "Mandelbrotter/geometry.h"
 
 namespace

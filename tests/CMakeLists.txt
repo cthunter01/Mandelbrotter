@@ -5,11 +5,11 @@ add_executable(Mandelbrotter_tests
     fractal_test.cpp
     image_test.cpp
     kernel_test.cpp
-    palette_test.cpp
+    PaletteTest.cpp
     png_writer_test.cpp
-    render_settings_test.cpp
-    renderer_test.cpp
-    viewport_test.cpp)
+    ProgressiveRendererTest.cpp
+    RenderSettingsTest.cpp
+    ViewportTest.cpp)
 target_link_libraries(Mandelbrotter_tests PRIVATE Mandelbrotter::lib GTest::gtest_main stb::stb)
 Mandelbrotter_configure_target(Mandelbrotter_tests)
 

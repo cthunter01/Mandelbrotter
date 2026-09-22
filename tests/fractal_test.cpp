@@ -2,8 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include "Mandelbrotter/Viewport.h"
 #include "Mandelbrotter/geometry.h"
-#include "Mandelbrotter/viewport.h"
 
 namespace
 {

@@ -1,4 +1,4 @@
-#include "gui/export_dialog.h"
+#include "gui/ExportDialog.h"
 
 #include <algorithm>
 #include <array>

@@ -1,4 +1,4 @@
-#include "gui/fractal_canvas.h"
+#include "gui/FractalCanvas.h"
 
 #include <algorithm>
 #include <cmath>
@@ -9,9 +9,9 @@
 #include <wx/dcclient.h>
 #include <wx/pen.h>
 
+#include "Mandelbrotter/Palette.h"
 #include "Mandelbrotter/fractal.h"
 #include "Mandelbrotter/kernel.h"
-#include "Mandelbrotter/palette.h"
 #include "gui/wx_util.h"
 
 namespace mandelbrotter::gui

@@ -1,5 +1,3 @@
-#include "Mandelbrotter/renderer.h"
-
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
@@ -16,11 +14,12 @@
 
 #include <gtest/gtest.h>
 
+#include "Mandelbrotter/ProgressiveRenderer.h"
+#include "Mandelbrotter/RenderSettings.h"
+#include "Mandelbrotter/Viewport.h"
 #include "Mandelbrotter/geometry.h"
 #include "Mandelbrotter/image.h"
 #include "Mandelbrotter/kernel.h"
-#include "Mandelbrotter/render_settings.h"
-#include "Mandelbrotter/viewport.h"
 
 namespace
 {

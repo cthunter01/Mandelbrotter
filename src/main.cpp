@@ -14,7 +14,7 @@
 #include <wx/init.h>
 
 #include "Mandelbrotter/cli.h"
-#include "gui/app.h"
+#include "gui/MandelbrotterApp.h"
 
 wxIMPLEMENT_APP_NO_MAIN(mandelbrotter::gui::MandelbrotterApp);
 

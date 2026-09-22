@@ -8,10 +8,10 @@
 #include <string>
 #include <string_view>
 
+#include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/exporter.h"
 #include "Mandelbrotter/fractal.h"
 #include "Mandelbrotter/geometry.h"
-#include "Mandelbrotter/render_settings.h"
 
 namespace mandelbrotter
 {

@@ -10,13 +10,13 @@
 
 #include <gtest/gtest.h>
 
+#include "Mandelbrotter/Palette.h"
+#include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/exporter.h"
 #include "Mandelbrotter/fractal.h"
 #include "Mandelbrotter/geometry.h"
-#include "Mandelbrotter/palette.h"
-#include "Mandelbrotter/render_settings.h"
-#include "test_util.h"
+#include "TempDir.h"
 
 namespace
 {

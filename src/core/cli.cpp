@@ -13,16 +13,16 @@
 #include <string>
 #include <string_view>
 
+#include "Mandelbrotter/Palette.h"
+#include "Mandelbrotter/RenderSettings.h"
+#include "Mandelbrotter/Viewport.h"
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/exporter.h"
 #include "Mandelbrotter/fractal.h"
 #include "Mandelbrotter/geometry.h"
 #include "Mandelbrotter/image.h"
-#include "Mandelbrotter/palette.h"
 #include "Mandelbrotter/parse.h"
 #include "Mandelbrotter/png_writer.h"
-#include "Mandelbrotter/render_settings.h"
-#include "Mandelbrotter/viewport.h"
 
 namespace mandelbrotter
 {

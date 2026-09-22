@@ -1,4 +1,4 @@
-#include "Mandelbrotter/palette.h"
+#include "Mandelbrotter/Palette.h"
 
 #include <algorithm>
 #include <cmath>

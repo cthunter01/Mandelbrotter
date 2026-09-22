@@ -6,7 +6,7 @@
 #include <span>
 #include <string_view>
 
-#include "Mandelbrotter/viewport.h"
+#include "Mandelbrotter/Viewport.h"
 
 namespace mandelbrotter
 {

@@ -9,9 +9,9 @@
 #include <thread>
 #include <vector>
 
+#include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/geometry.h"
 #include "Mandelbrotter/image.h"
-#include "Mandelbrotter/render_settings.h"
 
 namespace mandelbrotter
 {

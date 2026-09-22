@@ -6,12 +6,12 @@
 
 #include <gtest/gtest.h>
 
+#include "Mandelbrotter/Palette.h"
+#include "Mandelbrotter/RenderSettings.h"
+#include "Mandelbrotter/Viewport.h"
 #include "Mandelbrotter/fractal.h"
 #include "Mandelbrotter/geometry.h"
-#include "Mandelbrotter/palette.h"
-#include "Mandelbrotter/render_settings.h"
-#include "Mandelbrotter/viewport.h"
-#include "test_util.h"
+#include "TempDir.h"
 
 namespace
 {

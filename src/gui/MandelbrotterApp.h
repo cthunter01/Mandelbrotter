@@ -2,7 +2,7 @@
 
 #include <wx/app.h>
 
-#include "Mandelbrotter/render_settings.h"
+#include "Mandelbrotter/RenderSettings.h"
 
 namespace mandelbrotter::gui
 {

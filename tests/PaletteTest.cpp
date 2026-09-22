@@ -1,5 +1,3 @@
-#include "Mandelbrotter/palette.h"
-
 #include <cstdlib>
 #include <functional>
 #include <limits>
@@ -8,6 +6,8 @@
 #include <string_view>
 
 #include <gtest/gtest.h>
+
+#include "Mandelbrotter/Palette.h"
 
 namespace
 {

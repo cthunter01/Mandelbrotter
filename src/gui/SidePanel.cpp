@@ -1,4 +1,4 @@
-#include "gui/side_panel.h"
+#include "gui/SidePanel.h"
 
 #include <cmath>
 #include <format>
@@ -17,10 +17,10 @@
 #include <wx/textctrl.h>
 #include <wx/tglbtn.h>
 
+#include "Mandelbrotter/Palette.h"
 #include "Mandelbrotter/fractal.h"
-#include "Mandelbrotter/palette.h"
 #include "Mandelbrotter/parse.h"
-#include "gui/julia_preview.h"
+#include "gui/JuliaPreview.h"
 #include "gui/wx_util.h"
 
 namespace mandelbrotter::gui

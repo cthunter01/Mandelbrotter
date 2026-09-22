@@ -15,7 +15,7 @@
 #include <gtest/gtest.h>
 
 #include "Mandelbrotter/image.h"
-#include "test_util.h"
+#include "TempDir.h"
 
 namespace
 {

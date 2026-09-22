@@ -1,8 +1,8 @@
 #pragma once
 
+#include "Mandelbrotter/Palette.h"
+#include "Mandelbrotter/Viewport.h"
 #include "Mandelbrotter/fractal.h"
-#include "Mandelbrotter/palette.h"
-#include "Mandelbrotter/viewport.h"
 
 namespace mandelbrotter
 {

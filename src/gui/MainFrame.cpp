@@ -1,4 +1,4 @@
-#include "gui/main_frame.h"
+#include "gui/MainFrame.h"
 
 #include <array>
 #include <cstdint>
@@ -19,9 +19,9 @@
 
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/fractal.h"
-#include "gui/export_dialog.h"
+#include "gui/ExportDialog.h"
+#include "gui/SidePanel.h"
 #include "gui/export_runner.h"
-#include "gui/side_panel.h"
 #include "gui/wx_util.h"
 
 namespace mandelbrotter::gui

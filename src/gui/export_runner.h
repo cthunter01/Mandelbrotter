@@ -4,8 +4,8 @@
 
 #include <wx/window.h>
 
+#include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/exporter.h"
-#include "Mandelbrotter/render_settings.h"
 
 namespace mandelbrotter::gui
 {

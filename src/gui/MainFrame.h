@@ -6,10 +6,10 @@
 #include <wx/frame.h>
 #include <wx/menu.h>
 
+#include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/geometry.h"
-#include "Mandelbrotter/render_settings.h"
-#include "gui/bookmark_store.h"
-#include "gui/fractal_canvas.h"
+#include "gui/BookmarkStore.h"
+#include "gui/FractalCanvas.h"
 
 namespace mandelbrotter::gui
 {

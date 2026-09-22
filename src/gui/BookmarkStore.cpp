@@ -1,4 +1,4 @@
-#include "gui/bookmark_store.h"
+#include "gui/BookmarkStore.h"
 
 #include <exception>
 #include <utility>

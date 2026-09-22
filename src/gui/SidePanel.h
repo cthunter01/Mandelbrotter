@@ -16,9 +16,9 @@
 #include <wx/textctrl.h>
 #include <wx/tglbtn.h>
 
+#include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/geometry.h"
-#include "Mandelbrotter/render_settings.h"
 
 namespace mandelbrotter::gui
 {

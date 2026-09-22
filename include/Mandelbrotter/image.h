@@ -4,9 +4,9 @@
 #include <cstdint>
 #include <vector>
 
+#include "Mandelbrotter/Palette.h"
 #include "Mandelbrotter/geometry.h"
 #include "Mandelbrotter/kernel.h"
-#include "Mandelbrotter/palette.h"
 
 namespace mandelbrotter
 {

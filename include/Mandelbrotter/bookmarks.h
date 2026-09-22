@@ -7,7 +7,7 @@
 #include <string_view>
 #include <vector>
 
-#include "Mandelbrotter/render_settings.h"
+#include "Mandelbrotter/RenderSettings.h"
 
 namespace mandelbrotter
 {

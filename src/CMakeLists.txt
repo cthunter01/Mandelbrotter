@@ -6,11 +6,11 @@ add_library(Mandelbrotter_lib STATIC
     core/fractal.cpp
     core/image.cpp
     core/kernel.cpp
-    core/palette.cpp
+    core/Palette.cpp
     core/png_writer.cpp
-    core/render_settings.cpp
-    core/renderer.cpp
-    core/viewport.cpp)
+    core/ProgressiveRenderer.cpp
+    core/RenderSettings.cpp
+    core/Viewport.cpp)
 add_library(Mandelbrotter::lib ALIAS Mandelbrotter_lib)
 target_include_directories(Mandelbrotter_lib PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(Mandelbrotter_lib
@@ -20,14 +20,14 @@ Mandelbrotter_configure_target(Mandelbrotter_lib)
 
 # GUI library: the wxWidgets layer. Headers live next to the sources and are included as "gui/<name>.h".
 add_library(Mandelbrotter_gui STATIC
-    gui/app.cpp
-    gui/bookmark_store.cpp
-    gui/export_dialog.cpp
+    gui/BookmarkStore.cpp
     gui/export_runner.cpp
-    gui/fractal_canvas.cpp
-    gui/julia_preview.cpp
-    gui/main_frame.cpp
-    gui/side_panel.cpp
+    gui/ExportDialog.cpp
+    gui/FractalCanvas.cpp
+    gui/JuliaPreview.cpp
+    gui/MainFrame.cpp
+    gui/MandelbrotterApp.cpp
+    gui/SidePanel.cpp
     gui/wx_util.cpp)
 add_library(Mandelbrotter::gui ALIAS Mandelbrotter_gui)
 target_include_directories(Mandelbrotter_gui PUBLIC ${PROJECT_SOURCE_DIR}/src)

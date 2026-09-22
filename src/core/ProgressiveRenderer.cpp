@@ -1,4 +1,4 @@
-#include "Mandelbrotter/renderer.h"
+#include "Mandelbrotter/ProgressiveRenderer.h"
 
 #include <algorithm>
 #include <atomic>
@@ -14,12 +14,12 @@
 #include <utility>
 #include <vector>
 
+#include "Mandelbrotter/RenderSettings.h"
+#include "Mandelbrotter/Viewport.h"
 #include "Mandelbrotter/fractal.h"
 #include "Mandelbrotter/geometry.h"
 #include "Mandelbrotter/image.h"
 #include "Mandelbrotter/kernel.h"
-#include "Mandelbrotter/render_settings.h"
-#include "Mandelbrotter/viewport.h"
 
 namespace mandelbrotter
 {

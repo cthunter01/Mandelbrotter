@@ -6,9 +6,9 @@
 #include <wx/timer.h>
 #include <wx/window.h>
 
+#include "Mandelbrotter/Palette.h"
 #include "Mandelbrotter/fractal.h"
 #include "Mandelbrotter/geometry.h"
-#include "Mandelbrotter/palette.h"
 
 namespace mandelbrotter::gui
 {

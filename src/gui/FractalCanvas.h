@@ -10,11 +10,11 @@
 #include <wx/timer.h>
 #include <wx/window.h>
 
+#include "Mandelbrotter/ProgressiveRenderer.h"
+#include "Mandelbrotter/RenderSettings.h"
+#include "Mandelbrotter/Viewport.h"
 #include "Mandelbrotter/geometry.h"
 #include "Mandelbrotter/image.h"
-#include "Mandelbrotter/render_settings.h"
-#include "Mandelbrotter/renderer.h"
-#include "Mandelbrotter/viewport.h"
 
 namespace mandelbrotter::gui
 {

@@ -5,11 +5,11 @@
 
 #include <gtest/gtest.h>
 
+#include "Mandelbrotter/Palette.h"
+#include "Mandelbrotter/ProgressiveRenderer.h"
+#include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/geometry.h"
 #include "Mandelbrotter/image.h"
-#include "Mandelbrotter/palette.h"
-#include "Mandelbrotter/render_settings.h"
-#include "Mandelbrotter/renderer.h"
 
 namespace
 {

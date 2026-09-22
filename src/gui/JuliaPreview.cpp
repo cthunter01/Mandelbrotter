@@ -1,13 +1,13 @@
-#include "gui/julia_preview.h"
+#include "gui/JuliaPreview.h"
 
 #include <algorithm>
 #include <cmath>
 
 #include <wx/dcbuffer.h>
 
+#include "Mandelbrotter/ProgressiveRenderer.h"
+#include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/image.h"
-#include "Mandelbrotter/render_settings.h"
-#include "Mandelbrotter/renderer.h"
 #include "gui/wx_util.h"
 
 namespace mandelbrotter::gui

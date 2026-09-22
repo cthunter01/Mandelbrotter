@@ -1,8 +1,8 @@
-#include "gui/app.h"
+#include "gui/MandelbrotterApp.h"
 
 #include <wx/stdpaths.h>
 
-#include "gui/main_frame.h"
+#include "gui/MainFrame.h"
 
 namespace mandelbrotter::gui
 {

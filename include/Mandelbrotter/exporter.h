@@ -3,10 +3,10 @@
 #include <optional>
 #include <stop_token>
 
+#include "Mandelbrotter/ProgressiveRenderer.h"
+#include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/geometry.h"
 #include "Mandelbrotter/image.h"
-#include "Mandelbrotter/render_settings.h"
-#include "Mandelbrotter/renderer.h"
 
 namespace mandelbrotter
 {

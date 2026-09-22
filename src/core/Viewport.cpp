@@ -1,4 +1,4 @@
-#include "Mandelbrotter/viewport.h"
+#include "Mandelbrotter/Viewport.h"
 
 #include <algorithm>
 #include <cmath>
