@@ -1,9 +1,9 @@
+#include "Mandelbrotter/RenderSettings.h"
+
 #include <cmath>
 #include <limits>
 
 #include <gtest/gtest.h>
-
-#include "Mandelbrotter/RenderSettings.h"
 
 namespace
 {

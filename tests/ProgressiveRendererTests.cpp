@@ -1,3 +1,5 @@
+#include "Mandelbrotter/ProgressiveRenderer.h"
+
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
@@ -14,7 +16,6 @@
 
 #include <gtest/gtest.h>
 
-#include "Mandelbrotter/ProgressiveRenderer.h"
 #include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/Viewport.h"
 #include "Mandelbrotter/geometry.h"

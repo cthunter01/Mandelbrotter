@@ -1,15 +1,15 @@
 add_executable(Mandelbrotter_tests
-    bookmarks_test.cpp
-    cli_test.cpp
-    exporter_test.cpp
-    fractal_test.cpp
-    image_test.cpp
-    kernel_test.cpp
-    PaletteTest.cpp
-    png_writer_test.cpp
-    ProgressiveRendererTest.cpp
-    RenderSettingsTest.cpp
-    ViewportTest.cpp)
+    bookmarks_tests.cpp
+    cli_tests.cpp
+    exporter_tests.cpp
+    fractal_tests.cpp
+    image_tests.cpp
+    kernel_tests.cpp
+    PaletteTests.cpp
+    png_writer_tests.cpp
+    ProgressiveRendererTests.cpp
+    RenderSettingsTests.cpp
+    ViewportTests.cpp)
 target_link_libraries(Mandelbrotter_tests PRIVATE Mandelbrotter::lib GTest::gtest_main stb::stb)
 Mandelbrotter_configure_target(Mandelbrotter_tests)
 

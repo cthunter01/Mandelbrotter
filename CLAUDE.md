@@ -33,8 +33,8 @@ shows this machine's.
 - `src/main.cpp`: the executable. `wxIMPLEMENT_APP_NO_MAIN` must stay in this file (in a static library the
   linker drops the app initializer); `main()` parses the command line, runs the CLI, or hands the resolved
   settings to the GUI and calls `wxEntry` with no arguments
-- `tests/`: GoogleTest files, all in `Mandelbrotter_tests` (class tests: `MyClassTest.cpp`; other tests:
-  `*_test.cpp`); `cli_render_test.cmake` runs the real executable with `DISPLAY` cleared
+- `tests/`: GoogleTest files, all in `Mandelbrotter_tests` (class tests: `MyClassTests.cpp`; other tests:
+  `*_tests.cpp`); `cli_render_test.cmake` runs the real executable with `DISPLAY` cleared
 - `cmake/ProjectOptions.cmake`: `Mandelbrotter_configure_target()` (warnings, sanitizers, coverage, tidy)
 - `cmake/Dependencies.cmake`: third-party libraries via FetchContent (GoogleTest, nlohmann/json, stb, wxWidgets
   with its option block: static, native toolkit, unneeded components off, no `find_package` fallback because a shared
@@ -44,8 +44,8 @@ shows this machine's.
 - Headers are `.h` (never `.hpp`) and use `#pragma once`
 - A class's header and implementation files are named exactly after the class, including capitalization:
   `class MyClass` lives in `include/Mandelbrotter/MyClass.h` and `src/core/MyClass.cpp` (GUI classes: `src/gui/MyClass.h`
-  and `.cpp`), and its tests in `tests/MyClassTest.cpp`. Headers of free functions or of several small types keep
-  snake_case names (`kernel.h`, `geometry.h`), with tests named `*_test.cpp`
+  and `.cpp`), and its tests in `tests/MyClassTests.cpp`. Headers of free functions or of several small types keep
+  snake_case names (`kernel.h`, `geometry.h`), with tests named `*_tests.cpp`
 - Code lives in `namespace mandelbrotter` (GUI: `mandelbrotter::gui`); project includes use quotes:
   `#include "Mandelbrotter/kernel.h"`
 - Every new target must call `Mandelbrotter_configure_target(<target>)`
