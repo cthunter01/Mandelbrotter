@@ -157,7 +157,9 @@ TEST(Renderer, SyncRenderReportsProgressAndHonoursStop)
     EXPECT_EQ(total, 2);  // 70x50 in 64x64 tiles
     EXPECT_EQ(last, total);
 
-    const std::stop_source source;
+    // Not const: the standard's request_stop() is non-const (libc++, MSVC); libstdc++'s const one
+    // is an extension, which is why clang-tidy on Linux would otherwise ask for const here.
+    std::stop_source source;  // NOLINT(misc-const-correctness)
     source.request_stop();
     EXPECT_FALSE(mandelbrotter::renderSync(smallScene(), kSize, 2, std::nullopt, source.get_token())
                      .has_value());

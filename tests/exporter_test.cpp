@@ -88,7 +88,9 @@ TEST(Exporter, ReportsProgressAndHonoursStop)
     EXPECT_EQ(total, 16);  // 200x200 in 64x64 tiles
     EXPECT_EQ(last, total);
 
-    const std::stop_source source;
+    // Not const: the standard's request_stop() is non-const (libc++, MSVC); libstdc++'s const one
+    // is an extension, which is why clang-tidy on Linux would otherwise ask for const here.
+    std::stop_source source;  // NOLINT(misc-const-correctness)
     source.request_stop();
     EXPECT_FALSE(mandelbrotter::renderForExport(scene(), {.size = {20, 20}}, source.get_token())
                      .has_value());
