@@ -115,8 +115,8 @@ Every preset builds into `build/<preset>/`. A preset only exists on the platform
 Configure, build and test can also be run separately: `cmake --preset clang-debug`,
 `cmake --build --preset clang-debug`, `ctest --preset clang-debug`.
 
-CI (GitHub Actions) runs `ci-gcc`, `ci-clang`, `asan` and `tidy` on Arch Linux, `ci-clang` and `asan` on macOS,
-`ci-msvc` on Windows, and a clang-format check.
+CI (GitHub Actions) runs `ci-gcc`, `ci-clang`, `asan` and `tidy` on Arch Linux, `ci-clang` on macOS, `ci-msvc` on
+Windows, and a clang-format check.
 
 ## Layout
 

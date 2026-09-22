@@ -38,13 +38,15 @@ jobs:
         run: ccache -sv
 
   # Apple Clang from the runner's default Xcode. wxWidgets builds on Cocoa, so it needs no extra libraries.
+  # No asan here: Apple's AddressSanitizer runtime has no leak detection, and the sanitized code (core library
+  # and CLI) has no platform-specific paths, so the Linux asan job already covers it.
   macos:
     name: macos / ${{ matrix.preset }}
     runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:
-        preset: [ci-clang, asan]
+        preset: [ci-clang]
     steps:
       - name: Install Ninja and ccache
         run: brew install ninja ccache

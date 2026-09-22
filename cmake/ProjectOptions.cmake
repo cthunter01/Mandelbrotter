@@ -61,6 +61,11 @@ function(Mandelbrotter_configure_target target)
             endif()
             target_compile_options(${target} PRIVATE ${sanitize} -fno-omit-frame-pointer)
             target_link_options(${target} PUBLIC ${sanitize})
+            if("address" IN_LIST MANDELBROTTER_SANITIZERS)
+                # libstdc++ annotates std::vector's spare capacity for ASan only on request (libc++ does it by
+                # default), so reads past size() but within capacity() are caught. Ignored by libc++ and MSVC.
+                target_compile_definitions(${target} PRIVATE _GLIBCXX_SANITIZE_VECTOR)
+            endif()
         endif()
     endif()
 
