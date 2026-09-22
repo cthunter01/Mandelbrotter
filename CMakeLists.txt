@@ -1,0 +1,54 @@
+cmake_minimum_required(VERSION 3.28)   # FetchContent SYSTEM + EXCLUDE_FROM_ALL + FIND_PACKAGE_ARGS
+project(Mandelbrotter VERSION 0.1.0 DESCRIPTION "Interactive Mandelbrot-family fractal explorer" LANGUAGES CXX)
+
+if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
+    message(FATAL_ERROR "In-source builds are not allowed. Use a preset: cmake --preset clang-debug")
+endif()
+
+# Presets set the build type; this covers a bare `cmake -B build`. A parent project keeps its own choice.
+if(PROJECT_IS_TOP_LEVEL AND NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
+endif()
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)     # no C++ modules; remove this line to use them
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+
+option(MANDELBROTTER_BUILD_TESTS "Build the unit tests" ${PROJECT_IS_TOP_LEVEL})
+option(MANDELBROTTER_BUILD_DOCS "Add a 'docs' target when Doxygen is found" ${PROJECT_IS_TOP_LEVEL})
+option(MANDELBROTTER_WARNINGS_AS_ERRORS "Treat compiler and clang-tidy warnings as errors" OFF)
+option(MANDELBROTTER_ENABLE_COVERAGE "Clang source-based coverage and a 'coverage' target" OFF)
+option(MANDELBROTTER_ENABLE_CLANG_TIDY "Run clang-tidy on our sources while compiling" OFF)
+option(MANDELBROTTER_ENABLE_IPO "Link-time optimisation for our targets" OFF)
+set(MANDELBROTTER_SANITIZERS "" CACHE STRING "Sanitizers for our targets, e.g. address;undefined or thread")
+
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM AND NOT CMAKE_CXX_COMPILER_LAUNCHER)   # a launcher the user chose wins
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+endif()
+
+# Point clangd (in any editor) at the most recently configured preset.
+if(PROJECT_IS_TOP_LEVEL)
+    file(CREATE_LINK ${PROJECT_BINARY_DIR}/compile_commands.json
+         ${PROJECT_SOURCE_DIR}/compile_commands.json SYMBOLIC)
+endif()
+
+# Project modules are included by path, so a parent's CMAKE_MODULE_PATH cannot replace them.
+include(${PROJECT_SOURCE_DIR}/cmake/ProjectOptions.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/Dependencies.cmake)
+
+add_subdirectory(src)
+
+if(MANDELBROTTER_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+if(MANDELBROTTER_ENABLE_COVERAGE)
+    include(${PROJECT_SOURCE_DIR}/cmake/Coverage.cmake)
+endif()
+if(MANDELBROTTER_BUILD_DOCS)
+    include(${PROJECT_SOURCE_DIR}/cmake/Docs.cmake)
+endif()

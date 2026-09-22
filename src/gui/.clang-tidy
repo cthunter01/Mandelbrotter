@@ -1,0 +1,6 @@
+# The wxWidgets layer: parent-owned widgets are created with `new` and wx headers are umbrella headers, so two
+# checks from the project config do not fit here.
+InheritParentConfig: true
+Checks: >
+  -cppcoreguidelines-owning-memory,
+  -misc-include-cleaner

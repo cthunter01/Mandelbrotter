@@ -1,0 +1,6 @@
+# Test code: every EXPECT/ASSERT macro expands to a branch, which makes cognitive-complexity meaningless here,
+# and ASSERT_TRUE(opt.has_value()) is invisible to the optional-access check.
+InheritParentConfig: true
+Checks: >
+  -readability-function-cognitive-complexity,
+  -bugprone-unchecked-optional-access
