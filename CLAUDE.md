@@ -37,15 +37,11 @@ shows this machine's.
   the real executable with `DISPLAY` cleared
 - `cmake/ProjectOptions.cmake`: `Mandelbrotter_configure_target()` (warnings, sanitizers, coverage, tidy)
 - `cmake/Dependencies.cmake`: third-party libraries via FetchContent (GoogleTest, nlohmann/json, stb, wxWidgets
-  with its option block: static, GTK3, unneeded components off, no `find_package` fallback because a shared
+  with its option block: static, native toolkit, unneeded components off, no `find_package` fallback because a shared
   system wx would otherwise be picked up)
 
 ## Conventions
 - Headers are `.h` (never `.hpp`) and use `#pragma once`
-- A class's header and implementation files are named exactly after the class, including capitalization:
-  `class MyClass` lives in `include/myproject/MyClass.h` and `src/MyClass.cpp`, and its tests in `tests/MyClassTest.cpp`
-- Code lives in `namespace myproject`; project includes use quotes: `#include "myproject/greet.h"`
-- Every new target must call `myproject_configure_target(<target>)`
 - Code lives in `namespace mandelbrotter` (GUI: `mandelbrotter::gui`); project includes use quotes:
   `#include "Mandelbrotter/kernel.h"`
 - Every new target must call `Mandelbrotter_configure_target(<target>)`
@@ -55,8 +51,6 @@ shows this machine's.
 - Code must build and pass its tests on Linux, macOS and Windows (CI runs all three). Use the standard library
   (`<filesystem>`, `<thread>`, `<chrono>`) over POSIX or Win32 APIs; when an OS API is unavoidable, keep it in one
   source file behind an `#ifdef _WIN32` / `__APPLE__` / `__linux__` split, with a branch for each platform
-- Warnings are part of the build: code must compile cleanly with `-Werror` under both GCC and Clang, and pass
-  clang-tidy (`.clang-tidy`; `src/gui/.clang-tidy` and `tests/.clang-tidy` relax a few checks for wx and gtest)
 - Renderer callbacks run on worker threads: marshal to the GUI thread with `CallAfter`, never touch wx objects
   from a worker
 - wxWidgets rules: `Bind()` only (no event tables, no `wxIMPLEMENT_DYNAMIC_CLASS`); convert text with

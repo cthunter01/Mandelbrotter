@@ -1,9 +1,8 @@
 #pragma once
 
-#include <unistd.h>
-
 #include <atomic>
 #include <filesystem>
+#include <random>
 #include <string>
 
 namespace mandelbrotter::test
@@ -15,9 +14,13 @@ class TempDir
 public:
     TempDir()
     {
+        // A random per-process token instead of the PID: it needs no OS header, and two test
+        // binaries running at once still get distinct directories (each removes its own in the
+        // destructor).
+        static const unsigned   kProcessToken = std::random_device{}();
         static std::atomic<int> s_counter{0};
-        const auto              id = std::to_string(::getpid()) + "-" + std::to_string(s_counter++);
-        m_path = std::filesystem::temp_directory_path() / ("mandelbrotter-test-" + id);
+        const auto id = std::to_string(kProcessToken) + "-" + std::to_string(s_counter++);
+        m_path        = std::filesystem::temp_directory_path() / ("mandelbrotter-test-" + id);
         std::filesystem::create_directories(m_path);
     }
     ~TempDir()

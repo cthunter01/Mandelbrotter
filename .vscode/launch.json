@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      // Debugs the CMake Tools launch target (status bar). Pick myproject_tests there to debug the tests.
+      // Debugs the CMake Tools launch target (status bar). Pick Mandelbrotter_tests there to debug the tests.
       // Linux: gdb. macOS: lldb.
       "name": "Debug launch target (gdb/lldb)",
       "type": "cppdbg",

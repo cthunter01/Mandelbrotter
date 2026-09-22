@@ -11,10 +11,6 @@ if("thread" IN_LIST MANDELBROTTER_SANITIZERS AND "address" IN_LIST MANDELBROTTER
     message(FATAL_ERROR "MANDELBROTTER_SANITIZERS: 'thread' cannot be combined with 'address'")
 endif()
 
-if("thread" IN_LIST MANDELBROTTER_SANITIZERS AND "address" IN_LIST MANDELBROTTER_SANITIZERS)
-    message(FATAL_ERROR "MANDELBROTTER_SANITIZERS: 'thread' cannot be combined with 'address'")
-endif()
-
 if(MANDELBROTTER_ENABLE_COVERAGE AND NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     message(FATAL_ERROR "MANDELBROTTER_ENABLE_COVERAGE uses llvm-cov and needs Clang. Use the coverage preset.")
 endif()
@@ -43,7 +39,7 @@ function(Mandelbrotter_configure_target target)
             # thread-unsafe statics (4640), string literal casts (4905, 4906), copy-init (4928).
             /w14242 /w14254 /w14263 /w14265 /w14287 /w14296 /w14311 /w14545 /w14546 /w14547 /w14549
             /w14555 /w14640 /w14826 /w14905 /w14906 /w14928
-            $<$<BOOL:${MYPROJECT_WARNINGS_AS_ERRORS}>:/WX>)
+            $<$<BOOL:${MANDELBROTTER_WARNINGS_AS_ERRORS}>:/WX>)
     elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         target_compile_options(${target} PRIVATE
             -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Wnon-virtual-dtor

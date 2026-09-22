@@ -1,10 +1,17 @@
 # Builds and tests the CI presets on Linux, macOS and Windows, and checks formatting.
 # Linux runs in an Arch Linux container so CI has the same current GCC/Clang as the dev machine.
+# wxWidgets is built from source (statically) inside each preset's build tree; ccache is persisted between runs
+# so that only the first run of a preset pays for it.
 name: CI
 
 on:
   push:
   pull_request:
+
+env:
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
+  CCACHE_MAXSIZE: 2G
+  CCACHE_COMPILERCHECK: content   # runner images and pacman -Syu update compilers; hash the binary, not its mtime
 
 jobs:
   linux:
@@ -16,13 +23,21 @@ jobs:
       matrix:
         preset: [ci-gcc, ci-clang, asan, tidy]
     steps:
-      - name: Install toolchain
-        run: pacman -Syu --noconfirm --needed cmake ninja clang git
+      - name: Install toolchain and wxWidgets build dependencies
+        run: pacman -Syu --noconfirm --needed cmake ninja clang git ccache pkgconf gtk3 libpng zlib
       - uses: actions/checkout@v7
+      - name: Restore compiler cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ccache-${{ matrix.preset }}-${{ github.run_id }}
+          restore-keys: ccache-${{ matrix.preset }}-
       - name: Configure, build and test
         run: cmake --workflow --preset ${{ matrix.preset }}
+      - name: Compiler cache statistics
+        run: ccache -sv
 
-  # Apple Clang from the runner's default Xcode.
+  # Apple Clang from the runner's default Xcode. wxWidgets builds on Cocoa, so it needs no extra libraries.
   macos:
     name: macos / ${{ matrix.preset }}
     runs-on: macos-latest
@@ -31,21 +46,39 @@ jobs:
       matrix:
         preset: [ci-clang, asan]
     steps:
-      - name: Install Ninja
-        run: brew install ninja
+      - name: Install Ninja and ccache
+        run: brew install ninja ccache
       - uses: actions/checkout@v7
+      - name: Restore compiler cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ccache-macos-${{ matrix.preset }}-${{ github.run_id }}
+          restore-keys: ccache-macos-${{ matrix.preset }}-
       - name: Configure, build and test
         run: cmake --workflow --preset ${{ matrix.preset }}
+      - name: Compiler cache statistics
+        run: ccache -sv
 
   # MSVC from the runner's Visual Studio; msvc-dev-cmd sets up the Developer PowerShell environment.
   windows:
     name: windows / ci-msvc
     runs-on: windows-latest
     steps:
+      - name: Install ccache
+        run: choco install ccache --no-progress
       - uses: actions/checkout@v7
       - uses: ilammy/msvc-dev-cmd@v1
+      - name: Restore compiler cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ccache-windows-ci-msvc-${{ github.run_id }}
+          restore-keys: ccache-windows-ci-msvc-
       - name: Configure, build and test
         run: cmake --workflow --preset ci-msvc
+      - name: Compiler cache statistics
+        run: ccache -sv
 
   format:
     name: clang-format

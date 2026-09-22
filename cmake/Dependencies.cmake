@@ -51,9 +51,10 @@ add_library(stb_impl STATIC EXCLUDE_FROM_ALL ${stb_BINARY_DIR}/stb_impl.cpp)
 add_library(stb::stb ALIAS stb_impl)
 target_include_directories(stb_impl SYSTEM PUBLIC ${stb_SOURCE_DIR})
 
-# wxWidgets 3.2, built in-tree as static libraries on the GTK3 toolkit. Link wx::core wx::base.
+# wxWidgets 3.2, built in-tree as static libraries on the platform's native toolkit, which wx picks itself:
+# GTK3 on Linux (GTK stays a system shared library), Cocoa on macOS, Win32 on Windows. Link wx::core wx::base.
 # Deliberately no FIND_PACKAGE_ARGS: a *shared* system wxWidgets would otherwise be picked up, and we want a
-# static, trimmed build with a known configuration. GTK itself stays a system shared library.
+# static, trimmed build with a known configuration.
 set(wxBUILD_SHARED     OFF  CACHE BOOL   "" FORCE)
 set(wxBUILD_MONOLITHIC OFF  CACHE BOOL   "" FORCE)
 set(wxBUILD_PRECOMP    OFF  CACHE STRING "" FORCE)   # precompiled headers defeat ccache
@@ -63,7 +64,7 @@ set(wxBUILD_TESTS      OFF  CACHE STRING "" FORCE)
 set(wxBUILD_DEMOS      OFF  CACHE BOOL   "" FORCE)
 set(wxBUILD_BENCHMARKS OFF  CACHE BOOL   "" FORCE)
 set(wxBUILD_LOCALES    OFF  CACHE STRING "" FORCE)
-set(wxBUILD_TOOLKIT    gtk3 CACHE STRING "" FORCE)
+# Components we don't use; the GTK-only ones (libnotify, SDL, EGL, XTest) are simply ignored elsewhere.
 foreach(opt wxUSE_WEBVIEW wxUSE_MEDIACTRL wxUSE_STC wxUSE_XRC wxUSE_XML wxUSE_RICHTEXT wxUSE_HTML wxUSE_PROPGRID
             wxUSE_RIBBON wxUSE_AUI wxUSE_OPENGL wxUSE_GLCANVAS_EGL wxUSE_SOUND wxUSE_LIBSDL wxUSE_LIBNOTIFY
             wxUSE_SECRETSTORE wxUSE_WEBREQUEST wxUSE_LIBMSPACK wxUSE_XTEST wxUSE_LIBLZMA wxUSE_DEBUGREPORT
@@ -75,8 +76,8 @@ set(wxUSE_LIBTIFF OFF CACHE STRING "" FORCE)
 set(wxUSE_EXPAT   OFF CACHE STRING "" FORCE)
 set(wxUSE_NANOSVG OFF CACHE STRING "" FORCE)
 set(wxUSE_REGEX   OFF CACHE STRING "" FORCE)
-set(wxUSE_LIBPNG  sys CACHE STRING "" FORCE)   # keep: wxGTK's clipboard bitmap data object is encoded as PNG
-set(wxUSE_ZLIB    sys CACHE STRING "" FORCE)
+# libpng and zlib stay on, with wx's defaults (system libraries where wx finds them, its bundled copies elsewhere):
+# wxGTK's clipboard bitmap data object is encoded as PNG.
 FetchContent_Declare(wxwidgets
     URL      https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.11/wxWidgets-3.2.11.tar.bz2
     URL_HASH SHA256=6a129015bce2e914e4bf61ec4411854ad962801d47e92f2eb8340adb6a90af08
