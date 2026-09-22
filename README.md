@@ -1,6 +1,7 @@
 # Mandelbrotter
 
 An interactive explorer for the Mandelbrot set and its relatives, written in C++23 with a wxWidgets GUI.
+It builds and runs on Linux, macOS and Windows.
 
 - **Fractals**: Mandelbrot and Multibrot (`z^n + c`, n = 2..8), Burning Ship, Tricorn, and the Julia set of any
   of them (pick the constant by clicking on the set, type it in, or watch the live preview follow the mouse).
@@ -15,28 +16,44 @@ An interactive explorer for the Mandelbrot set and its relatives, written in C++
 
 ## Requirements
 
-- CMake 3.28+ and Ninja
-- GCC 14+ or Clang 18+ (C++23 including `<print>` and `<expected>`)
-- GTK 3 development files and `pkg-config` (wxWidgets is downloaded and built from source as static libraries;
-  GTK itself stays a system library). On Arch: `pacman -S gtk3 pkgconf`; on Debian/Ubuntu:
-  `apt install libgtk-3-dev pkg-config`.
-- Optional: clang-tidy, clang-format, llvm-cov/llvm-profdata (coverage), Doxygen, ccache (strongly recommended:
-  every preset builds wxWidgets once, and ccache shares the result between presets with the same flags)
+On every platform: CMake 3.28+, Ninja and Git. wxWidgets is downloaded and built from source as static
+libraries by the first configure (a few minutes); GoogleTest and nlohmann/json are used from the system if
+installed, otherwise downloaded.
 
-GoogleTest and nlohmann/json are used from the system if installed, otherwise downloaded.
+- **Linux**: GCC 14+ or Clang 18+ (C++23 including `<print>` and `<expected>`), plus the GTK 3 development
+  files and `pkg-config` (GTK itself stays a system library). On Arch: `pacman -S cmake ninja gtk3 pkgconf`;
+  on Debian/Ubuntu: `apt install cmake ninja-build libgtk-3-dev pkg-config`.
+- **macOS**: Xcode 26.6 or later (its Apple Clang is what CI uses; earlier Xcode 26 releases are untested), and
+  Ninja and CMake from Homebrew: `brew install cmake ninja`. wxWidgets uses Cocoa, so nothing else is needed.
+- **Windows**: Visual Studio 2026 (what CI uses; Visual Studio 2022 17.8 or later should also work) with the
+  *Desktop development with C++* workload, which includes MSVC, CMake and Ninja. Run every `cmake` command
+  from a *Developer PowerShell for VS* (x64) so the compiler is on the PATH. Symlinks need Developer Mode
+  turned on; without it the build still works, only the `compile_commands.json` link for clangd is skipped.
+- Optional, all platforms: clang-format, ccache (strongly recommended: every preset builds wxWidgets once, and
+  ccache shares the result between presets with the same flags), Doxygen. Linux and macOS only: clang-tidy and
+  llvm-cov/llvm-profdata for the `tidy` and `coverage` presets (on macOS from `brew install llvm`; the presets
+  find them there without touching your PATH).
 
 ## Quick start
+
+Linux and macOS:
 
 ```sh
 cmake --workflow --preset dev          # configure + build + test (Clang, Debug)
 ./build/clang-debug/bin/Mandelbrotter  # open the window
 ```
 
-The first configure downloads and compiles wxWidgets (a few minutes). Debug builds render slowly; for
-exploring, build the release preset:
+Windows, in a Developer PowerShell for VS:
+
+```powershell
+cmake --workflow --preset dev-msvc         # configure + build + test (MSVC, Debug)
+.\build\msvc-debug\bin\Mandelbrotter.exe   # open the window
+```
+
+Debug builds render slowly; for exploring, build the release preset:
 
 ```sh
-cmake --workflow --preset clang-release
+cmake --workflow --preset clang-release    # Windows: msvc-release
 ./build/clang-release/bin/Mandelbrotter
 ```
 
@@ -73,22 +90,33 @@ Mandelbrotter --render ship.png --fractal burning-ship --center -1.75,-0.03 --zo
 Mandelbrotter --view my-view.json
 ```
 
-Views and bookmarks are JSON. Bookmarks live in `~/.local/share/Mandelbrotter/bookmarks.json`.
+Views and bookmarks are JSON. Bookmarks live in the per-user application data directory:
+`~/.local/share/Mandelbrotter/bookmarks.json` on Linux, `~/Library/Application Support/Mandelbrotter/bookmarks.json`
+on macOS and `%APPDATA%\Mandelbrotter\bookmarks.json` on Windows.
 
 ## Presets
 
-| Preset | What it does |
-|---|---|
-| `dev` (workflow) | Clang, Debug: configure, build, test |
-| `clang-debug`, `clang-release`, `gcc-debug`, `gcc-release` | configure/build/test presets per compiler and build type |
-| `asan` | Clang Debug with AddressSanitizer + UndefinedBehaviorSanitizer |
-| `tsan` | Clang RelWithDebInfo with ThreadSanitizer |
-| `tidy` | Clang Debug with clang-tidy, warnings as errors |
-| `coverage` | Clang Debug with source-based coverage; report in `build/coverage/coverage/` |
-| `ci-gcc`, `ci-clang` | Release, warnings as errors (what CI runs) |
+Every preset builds into `build/<preset>/`. A preset only exists on the platforms whose compiler it uses, so
+`cmake --list-presets` shows the ones available on this machine.
+
+| Preset | Platforms | What it does |
+|---|---|---|
+| `dev` (workflow) | Linux, macOS | Clang, Debug: configure, build, test |
+| `dev-msvc` (workflow) | Windows | MSVC, Debug: configure, build, test |
+| `clang-debug`, `clang-release` | Linux, macOS | configure/build/test presets per build type |
+| `gcc-debug`, `gcc-release` | Linux | the same with GCC |
+| `msvc-debug`, `msvc-release` | Windows | the same with MSVC |
+| `asan` | Linux, macOS | Clang Debug with AddressSanitizer + UndefinedBehaviorSanitizer |
+| `tsan` | Linux, macOS | Clang RelWithDebInfo with ThreadSanitizer |
+| `tidy` | Linux, macOS | Clang Debug with clang-tidy, warnings as errors |
+| `coverage` | Linux, macOS | Clang Debug with source-based coverage; report in `build/coverage/coverage/` |
+| `ci-gcc`, `ci-clang`, `ci-msvc` | Linux / Linux, macOS / Windows | Release, warnings as errors (what CI runs) |
 
 Configure, build and test can also be run separately: `cmake --preset clang-debug`,
 `cmake --build --preset clang-debug`, `ctest --preset clang-debug`.
+
+CI (GitHub Actions) runs `ci-gcc`, `ci-clang`, `asan` and `tidy` on Arch Linux, `ci-clang` and `asan` on macOS,
+`ci-msvc` on Windows, and a clang-format check.
 
 ## Layout
 
