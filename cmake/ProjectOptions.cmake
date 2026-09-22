@@ -11,6 +11,10 @@ if("thread" IN_LIST MANDELBROTTER_SANITIZERS AND "address" IN_LIST MANDELBROTTER
     message(FATAL_ERROR "MANDELBROTTER_SANITIZERS: 'thread' cannot be combined with 'address'")
 endif()
 
+if(MANDELBROTTER_SANITIZERS AND MSVC)
+    message(FATAL_ERROR "MANDELBROTTER_SANITIZERS needs GCC or Clang (asan/tsan presets: Linux, macOS)")
+endif()
+
 if(MANDELBROTTER_ENABLE_COVERAGE AND NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     message(FATAL_ERROR "MANDELBROTTER_ENABLE_COVERAGE uses llvm-cov and needs Clang. Use the coverage preset.")
 endif()
