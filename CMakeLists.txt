@@ -31,9 +31,14 @@ if(CCACHE_PROGRAM AND NOT CMAKE_CXX_COMPILER_LAUNCHER)   # a launcher the user c
 endif()
 
 # Point clangd (in any editor) at the most recently configured preset.
+# Windows allows symlinks only in Developer Mode (or as admin), so a failure is a note, not an error.
 if(PROJECT_IS_TOP_LEVEL)
     file(CREATE_LINK ${PROJECT_BINARY_DIR}/compile_commands.json
-         ${PROJECT_SOURCE_DIR}/compile_commands.json SYMBOLIC)
+         ${PROJECT_SOURCE_DIR}/compile_commands.json RESULT link_result SYMBOLIC)
+    if(NOT link_result EQUAL 0)
+        message(STATUS "Could not link compile_commands.json into the source tree (${link_result}). "
+                       "On Windows, turn on Developer Mode to allow symlinks.")
+    endif()
 endif()
 
 # Project modules are included by path, so a parent's CMAKE_MODULE_PATH cannot replace them.

@@ -1,7 +1,5 @@
-# Builds and tests every CI preset, and checks formatting.
-# Runs in an Arch Linux container so CI has the same current GCC/Clang as the dev machine.
-# wxWidgets is built from source (statically) inside each preset's build tree; ccache is persisted between runs
-# so that only the first run of a preset pays for it.
+# Builds and tests the CI presets on Linux, macOS and Windows, and checks formatting.
+# Linux runs in an Arch Linux container so CI has the same current GCC/Clang as the dev machine.
 name: CI
 
 on:
@@ -9,32 +7,45 @@ on:
   pull_request:
 
 jobs:
-  build:
-    name: ${{ matrix.preset }}
+  linux:
+    name: linux / ${{ matrix.preset }}
     runs-on: ubuntu-latest
     container: archlinux:base-devel
     strategy:
       fail-fast: false
       matrix:
         preset: [ci-gcc, ci-clang, asan, tidy]
-    env:
-      CCACHE_DIR: ${{ github.workspace }}/.ccache
-      CCACHE_MAXSIZE: 2G
-      CCACHE_COMPILERCHECK: content   # pacman -Syu may update the compiler; hash the binary, not its mtime
     steps:
-      - name: Install toolchain and wxWidgets build dependencies
-        run: pacman -Syu --noconfirm --needed cmake ninja clang git ccache pkgconf gtk3 libpng zlib
+      - name: Install toolchain
+        run: pacman -Syu --noconfirm --needed cmake ninja clang git
       - uses: actions/checkout@v7
-      - name: Restore compiler cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}/.ccache
-          key: ccache-${{ matrix.preset }}-${{ github.run_id }}
-          restore-keys: ccache-${{ matrix.preset }}-
       - name: Configure, build and test
         run: cmake --workflow --preset ${{ matrix.preset }}
-      - name: Compiler cache statistics
-        run: ccache -sv
+
+  # Apple Clang from the runner's default Xcode.
+  macos:
+    name: macos / ${{ matrix.preset }}
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        preset: [ci-clang, asan]
+    steps:
+      - name: Install Ninja
+        run: brew install ninja
+      - uses: actions/checkout@v7
+      - name: Configure, build and test
+        run: cmake --workflow --preset ${{ matrix.preset }}
+
+  # MSVC from the runner's Visual Studio; msvc-dev-cmd sets up the Developer PowerShell environment.
+  windows:
+    name: windows / ci-msvc
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Configure, build and test
+        run: cmake --workflow --preset ci-msvc
 
   format:
     name: clang-format

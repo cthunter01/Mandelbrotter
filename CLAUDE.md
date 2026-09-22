@@ -1,7 +1,8 @@
 # Mandelbrotter
 
-Interactive Mandelbrot-family fractal explorer. C++23, CMake presets + Ninja, GoogleTest, wxWidgets 3.2 GUI
-(statically linked, built in-tree via FetchContent). Linux, GCC and Clang.
+Interactive Mandelbrot-family fractal explorer. C++23 project built with CMake presets + Ninja, wxWidgets 3.2 GUI
+(statically linked, built in-tree via FetchContent), tested with GoogleTest. Cross-platform: Linux (GCC, Clang),
+macOS (Apple Clang) and Windows (MSVC).
 
 ## Commands
 - Build and test (Clang Debug): `cmake --workflow --preset dev`
@@ -12,13 +13,17 @@ Interactive Mandelbrot-family fractal explorer. C++23, CMake presets + Ninja, Go
   headless render: `build/clang-debug/bin/Mandelbrotter --render out.png --size 640x400`
 - Before finishing a change, also run: `cmake --workflow --preset tidy` (clang-tidy, warnings are errors) and
   `cmake --workflow --preset asan` (AddressSanitizer + UBSan); `cmake --workflow --preset tsan` for renderer changes
+- On Windows the presets are `msvc-debug` (workflow `dev-msvc`), `msvc-release` and `ci-msvc`, and cmake must run
+  in a Developer PowerShell for VS. `tidy`, `asan`, `tsan` and `coverage` exist on Linux and macOS only
 - Formatting is automatic: a Claude Code hook (`.claude/hooks/format-cpp.sh`) runs clang-format on every C/C++
   file right after you edit it. The pre-commit hook and CI also reject unformatted files
 
 Other presets: `clang-release`, `gcc-debug`, `gcc-release`, `tsan`, `coverage`, `ci-gcc`, `ci-clang`
 (`gcc-debug` and the like are configure/build/test presets, not workflows).
 Each builds into `build/<preset>/`; never edit anything under `build/`. The first configure of a preset
-downloads and compiles wxWidgets (minutes); ccache makes later presets fast.
+downloads and compiles wxWidgets (minutes); ccache makes later presets fast. A preset is only available on the
+platforms it supports (`gcc-*`: Linux; `clang-*`: Linux and macOS; `msvc-*`: Windows); `cmake --list-presets`
+shows this machine's.
 
 ## Layout
 - `include/Mandelbrotter/`: public headers of the core library
@@ -37,10 +42,19 @@ downloads and compiles wxWidgets (minutes); ccache makes later presets fast.
 
 ## Conventions
 - Headers are `.h` (never `.hpp`) and use `#pragma once`
+- A class's header and implementation files are named exactly after the class, including capitalization:
+  `class MyClass` lives in `include/myproject/MyClass.h` and `src/MyClass.cpp`, and its tests in `tests/MyClassTest.cpp`
+- Code lives in `namespace myproject`; project includes use quotes: `#include "myproject/greet.h"`
+- Every new target must call `myproject_configure_target(<target>)`
 - Code lives in `namespace mandelbrotter` (GUI: `mandelbrotter::gui`); project includes use quotes:
   `#include "Mandelbrotter/kernel.h"`
 - Every new target must call `Mandelbrotter_configure_target(<target>)`
 - New source files go into the relevant `CMakeLists.txt`; new tests go into `tests/CMakeLists.txt`
+- Warnings are part of the build: code must compile cleanly with `-Werror` under GCC and Clang and with `/WX`
+  under MSVC, and pass clang-tidy on Linux (`.clang-tidy`; `src/gui/.clang-tidy` and `tests/.clang-tidy` relax a few checks for wx and gtest)
+- Code must build and pass its tests on Linux, macOS and Windows (CI runs all three). Use the standard library
+  (`<filesystem>`, `<thread>`, `<chrono>`) over POSIX or Win32 APIs; when an OS API is unavoidable, keep it in one
+  source file behind an `#ifdef _WIN32` / `__APPLE__` / `__linux__` split, with a branch for each platform
 - Warnings are part of the build: code must compile cleanly with `-Werror` under both GCC and Clang, and pass
   clang-tidy (`.clang-tidy`; `src/gui/.clang-tidy` and `tests/.clang-tidy` relax a few checks for wx and gtest)
 - Renderer callbacks run on worker threads: marshal to the GUI thread with `CallAfter`, never touch wx objects
