@@ -28,7 +28,9 @@ shows this machine's.
 ## Layout
 - `include/Mandelbrotter/`: public headers of the core library
 - `src/core/`: `Mandelbrotter_lib` — kernels, viewport, palettes, progressive renderer, exporter, PNG writer,
-  bookmarks (JSON), CLI. **No wxWidgets here**, ever: the tests and the `--render` path must work headless
+  bookmarks (JSON), CLI, and the deep-zoom machinery: `BigFixed`/`BigComplex` (fixed-point big numbers),
+  `ReferenceOrbit` and `perturbation.h`. **No wxWidgets here**, ever: the tests and the `--render` path must
+  work headless
 - `src/gui/`: `Mandelbrotter_gui` — the wxWidgets layer; headers live beside sources, included as `"gui/x.h"`
 - `src/main.cpp`: the executable. `wxIMPLEMENT_APP_NO_MAIN` must stay in this file (in a static library the
   linker drops the app initializer); `main()` parses the command line, runs the CLI, or hands the resolved
@@ -55,6 +57,12 @@ shows this machine's.
 - Code must build and pass its tests on Linux, macOS and Windows (CI runs all three). Use the standard library
   (`<filesystem>`, `<thread>`, `<chrono>`) over POSIX or Win32 APIs; when an OS API is unavoidable, keep it in one
   source file behind an `#ifdef _WIN32` / `__APPLE__` / `__linux__` split, with a branch for each platform
+- Deep zoom: `ViewSpec::center` is a `BigComplex` whose precision follows the zoom (`fractionBitsFor`);
+  kernels never see absolute big positions, only double offsets from the centre (`Viewport::offsetFromCenter`).
+  Above `kPerturbationZoom` (1e8) the renderer iterates every pixel as a delta from the centre's
+  `ReferenceOrbit` (`iteratePerturbed`, with rebasing); below it the direct double kernel runs. Bookmarks and
+  view files store centres as decimal strings (schema version 2); `BigFixed::fromDecimal` rounds to nearest
+  and `toDecimal` prints enough digits that a saved view reloads bit-for-bit
 - Renderer callbacks run on worker threads: marshal to the GUI thread with `CallAfter`, never touch wx objects
   from a worker
 - wxWidgets rules: `Bind()` only (no event tables, no `wxIMPLEMENT_DYNAMIC_CLASS`); convert text with

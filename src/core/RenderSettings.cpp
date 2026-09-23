@@ -13,7 +13,9 @@ int autoIterationsFor(double zoom, int base) noexcept
     {
         return base;
     }
-    const double extra = kIterationsPerZoomDoubling * std::log2(zoom);
+    const double doublings = std::log2(zoom);
+    const double extra     = kIterationsPerZoomDoubling * doublings +
+                             kIterationsPerZoomDoublingSquared * doublings * doublings;
     const double total =
         std::min(static_cast<double>(base) + extra, static_cast<double>(kMaxIterations));
     return static_cast<int>(total);

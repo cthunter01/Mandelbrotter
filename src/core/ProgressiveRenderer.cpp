@@ -14,12 +14,15 @@
 #include <utility>
 #include <vector>
 
+#include "Mandelbrotter/BigComplex.h"
+#include "Mandelbrotter/ReferenceOrbit.h"
 #include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/Viewport.h"
 #include "Mandelbrotter/fractal.h"
 #include "Mandelbrotter/geometry.h"
 #include "Mandelbrotter/image.h"
 #include "Mandelbrotter/kernel.h"
+#include "Mandelbrotter/perturbation.h"
 
 namespace mandelbrotter
 {
@@ -30,19 +33,35 @@ namespace
 /// Everything constant for the duration of a job.
 struct Scene
 {
-    FractalSpec fractal;
-    Viewport    viewport;
-    int         maxIterations;
+    FractalSpec                   fractal;
+    Viewport                      viewport;
+    int                           maxIterations;
+    std::optional<ReferenceOrbit> reference;  ///< the centre's orbit, in perturbation mode
 
-    Scene(const RenderSettings& settings, PixelSize size)
+    /// Computes the reference orbit when the zoom calls for one; `stop` cuts that short.
+    Scene(const RenderSettings& settings, PixelSize size, const std::stop_token& stop)
       : fractal(settings.fractal),
         viewport(settings.view, size),
         maxIterations(effectiveIterations(settings))
     {
+        const double zoom = viewport.view().zoom;
+        if (usesPerturbation(zoom))
+        {
+            // A centre that came in as doubles has fewer bits than its zoom needs; extending is
+            // exact.
+            const BigComplex& center = viewport.view().center;
+            const int         bits   = std::max(center.fractionBits(), fractionBitsFor(zoom));
+            reference.emplace(fractal, center.withFractionBits(bits), maxIterations, stop);
+        }
     }
 
     [[nodiscard]] IterationResult sample(int x, int y) const noexcept
     {
+        if (reference)
+        {
+            return iteratePerturbed(*reference, viewport.offsetFromCenter(x + 0.5, y + 0.5),
+                                    maxIterations);
+        }
         return iteratePixel(fractal, viewport.pixelCenter({x, y}), maxIterations);
     }
 };
@@ -171,7 +190,7 @@ void coordinate(const std::stop_token& stop, const RenderJob& job, std::uint64_t
                 const TileCallback& onTile, const CompletionCallback& onDone)
 {
     const auto                   startTime = std::chrono::steady_clock::now();
-    const Scene                  scene(job.settings, job.size);
+    const Scene                  scene(job.settings, job.size, stop);
     const std::vector<PixelRect> rects =
         tileGrid({0, 0, job.size.width, job.size.height}, job.tileSize);
     std::vector<TileState> tiles;
@@ -181,10 +200,14 @@ void coordinate(const std::stop_token& stop, const RenderJob& job, std::uint64_t
         tiles.emplace_back(rect);
     }
 
-    bool cancelled    = false;
+    bool cancelled    = stop.stop_requested();  // the reference orbit may have been cut short
     int  previousStep = 0;
     for (const int step : sanitizedPasses(job.passes))
     {
+        if (cancelled)
+        {
+            break;
+        }
         forEachTile(tiles.size(), workerCount(job.threads), stop, [&](std::size_t t) {
             if (renderPass(scene, tiles[t], step, previousStep, stop) && onTile)
             {
@@ -269,7 +292,11 @@ std::optional<IterationBuffer> renderSync(const RenderSettings& settings, PixelS
     {
         return buffer;
     }
-    const Scene                  scene(settings, size);
+    const Scene scene(settings, size, stop);
+    if (stop.stop_requested())
+    {
+        return std::nullopt;
+    }
     const std::vector<PixelRect> rects = tileGrid(area, kDefaultTileSize);
     std::mutex                   progressMutex;
     int                          done = 0;
@@ -324,6 +351,11 @@ std::vector<PixelRect> tileGrid(PixelRect area, int tileSize)
     };
     std::ranges::stable_sort(tiles, {}, distance);
     return tiles;
+}
+
+bool usesPerturbation(double zoom) noexcept
+{
+    return zoom > kPerturbationZoom;
 }
 
 unsigned workerCount(unsigned requested) noexcept

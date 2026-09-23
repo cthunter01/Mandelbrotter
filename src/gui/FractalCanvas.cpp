@@ -10,6 +10,7 @@
 #include <wx/pen.h>
 
 #include "Mandelbrotter/Palette.h"
+#include "Mandelbrotter/ReferenceOrbit.h"
 #include "Mandelbrotter/fractal.h"
 #include "Mandelbrotter/kernel.h"
 #include "gui/wx_util.h"
@@ -456,16 +457,31 @@ void FractalCanvas::onCaptureLost(wxMouseCaptureLostEvent& /*event*/)
 
 void FractalCanvas::updateOrbit(wxPoint at)
 {
-    const Viewport             vp = viewport();
-    const std::vector<Complex> points =
-        orbit(m_settings.fractal, complexAt(at),
-              std::min(effectiveIterations(m_settings), kMaxOrbitPoints));
+    const Viewport       vp        = viewport();
+    const int            maxPoints = std::min(effectiveIterations(m_settings), kMaxOrbitPoints);
+    const bool           deep      = usesPerturbation(vp.view().zoom);
+    std::vector<Complex> points;
+    if (deep)
+    {
+        // Doubles cannot place the pointer this deep, but its exact orbit can be computed; it
+        // leaves the view within a few steps anyway.
+        const ReferenceOrbit exact(m_settings.fractal, bigAt(at), maxPoints - 1);
+        points.assign(exact.points().begin(), exact.points().end());
+    }
+    else
+    {
+        points = orbit(m_settings.fractal, complexAt(at), maxPoints);
+    }
     m_orbit.clear();
     m_orbit.reserve(points.size());
     for (const Complex z : points)
     {
         const wxPoint p = toLogical(vp.toPixel(z));
         m_orbit.emplace_back(clampCoordinate(p.x), clampCoordinate(p.y));
+    }
+    if (deep && m_settings.fractal.julia && !m_orbit.empty())
+    {
+        m_orbit.front() = at;  // z0 is the pointer itself, which toPixel(Complex) cannot resolve
     }
     Refresh(false);
 }

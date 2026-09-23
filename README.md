@@ -8,7 +8,10 @@ It builds and runs on Linux, macOS and Windows.
 - **Navigation**: mouse wheel zooms at the cursor, drag pans, right-drag or Shift-drag zooms to a rectangle,
   right-click zooms out, arrow keys / `+` / `-` / `Home` work too.
 - **Rendering**: multi-threaded and progressive (a coarse pass appears instantly, then refines); any navigation
-  cancels the render in flight. Iteration limit is manual or grows automatically with the zoom.
+  cancels the render in flight. Iteration limit (up to 1 000 000) is manual or grows automatically with the zoom.
+- **Deep zoom**: to 1e300, far past where doubles stop telling pixels apart (about 1e13). The view centre is a
+  big number whose precision follows the zoom, and above 1e8 every pixel is iterated as a small delta from the
+  centre's reference orbit (perturbation with rebasing), for every fractal family and in Julia mode.
 - **Colouring**: smooth escape-time colouring with six palettes plus density and offset controls; palette
   changes recolour instantly without recomputing.
 - **Extras**: orbit overlay for the point under the cursor; supersampled PNG export at any resolution; copy to
@@ -69,7 +72,7 @@ usage: Mandelbrotter [options]
       --exponent N        z^N + c, N from 2 to 8 (default 2)
       --julia RE,IM       draw the Julia set for the constant c = RE + IM i
       --center RE,IM      centre of the view
-      --zoom Z            magnification (1 shows the whole set; up to 1e+12)
+      --zoom Z            magnification (1 shows the whole set; up to 1e+300)
       --iterations N      fixed iteration limit (default: automatic, grows with zoom)
       --palette NAME      one of: classic, grayscale, fire, ocean, rainbow, electric
       --size WxH          output size for --render (default 1920x1080)
@@ -90,7 +93,8 @@ Mandelbrotter --render ship.png --fractal burning-ship --center -1.75,-0.03 --zo
 Mandelbrotter --view my-view.json
 ```
 
-Views and bookmarks are JSON. Bookmarks live in the per-user application data directory:
+Views and bookmarks are JSON; the centre is written as decimal strings with as many digits as the zoom needs,
+and `--center` takes decimals of any length. Bookmarks live in the per-user application data directory:
 `~/.local/share/Mandelbrotter/bookmarks.json` on Linux, `~/Library/Application Support/Mandelbrotter/bookmarks.json`
 on macOS and `%APPDATA%\Mandelbrotter\bookmarks.json` on Windows.
 

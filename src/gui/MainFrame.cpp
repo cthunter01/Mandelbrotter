@@ -17,6 +17,7 @@
 #include <wx/statusbr.h>
 #include <wx/textdlg.h>
 
+#include "Mandelbrotter/ProgressiveRenderer.h"
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/fractal.h"
 #include "gui/ExportDialog.h"
@@ -233,7 +234,10 @@ void MainFrame::updateStatusBar()
 {
     SetStatusText(toWx("Centre " + formatCenter(m_settings.view.center, m_settings.view.zoom)),
                   field(StatusField::CENTER));
-    SetStatusText(toWx("Zoom " + formatZoom(m_settings.view.zoom)), field(StatusField::ZOOM));
+    const std::string zoomText =
+        formatZoom(m_settings.view.zoom) +
+        (usesPerturbation(m_settings.view.zoom) ? " (deep)" : "");  // perturbation rendering
+    SetStatusText(toWx("Zoom " + zoomText), field(StatusField::ZOOM));
     SetStatusText(toWx(std::format("{} iterations", effectiveIterations(m_settings))),
                   field(StatusField::ITERATIONS));
     m_panel->setEffectiveIterations(effectiveIterations(m_settings));

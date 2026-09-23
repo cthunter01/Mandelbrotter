@@ -18,6 +18,12 @@ namespace mandelbrotter
 
 inline constexpr int kDefaultTileSize = 64;
 
+/// Above this zoom every pixel is iterated as a delta from the centre's reference orbit
+/// (perturbation, see perturbation.h); below it, directly in doubles, which still have several
+/// digits of sub-pixel precision to spare there (a 4K frame at 1e8 has pixels 1e-11 wide).
+inline constexpr double kPerturbationZoom = 1e8;
+[[nodiscard]] bool      usesPerturbation(double zoom) noexcept;
+
 /// Progress callback: (tiles done, tiles total). May be called from worker threads, but never
 /// concurrently.
 using ProgressCallback = std::function<void(int done, int total)>;

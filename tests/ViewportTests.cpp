@@ -81,7 +81,7 @@ TEST(Viewport, ZoomIsClamped)
 {
     const Viewport vp{{{0.0, 0.0}, 1.0}, kSize};
     EXPECT_DOUBLE_EQ(vp.zoomedAt({0, 0}, 1e-9).view().zoom, mandelbrotter::kMinZoom);
-    EXPECT_DOUBLE_EQ(vp.zoomedAt({0, 0}, 1e30).view().zoom, mandelbrotter::kMaxZoom);
+    EXPECT_DOUBLE_EQ(vp.zoomedAt({0, 0}, 1e301).view().zoom, mandelbrotter::kMaxZoom);
     EXPECT_DOUBLE_EQ(mandelbrotter::clampZoom(std::numeric_limits<double>::quiet_NaN()), 1.0);
 }
 
@@ -139,6 +139,8 @@ TEST(Viewport, PrecisionFollowsTheZoom)
     EXPECT_EQ(mandelbrotter::fractionBitsFor(0.5), mandelbrotter::kCenterGuardBits);
     EXPECT_EQ(mandelbrotter::fractionBitsFor(2.0), mandelbrotter::kCenterGuardBits + 1);
     EXPECT_EQ(mandelbrotter::fractionBitsFor(1e12), mandelbrotter::kCenterGuardBits + 40);
+    EXPECT_EQ(mandelbrotter::fractionBitsFor(mandelbrotter::kMaxZoom),
+              mandelbrotter::kCenterGuardBits + 997);
     // Decimals that reproduce that many bits (rounded up to limbs): 64 bits need 20, 128 need 39,
     // plus one for the rounding.
     EXPECT_EQ(mandelbrotter::centerDecimalsFor(1.0), 21);

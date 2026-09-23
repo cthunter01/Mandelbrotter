@@ -23,9 +23,13 @@ TEST(RenderSettings, AutoIterationsStartAtBaseAndGrowMonotonically)
         EXPECT_LE(current, mandelbrotter::kMaxIterations);
         previous = current;
     }
+    const double d = std::log2(1e6);
     EXPECT_EQ(mandelbrotter::autoIterationsFor(1e6, 256),
-              256 + static_cast<int>(64 * std::log2(1e6)));
-    EXPECT_EQ(mandelbrotter::autoIterationsFor(1e300, 90000), mandelbrotter::kMaxIterations);
+              static_cast<int>(256 + (64 * d) + (0.5 * d * d)));
+    // 1e300 alone asks for about 560 000; a large base pushes it over the cap.
+    EXPECT_GT(mandelbrotter::autoIterationsFor(1e300, 256), 500'000);
+    EXPECT_LT(mandelbrotter::autoIterationsFor(1e300, 256), mandelbrotter::kMaxIterations);
+    EXPECT_EQ(mandelbrotter::autoIterationsFor(1e300, 900'000), mandelbrotter::kMaxIterations);
     EXPECT_EQ(mandelbrotter::autoIterationsFor(std::numeric_limits<double>::infinity(), 256),
               mandelbrotter::kMaxIterations);
     EXPECT_EQ(mandelbrotter::autoIterationsFor(2.0, 0), mandelbrotter::kMinIterations + 64);
@@ -39,7 +43,7 @@ TEST(RenderSettings, EffectiveIterationsRespectsAutoFlag)
     s.autoIterations = false;
     EXPECT_EQ(mandelbrotter::effectiveIterations(s), 100);
     s.autoIterations = true;
-    EXPECT_EQ(mandelbrotter::effectiveIterations(s), 100 + (10 * 64));
+    EXPECT_EQ(mandelbrotter::effectiveIterations(s), 100 + (10 * 64) + 50);  // 0.5 * 10^2
     s.maxIterations = 10'000'000;
     EXPECT_EQ(mandelbrotter::effectiveIterations(s), mandelbrotter::kMaxIterations);
 }

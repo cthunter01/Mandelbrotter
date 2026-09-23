@@ -16,11 +16,14 @@
 
 #include <gtest/gtest.h>
 
+#include "Mandelbrotter/BigFixed.h"
+#include "Mandelbrotter/ReferenceOrbit.h"
 #include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/Viewport.h"
 #include "Mandelbrotter/geometry.h"
 #include "Mandelbrotter/image.h"
 #include "Mandelbrotter/kernel.h"
+#include "Mandelbrotter/perturbation.h"
 
 namespace
 {
@@ -41,6 +44,21 @@ RenderSettings smallScene()
     RenderSettings s;
     s.view           = {{-0.75, 0.1}, 3.0};
     s.maxIterations  = 120;
+    s.autoIterations = false;
+    return s;
+}
+
+/// A view far beyond double precision, on the tip of the antenna: the escape time grows with the
+/// logarithm of the distance to -2, so a window this small still shows structure.
+RenderSettings deepScene()
+{
+    constexpr double kZoom = 1e40;
+    const int        bits  = mandelbrotter::fractionBitsFor(kZoom);
+    RenderSettings   s;
+    s.view = {
+        {mandelbrotter::BigFixed::fromDecimal("-2", bits).value(), mandelbrotter::BigFixed{bits}},
+        kZoom};
+    s.maxIterations  = 300;
     s.autoIterations = false;
     return s;
 }
@@ -261,6 +279,59 @@ TEST(Renderer, CoarsePassesAreBlockFilledPreviews)
         const auto exact = expected->at(tile.rect.x, tile.rect.y);
         EXPECT_FLOAT_EQ(tile.smoothIter[0], static_cast<float>(exact.smoothIter));
     }
+}
+
+TEST(Renderer, PerturbationStartsAboveTheThresholdZoom)
+{
+    EXPECT_FALSE(mandelbrotter::usesPerturbation(1.0));
+    EXPECT_FALSE(mandelbrotter::usesPerturbation(mandelbrotter::kPerturbationZoom));
+    EXPECT_TRUE(mandelbrotter::usesPerturbation(mandelbrotter::kPerturbationZoom * 1.01));
+    EXPECT_TRUE(mandelbrotter::usesPerturbation(mandelbrotter::kMaxZoom));
+}
+
+TEST(Renderer, DeepRenderIteratesEveryPixelAsADeltaFromTheCentre)
+{
+    const RenderSettings settings = deepScene();
+    ASSERT_TRUE(mandelbrotter::usesPerturbation(settings.view.zoom));
+    const auto buffer = mandelbrotter::renderSync(settings, kSize, 2);
+    ASSERT_TRUE(buffer.has_value());
+    const mandelbrotter::Viewport       vp(settings.view, kSize);
+    const mandelbrotter::ReferenceOrbit ref(settings.fractal, settings.view.center,
+                                            settings.maxIterations);
+    bool                                varied = false;
+    for (int y = 0; y < kSize.height; ++y)
+    {
+        for (int x = 0; x < kSize.width; ++x)
+        {
+            const auto expected = mandelbrotter::iteratePerturbed(
+                ref, vp.offsetFromCenter(x + 0.5, y + 0.5), settings.maxIterations);
+            const std::size_t i = buffer->index(x, y);
+            EXPECT_FLOAT_EQ(buffer->smoothIter[i], static_cast<float>(expected.smoothIter))
+                << x << "," << y;
+            EXPECT_EQ(buffer->interior[i] != 0, expected.interior) << x << "," << y;
+            varied = varied || buffer->smoothIter[i] != buffer->smoothIter[0];
+        }
+    }
+    EXPECT_TRUE(varied);  // a double render would collapse this window into one value
+}
+
+TEST(Renderer, CancelInterruptsTheReferenceOrbit)
+{
+    // At the deepest zoom with the most iterations, the reference orbit alone takes seconds.
+    ProgressiveRenderer renderer;
+    RenderSettings      deep               = deepScene();
+    deep.view.zoom                         = mandelbrotter::kMaxZoom;
+    deep.maxIterations                     = mandelbrotter::kMaxIterations;
+    auto                          done     = std::make_shared<std::promise<RenderCompletion>>();
+    std::future<RenderCompletion> finished = done->get_future();
+    renderer.start(RenderJob{.settings = deep, .size = kSize, .threads = 2}, {},
+                   [done](const RenderCompletion& c) { done->set_value(c); });
+    EXPECT_TRUE(renderer.busy());
+    const auto before = std::chrono::steady_clock::now();
+    renderer.cancel();
+    EXPECT_LT(std::chrono::steady_clock::now() - before, std::chrono::seconds(5));
+    ASSERT_EQ(finished.wait_for(std::chrono::seconds(0)), std::future_status::ready);
+    EXPECT_TRUE(finished.get().cancelled);
 }
 
 TEST(Renderer, CancelStopsAJobPromptlyAndReportsIt)

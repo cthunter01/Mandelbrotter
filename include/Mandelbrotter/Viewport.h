@@ -9,8 +9,9 @@ namespace mandelbrotter
 /// Complex units spanned by the shorter window side at zoom 1.
 inline constexpr double kUnitsAcrossShortSide = 3.0;
 inline constexpr double kMinZoom              = 0.1;
-/// Beyond this, double precision runs out (pixels become identical).
-inline constexpr double kMaxZoom = 1e12;
+/// The deepest zoom. Pixel offsets and the perturbation deltas are doubles, and at 1e300 they sit
+/// just above the smallest normal double (a pixel is about 1e-303 wide).
+inline constexpr double kMaxZoom = 1e300;
 /// Bits the view centre keeps beyond what the pixel grid at its zoom can tell apart.
 inline constexpr int kCenterGuardBits = 64;
 /// toPixel clamps its result to this magnitude: far-off points stay representable as ints.
