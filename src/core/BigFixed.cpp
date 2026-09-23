@@ -24,10 +24,12 @@ namespace
 using Limb  = std::uint32_t;
 using Limbs = std::vector<Limb>;
 
-constexpr int  kLimbBits     = BigFixed::kLimbBits;
-constexpr Limb kSignBit      = 0x8000'0000U;
-constexpr Limb kDecimalBase  = 10;
-constexpr int  kMantissaBits = std::numeric_limits<double>::digits;
+constexpr int  kLimbBits = BigFixed::kLimbBits;
+constexpr Limb kSignBit  = 0x8000'0000U;
+/// All bits of a limb, as the wide type the arithmetic runs in.
+constexpr std::uint64_t kLimbMask     = std::numeric_limits<Limb>::max();
+constexpr Limb          kDecimalBase  = 10;
+constexpr int           kMantissaBits = std::numeric_limits<double>::digits;
 /// Exponents beyond this in decimal input are rejected rather than expanded into digit strings.
 constexpr int kMaxDecimalExponent = 100'000;
 /// An upper bound on the bits a decimal digit contributes (log2(10) < 4).
@@ -42,7 +44,9 @@ int limbsFor(int fractionBits) noexcept
 
 bool negative(const Limbs& limbs) noexcept
 {
-    return (limbs.back() & kSignBit) != 0;
+    // The empty check is for GCC's -Wnull-dereference (an empty vector's data() is null); a
+    // BigFixed always has at least the integer limbs.
+    return !limbs.empty() && (limbs.back() & kSignBit) != 0;
 }
 
 /// Two's complement negation in place.
@@ -51,7 +55,8 @@ void negate(Limbs& limbs) noexcept
     std::uint64_t carry = 1;
     for (Limb& limb : limbs)
     {
-        const std::uint64_t sum = static_cast<std::uint64_t>(~limb) + carry;
+        // The limb's complement, already 64 bits wide (MSVC warns, C4319, when ~limb is widened).
+        const std::uint64_t sum = (static_cast<std::uint64_t>(limb) ^ kLimbMask) + carry;
         limb                    = static_cast<Limb>(sum);
         carry                   = sum >> kLimbBits;
     }
