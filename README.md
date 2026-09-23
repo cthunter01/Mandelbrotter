@@ -58,7 +58,8 @@ cmake --workflow --preset dev-msvc         # configure + build + test (MSVC, Deb
 Debug builds render slowly; for exploring, build the release preset:
 
 ```sh
-cmake --workflow --preset clang-release    # Windows: msvc-release
+cmake --preset clang-release               # configure once; Windows: msvc-release
+cmake --build --preset clang-release       # build (`clang-release` is a build preset, not a workflow)
 ./build/clang-release/bin/Mandelbrotter
 ```
 
