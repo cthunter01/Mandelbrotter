@@ -6,8 +6,8 @@
 #include <wx/frame.h>
 #include <wx/menu.h>
 
+#include "Mandelbrotter/BigComplex.h"
 #include "Mandelbrotter/RenderSettings.h"
-#include "Mandelbrotter/geometry.h"
 #include "gui/BookmarkStore.h"
 #include "gui/FractalCanvas.h"
 
@@ -29,7 +29,7 @@ private:
     /// Makes `settings` the current model everywhere (canvas, panel, status bar).
     void applySettings(const RenderSettings& settings);
     void updateStatusBar();
-    void showPointer(std::optional<Complex> pointer);
+    void showPointer(const std::optional<BigComplex>& pointer);
     void showRenderStatus(const FractalCanvas::RenderStatus& status);
 
     void saveImage();

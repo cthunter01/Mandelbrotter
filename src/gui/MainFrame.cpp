@@ -177,9 +177,10 @@ void MainFrame::wireCanvas()
         m_panel->setSettings(m_settings);
         updateStatusBar();
     };
-    m_canvas->onPointerMoved = [this](std::optional<Complex> pointer) {
+    m_canvas->onPointerMoved = [this](const std::optional<BigComplex>& pointer) {
         showPointer(pointer);
-        m_panel->setPreviewSeed(pointer);
+        m_panel->setPreviewSeed(pointer ? std::optional<Complex>(pointer->approx())
+                                        : std::optional<Complex>());
     };
     m_canvas->onSeedPicked = [this](Complex seed) {
         RenderSettings next = m_settings;
@@ -230,7 +231,7 @@ void MainFrame::applySettings(const RenderSettings& settings)
 
 void MainFrame::updateStatusBar()
 {
-    SetStatusText(toWx("Centre " + formatComplex(m_settings.view.center)),
+    SetStatusText(toWx("Centre " + formatCenter(m_settings.view.center, m_settings.view.zoom)),
                   field(StatusField::CENTER));
     SetStatusText(toWx("Zoom " + formatZoom(m_settings.view.zoom)), field(StatusField::ZOOM));
     SetStatusText(toWx(std::format("{} iterations", effectiveIterations(m_settings))),
@@ -238,9 +239,9 @@ void MainFrame::updateStatusBar()
     m_panel->setEffectiveIterations(effectiveIterations(m_settings));
 }
 
-void MainFrame::showPointer(std::optional<Complex> pointer)
+void MainFrame::showPointer(const std::optional<BigComplex>& pointer)
 {
-    SetStatusText(pointer ? toWx(formatComplex(*pointer)) : wxString(),
+    SetStatusText(pointer ? toWx(formatCenter(*pointer, m_settings.view.zoom)) : wxString(),
                   field(StatusField::POINTER));
 }
 

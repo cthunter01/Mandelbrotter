@@ -74,7 +74,7 @@ int clampExponent(int exponent) noexcept
     return std::clamp(exponent, kMinExponent, kMaxExponent);
 }
 
-ViewSpec defaultView(const FractalSpec& spec) noexcept
+ViewSpec defaultView(const FractalSpec& spec)
 {
     if (spec.julia)
     {

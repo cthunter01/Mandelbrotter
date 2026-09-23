@@ -16,6 +16,8 @@
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
 
+#include "Mandelbrotter/BigComplex.h"
+#include "Mandelbrotter/BigFixed.h"
 #include "Mandelbrotter/Palette.h"
 #include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/Viewport.h"
@@ -30,11 +32,21 @@ namespace
 
 using nlohmann::json;
 
-constexpr int kSchemaVersion = 1;
+/// Version 2 writes the view centre as decimal strings (version 1 wrote numbers, which the reader
+/// still accepts).
+constexpr int kSchemaVersion = 2;
 
 json complexToJson(Complex c)
 {
     return {{"re", c.re}, {"im", c.im}};
+}
+
+/// With as many decimals as the centre's precision at this zoom holds, so that reading the file
+/// back gives the identical value.
+json centerToJson(const BigComplex& center, double zoom)
+{
+    const int digits = centerDecimalsFor(zoom);
+    return {{"re", center.re.toDecimal(digits)}, {"im", center.im.toDecimal(digits)}};
 }
 
 json settingsToJson(const RenderSettings& s)
@@ -44,7 +56,7 @@ json settingsToJson(const RenderSettings& s)
               {"exponent", s.fractal.exponent},
               {"julia", s.fractal.julia},
               {"seed", complexToJson(s.fractal.seed)}}},
-            {"view", {{"center", complexToJson(s.view.center)}, {"zoom", s.view.zoom}}},
+            {"view", {{"center", centerToJson(s.view.center, s.view.zoom)}, {"zoom", s.view.zoom}}},
             {"iterations", {{"max", s.maxIterations}, {"auto", s.autoIterations}}},
             {"coloring",
              {{"palette", s.coloring.palette},
@@ -107,6 +119,36 @@ Complex complexFromJson(const json& object, const char* key)
     return {finite(get<double>(c, "re", 0.0), key), finite(get<double>(c, "im", 0.0), key)};
 }
 
+/// One coordinate of the centre: a decimal string, or a number from a version-1 file. Missing
+/// means zero.
+BigFixed centerPartFromJson(const json& center, const char* key, int fractionBits)
+{
+    if (!center.is_object() || !center.contains(key))
+    {
+        return BigFixed{fractionBits};
+    }
+    const json& value = center.at(key);
+    if (value.is_number())
+    {
+        return BigFixed::fromDouble(finite(value.get<double>(), key), fractionBits);
+    }
+    if (value.is_string())
+    {
+        if (const auto parsed = BigFixed::fromDecimal(value.get<std::string>(), fractionBits))
+        {
+            return *parsed;
+        }
+    }
+    throw BookmarkError(std::string("bad value for \"") + key + "\"");
+}
+
+BigComplex centerFromJson(const json& view, double zoom)
+{
+    const json& center = require(view, "center");
+    const int   bits   = fractionBitsFor(zoom);
+    return {centerPartFromJson(center, "re", bits), centerPartFromJson(center, "im", bits)};
+}
+
 RenderSettings settingsFromJson(const json& s)
 {
     if (!s.is_object())
@@ -131,8 +173,8 @@ RenderSettings settingsFromJson(const json& s)
     }
 
     const json& view = require(s, "view");
-    out.view.center  = complexFromJson(view, "center");
     out.view.zoom    = clampZoom(finite(getRequired<double>(view, "zoom"), "zoom"));
+    out.view.center  = centerFromJson(view, out.view.zoom);  // the zoom sets its precision
 
     if (s.contains("iterations"))
     {

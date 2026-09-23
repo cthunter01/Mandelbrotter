@@ -13,6 +13,8 @@
 #include <string>
 #include <string_view>
 
+#include "Mandelbrotter/BigComplex.h"
+#include "Mandelbrotter/BigFixed.h"
 #include "Mandelbrotter/Palette.h"
 #include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/Viewport.h"
@@ -45,6 +47,23 @@ std::expected<Complex, std::string> parseComplex(std::string_view flag, std::str
         return Error(std::format("{} expects re,im (got \"{}\")", flag, text));
     }
     return Complex{*re, *im};
+}
+
+/// "re,im" for --center: decimals of any length, at the given precision.
+std::optional<BigComplex> parseCenter(std::string_view text, int fractionBits)
+{
+    const auto comma = text.find(',');
+    if (comma == std::string_view::npos)
+    {
+        return std::nullopt;
+    }
+    const auto re = BigFixed::fromDecimal(text.substr(0, comma), fractionBits);
+    const auto im = BigFixed::fromDecimal(text.substr(comma + 1), fractionBits);
+    if (!re || !im)
+    {
+        return std::nullopt;
+    }
+    return BigComplex{*re, *im};
 }
 
 std::string paletteList()
@@ -110,12 +129,12 @@ Outcome setJulia(std::string_view value, CliOptions& options)
 
 Outcome setCenter(std::string_view value, CliOptions& options)
 {
-    const auto center = parseComplex("--center", value);
-    if (!center)
+    // Validated now (the range check does not depend on the precision), parsed in applyOverrides.
+    if (!parseCenter(value, BigFixed::kMinFractionBits))
     {
-        return Error(center.error());
+        return Error(std::format("--center expects re,im (got \"{}\")", value));
     }
-    options.overrides.center = *center;
+    options.overrides.center = std::string(value);
     return {};
 }
 
@@ -289,13 +308,17 @@ RenderSettings applyOverrides(RenderSettings base, const CliOverrides& overrides
     {
         base.view = defaultView(base.fractal);
     }
-    if (overrides.center)
-    {
-        base.view.center = *overrides.center;
-    }
     if (overrides.zoom)
     {
         base.view.zoom = clampZoom(*overrides.zoom);
+    }
+    if (overrides.center)
+    {
+        // The zoom is final now, so the centre can take the precision it calls for.
+        if (const auto center = parseCenter(*overrides.center, fractionBitsFor(base.view.zoom)))
+        {
+            base.view.center = *center;
+        }
     }
     if (overrides.iterations)
     {

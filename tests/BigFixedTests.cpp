@@ -123,10 +123,26 @@ TEST(BigFixed, MultiplicationTruncatesTowardZero)
     EXPECT_TRUE((tiny * tiny).isZero());
     EXPECT_TRUE(((-tiny) * tiny).isZero());
     EXPECT_FALSE(((-tiny) * tiny).isNegative());
-    // The decimal 0.1 is stored slightly below 0.1, so 0.1 * 10 lands just under 1.
+    // 0.1 is not representable: ten times its nearest approximation is within a few ulps of 1.
     const BigFixed nearlyOne = dec("0.1") * dbl(10.0);
-    EXPECT_LE(nearlyOne, dbl(1.0));
-    EXPECT_GT(nearlyOne, dbl(1.0) - dbl(std::ldexp(1.0, -200)));
+    EXPECT_NE(nearlyOne, dbl(1.0));
+    EXPECT_LT((nearlyOne - dbl(1.0)).abs(), dbl(std::ldexp(1.0, -250)));
+}
+
+TEST(BigFixed, DecimalParsingRoundsToNearest)
+{
+    // 2^-64 is 5.42e-20: 3e-20 rounds up to it, 2e-20 rounds down to zero.
+    const BigFixed ulp = dbl(std::ldexp(1.0, -64), 64);
+    EXPECT_EQ(dec("0.00000000000000000003", 64), ulp);
+    EXPECT_EQ(dec("-0.00000000000000000003", 64), -ulp);
+    EXPECT_TRUE(dec("0.00000000000000000002", 64).isZero());
+    EXPECT_TRUE(dec("-0.00000000000000000002", 64).isZero());
+    // Representable values are untouched; a tie (exactly 2^-65) rounds away from zero.
+    EXPECT_EQ(dec("0.5", 64), dbl(0.5, 64));
+    const std::string_view half =
+        "0.00000000000000000002710505431213761085018632002174854278564453125";
+    EXPECT_EQ(dec(half, 64), ulp);
+    EXPECT_EQ(dec(std::string("-") + std::string(half), 64), -ulp);
 }
 
 TEST(BigFixed, ProductsAreConsistentWithinRoundingError)

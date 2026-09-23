@@ -6,11 +6,12 @@
 
 #include <gtest/gtest.h>
 
+#include "Mandelbrotter/BigComplex.h"
+#include "Mandelbrotter/BigFixed.h"
 #include "Mandelbrotter/Palette.h"
 #include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/Viewport.h"
 #include "Mandelbrotter/fractal.h"
-#include "Mandelbrotter/geometry.h"
 #include "TempDir.h"
 
 namespace
@@ -37,7 +38,7 @@ TEST(Bookmarks, ViewJsonRoundTripsExactly)
 {
     const RenderSettings original = fancySettings();
     const std::string    json     = mandelbrotter::toJson(original);
-    EXPECT_NE(json.find("\"version\": 1"), std::string::npos);
+    EXPECT_NE(json.find("\"version\": 2"), std::string::npos);
     EXPECT_NE(json.find("\"burning-ship\""), std::string::npos);
     EXPECT_EQ(mandelbrotter::renderSettingsFromJson(json), original);
     EXPECT_EQ(mandelbrotter::renderSettingsFromJson(mandelbrotter::toJson(RenderSettings{})),
@@ -54,11 +55,31 @@ TEST(Bookmarks, BareSettingsObjectAndUnknownKeysAreAccepted)
     EXPECT_EQ(settings.fractal.family, FractalFamily::TRICORN);
     EXPECT_EQ(settings.fractal.exponent, 2);
     EXPECT_FALSE(settings.fractal.julia);
-    EXPECT_EQ(settings.view.center, (mandelbrotter::Complex{0.1, -0.2}));
+    EXPECT_EQ(settings.view.center, (mandelbrotter::BigComplex{0.1, -0.2}));
     EXPECT_DOUBLE_EQ(settings.view.zoom, 4.0);
     EXPECT_EQ(settings.maxIterations, mandelbrotter::kDefaultIterations);
     EXPECT_TRUE(settings.autoIterations);
     EXPECT_EQ(settings.coloring, mandelbrotter::ColoringSettings{});
+}
+
+TEST(Bookmarks, CenterIsWrittenAsDecimalsAndVersionOneNumbersStillLoad)
+{
+    RenderSettings deep;
+    const int      bits = mandelbrotter::fractionBitsFor(mandelbrotter::kMaxZoom);
+    deep.view           = {
+        {*mandelbrotter::BigFixed::fromDecimal("-0.7436438870371587047521915061147740", bits),
+         *mandelbrotter::BigFixed::fromDecimal("0.1318259042053119704931320563851390", bits)},
+        mandelbrotter::kMaxZoom};
+    const std::string json = mandelbrotter::toJson(deep);
+    EXPECT_NE(json.find("\"re\": \"-0.7436438870371587"), std::string::npos);
+    EXPECT_NE(json.find("\"im\": \"0.1318259042053119"), std::string::npos);
+    EXPECT_EQ(mandelbrotter::renderSettingsFromJson(json).view.center, deep.view.center);
+
+    const auto old = mandelbrotter::renderSettingsFromJson(R"({"version": 1, "settings": {
+        "fractal": {"family": "mandelbrot"},
+        "view": {"center": {"re": -0.75, "im": 0.125}, "zoom": 8}}})");
+    EXPECT_EQ(old.view.center, (mandelbrotter::BigComplex{-0.75, 0.125}));
+    EXPECT_DOUBLE_EQ(old.view.zoom, 8.0);
 }
 
 TEST(Bookmarks, ValuesAreClampedAndUnknownPaletteFallsBack)

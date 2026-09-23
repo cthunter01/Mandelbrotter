@@ -47,6 +47,6 @@ struct FractalSpec
 [[nodiscard]] int clampExponent(int exponent) noexcept;
 
 /// A sensible starting view that shows the whole set.
-[[nodiscard]] ViewSpec defaultView(const FractalSpec& spec) noexcept;
+[[nodiscard]] ViewSpec defaultView(const FractalSpec& spec);
 
 }  // namespace mandelbrotter

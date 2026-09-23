@@ -10,8 +10,11 @@
 
 #include <gtest/gtest.h>
 
+#include "Mandelbrotter/BigComplex.h"
+#include "Mandelbrotter/BigFixed.h"
 #include "Mandelbrotter/Palette.h"
 #include "Mandelbrotter/RenderSettings.h"
+#include "Mandelbrotter/Viewport.h"
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/exporter.h"
 #include "Mandelbrotter/fractal.h"
@@ -73,7 +76,7 @@ TEST(Cli, EveryOptionParsesInBothSpellings)
     EXPECT_EQ(spaced->overrides.family, FractalFamily::BURNING_SHIP);
     EXPECT_EQ(spaced->overrides.exponent, 3);
     EXPECT_EQ(spaced->overrides.julia, (Complex{-0.8, 0.156}));
-    EXPECT_EQ(spaced->overrides.center, (Complex{-0.75, 0.1}));
+    EXPECT_EQ(spaced->overrides.center, "-0.75,0.1");
     EXPECT_EQ(spaced->overrides.zoom, 5000.0);
     EXPECT_EQ(spaced->overrides.iterations, 1000);
     EXPECT_EQ(spaced->overrides.palette, "fire");
@@ -138,6 +141,21 @@ TEST(Cli, OverridesStartFromTheFamilyDefaultView)
     EXPECT_TRUE(juliaSettings->autoIterations);
 }
 
+TEST(Cli, LongCenterKeepsEveryDigitTheZoomCanUse)
+{
+    const std::string re      = "-0.7436438870371587047521915061147740";
+    const std::string im      = "0.1318259042053119704931320563851390";
+    const std::string center  = re + "," + im;
+    const auto        options = parse({"--center", center, "--zoom", "1e12"});
+    ASSERT_TRUE(options.has_value()) << options.error();
+    const auto settings = mandelbrotter::resolveSettings(*options);
+    ASSERT_TRUE(settings.has_value()) << settings.error();
+    EXPECT_EQ(settings->view.center.re.toDecimal(34), re);
+    EXPECT_EQ(settings->view.center.im.toDecimal(34), im);
+    EXPECT_EQ(settings->view.center.fractionBits(),
+              mandelbrotter::BigFixed{mandelbrotter::fractionBitsFor(1e12)}.fractionBits());
+}
+
 TEST(Cli, ViewFileIsLoadedThenOverridden)
 {
     const mandelbrotter::test::TempDir dir;
@@ -155,7 +173,7 @@ TEST(Cli, ViewFileIsLoadedThenOverridden)
     const auto settings = mandelbrotter::resolveSettings(*options);
     ASSERT_TRUE(settings.has_value()) << settings.error();
     EXPECT_EQ(settings->fractal.family, FractalFamily::TRICORN);
-    EXPECT_EQ(settings->view.center, (Complex{0.3, 0.4}));
+    EXPECT_EQ(settings->view.center, (mandelbrotter::BigComplex{0.3, 0.4}));
     EXPECT_DOUBLE_EQ(settings->view.zoom, 10.0);
     EXPECT_EQ(settings->maxIterations, 500);
     EXPECT_EQ(settings->coloring.palette, "grayscale");

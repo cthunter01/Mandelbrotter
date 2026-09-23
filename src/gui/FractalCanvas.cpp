@@ -149,6 +149,11 @@ Complex FractalCanvas::complexAt(wxPoint p) const
     return viewport().pixelCenter(toDevice(p));
 }
 
+BigComplex FractalCanvas::bigAt(wxPoint p) const
+{
+    return viewport().pixelCenterBig(toDevice(p));
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 // Rendering
 
@@ -356,7 +361,7 @@ void FractalCanvas::onMotion(wxMouseEvent& event)
     }
     if (onPointerMoved)
     {
-        onPointerMoved(complexAt(at));
+        onPointerMoved(bigAt(at));
     }
     if (m_showOrbit && m_drag == Drag::NONE)
     {

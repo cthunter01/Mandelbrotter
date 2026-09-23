@@ -22,10 +22,12 @@ struct CliOverrides
     std::optional<FractalFamily> family;
     std::optional<int>           exponent;
     std::optional<Complex>       julia;
-    std::optional<Complex>       center;
-    std::optional<double>        zoom;
-    std::optional<int>           iterations;
-    std::optional<std::string>   palette;
+    /// "re,im" as given (validated). Kept as text because its precision follows the zoom, which
+    /// is only known once every option and the view file are in.
+    std::optional<std::string> center;
+    std::optional<double>      zoom;
+    std::optional<int>         iterations;
+    std::optional<std::string> palette;
 
     bool operator==(const CliOverrides&) const = default;
 };

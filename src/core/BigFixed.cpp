@@ -133,6 +133,18 @@ Limb divideSmall(Limbs& limbs, Limb divisor) noexcept
     return static_cast<Limb>(remainder);
 }
 
+/// Shifts an unsigned magnitude right by one bit.
+void halve(Limbs& limbs) noexcept
+{
+    Limb carry = 0;
+    for (Limb& limb : std::views::reverse(limbs))
+    {
+        const Limb lowBit = limb & 1U;
+        limb              = (limb >> 1U) | (carry << (kLimbBits - 1));
+        carry             = lowBit;
+    }
+}
+
 bool allZero(const Limbs& limbs) noexcept
 {
     return std::ranges::all_of(limbs, [](Limb limb) { return limb == 0; });
@@ -356,14 +368,18 @@ std::optional<BigFixed> BigFixed::fromDecimal(std::string_view text, int fractio
         multiplySmall(integer, kDecimalBase);
         addSmall(integer, digitValue(c));
     }
-    // M * 2^fractionBits, then floor-divided by 10 once per fraction digit: nested integer
-    // divisions compose exactly, so this is the correctly truncated value.
+    // 2M * 2^fractionBits floor-divided by 10 once per fraction digit (nested integer divisions
+    // compose exactly) is the value with one extra bit; adding one and halving rounds it to
+    // nearest.
+    multiplySmall(integer, 2);
     Limbs work(fractionLimbs, 0);
     work.insert(work.end(), integer.begin(), integer.end());
     for (std::size_t i = 0; i < fractionDigits; ++i)
     {
         divideSmall(work, kDecimalBase);
     }
+    addSmall(work, 1);
+    halve(work);
     const std::size_t kept = fractionLimbs + kIntegerLimbs;
     const bool overflow    = (work[kept - 1] & kSignBit) != 0 ||
                              !std::ranges::all_of(work.begin() + static_cast<std::ptrdiff_t>(kept),

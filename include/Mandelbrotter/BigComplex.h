@@ -21,6 +21,12 @@ struct BigComplex
     }
     BigComplex(BigFixed real, BigFixed imaginary)
       : re(std::move(real)), im(std::move(imaginary)) { }
+    /// From doubles at the minimum precision: what `{re, im}` in an initializer means.
+    BigComplex(double real, double imaginary)
+      : re(BigFixed::fromDouble(real, BigFixed::kMinFractionBits)),
+        im(BigFixed::fromDouble(imaginary, BigFixed::kMinFractionBits))
+    {
+    }
 
     [[nodiscard]] static BigComplex fromComplex(Complex c, int fractionBits);
     /// Both parts as the nearest doubles.

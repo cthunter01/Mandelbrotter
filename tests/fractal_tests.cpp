@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include "Mandelbrotter/BigComplex.h"
 #include "Mandelbrotter/Viewport.h"
 #include "Mandelbrotter/geometry.h"
 
@@ -50,7 +51,7 @@ TEST(Fractal, DefaultViewsAreValid)
         }
     }
     const auto julia = mandelbrotter::defaultView(FractalSpec{.julia = true});
-    EXPECT_EQ(julia.center, (mandelbrotter::Complex{0.0, 0.0}));
+    EXPECT_EQ(julia.center, (mandelbrotter::BigComplex{0.0, 0.0}));
 }
 
 TEST(Fractal, SpecEquality)

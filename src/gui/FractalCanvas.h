@@ -10,6 +10,7 @@
 #include <wx/timer.h>
 #include <wx/window.h>
 
+#include "Mandelbrotter/BigComplex.h"
 #include "Mandelbrotter/ProgressiveRenderer.h"
 #include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/Viewport.h"
@@ -57,10 +58,10 @@ public:
     /// The picture currently on screen (possibly mid-render).
     [[nodiscard]] const RgbImage& currentImage() const noexcept { return m_rgb; }
 
-    std::function<void(const ViewSpec&)>        onViewChanged;
-    std::function<void(std::optional<Complex>)> onPointerMoved;
-    std::function<void(Complex)>                onSeedPicked;
-    std::function<void(const RenderStatus&)>    onRenderStatus;
+    std::function<void(const ViewSpec&)>                  onViewChanged;
+    std::function<void(const std::optional<BigComplex>&)> onPointerMoved;
+    std::function<void(Complex)>                          onSeedPicked;
+    std::function<void(const RenderStatus&)>              onRenderStatus;
 
 private:
     enum class Drag : std::uint8_t
@@ -88,6 +89,7 @@ private:
     [[nodiscard]] PixelPoint toDevice(wxPoint p) const;
     [[nodiscard]] wxPoint    toLogical(PixelPoint p) const;
     [[nodiscard]] Complex    complexAt(wxPoint p) const;
+    [[nodiscard]] BigComplex bigAt(wxPoint p) const;
 
     void changeView(const ViewSpec& view);
     void startRender();

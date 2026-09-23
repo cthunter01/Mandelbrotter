@@ -36,8 +36,8 @@ public:
     /// values give zero.
     [[nodiscard]] static BigFixed fromDouble(double value, int fractionBits);
     /// Parses "[+-]digits[.digits][(e|E)[+-]digits]" with at least one digit ("1.", ".5" and
-    /// "-7.25e-3" are all fine), truncating toward zero. nullopt for anything else and for values
-    /// outside the integer range.
+    /// "-7.25e-3" are all fine), rounding to the nearest representable value (ties away from
+    /// zero). nullopt for anything else and for values outside the integer range.
     [[nodiscard]] static std::optional<BigFixed> fromDecimal(std::string_view text,
                                                              int              fractionBits);
 
