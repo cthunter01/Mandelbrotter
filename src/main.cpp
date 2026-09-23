@@ -14,6 +14,7 @@
 #include <wx/init.h>
 
 #include "Mandelbrotter/cli.h"
+#include "Mandelbrotter/help_images.h"
 #include "gui/MandelbrotterApp.h"
 
 wxIMPLEMENT_APP_NO_MAIN(mandelbrotter::gui::MandelbrotterApp);
@@ -43,7 +44,16 @@ int run(int argc, char** argv)
         std::println(stderr, "error: {}", settings.error());
         return 2;
     }
-    mandelbrotter::gui::setStartupSettings(*settings);
+    if (options->screenshotsDir)
+    {
+        // The rendered example pictures of the help book need no window; the window then takes
+        // the screenshots (ScreenshotRun) and quits.
+        std::println("Rendering help images into {}", options->screenshotsDir->string());
+        mandelbrotter::writeHelpImages(*options->screenshotsDir,
+                                       [](std::string_view file) { std::println("  {}", file); });
+    }
+    mandelbrotter::gui::setStartupOptions(
+        {.settings = *settings, .screenshotsDir = options->screenshotsDir});
 
     // wx gets no arguments: everything was handled above.
     int wxArgc = 1;

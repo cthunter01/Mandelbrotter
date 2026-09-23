@@ -234,4 +234,25 @@ TEST(Cli, RunPrintsHelpOrRendersAPng)
     EXPECT_NE(err.str().find("cannot load view"), std::string::npos);
 }
 
+TEST(Cli, ScreenshotsIsAHiddenDeveloperOption)
+{
+    const auto options = parse({"--screenshots", "shots"});
+    ASSERT_TRUE(options.has_value()) << options.error();
+    EXPECT_EQ(options->screenshotsDir, std::filesystem::path("shots"));
+    EXPECT_TRUE(options->wantsGui());
+    EXPECT_EQ(mandelbrotter::usageText().find("--screenshots"), std::string::npos);
+
+    const std::vector<std::vector<std::string_view>> rejected{
+        {"--screenshots", "shots", "--render", "x.png"},
+        {"--screenshots", "shots", "--help"},
+    };
+    for (const auto& args : rejected)
+    {
+        const auto result = parse(args);
+        ASSERT_FALSE(result.has_value()) << args.back();
+        EXPECT_NE(result.error().find("--screenshots needs the window"), std::string::npos)
+            << result.error();
+    }
+}
+
 }  // namespace

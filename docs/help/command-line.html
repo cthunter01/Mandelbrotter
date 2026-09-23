@@ -1,0 +1,52 @@
+<html>
+<head><title>Command line</title></head>
+<body>
+<h1>Command line</h1>
+<p>Mandelbrotter can render a picture without opening a window, which makes it easy to script, and
+every option can also set up the window it opens. The same words work in the Try it links of this
+guide.</p>
+<pre>usage: Mandelbrotter [options]
+
+Without --render, opens the interactive window (with any view options applied).
+
+  -h, --help              show this help and exit
+  -o, --render FILE.png   render headlessly to a PNG file and exit
+      --view FILE.json    start from a saved view (File &gt; Export view..., or a bookmark)
+      --fractal NAME      mandelbrot (default), burning-ship or tricorn
+      --exponent N        z^N + c, N from 2 to 8 (default 2)
+      --julia RE,IM       draw the Julia set for the constant c = RE + IM i
+      --center RE,IM      centre of the view
+      --zoom Z            magnification (1 shows the whole set; up to 1e+300)
+      --iterations N      fixed iteration limit (default: automatic, grows with zoom)
+      --palette NAME      one of: classic, grayscale, fire, ocean, rainbow, electric
+      --size WxH          output size for --render (default 1920x1080)
+      --supersample K     anti-aliasing for --render: 1, 2 or 4 samples per axis (default 1)
+
+Options may also be written as --option=value.</pre>
+<p>Options given with <tt>--view</tt> override what the file says. A <tt>--fractal</tt> without a view
+file, centre or zoom starts from that family's default view. <tt>--center</tt> takes decimals of any
+length, so a centre copied from a view file keeps its full depth. <tt>--iterations</tt> fixes the
+limit and turns the automatic growth off.</p>
+
+<h2>Examples</h2>
+<pre># Seahorse valley, anti-aliased, no window needed
+Mandelbrotter --render seahorse.png --center -0.7436,0.1318 --zoom 5000 --iterations 2000 \
+              --palette electric --supersample 2
+
+# The Burning Ship's little ship
+Mandelbrotter --render ship.png --fractal burning-ship --center -1.75,-0.03 --zoom 40 --palette fire
+
+# Open the window on a saved view
+Mandelbrotter --view my-view.json</pre>
+
+<h2>Exit codes</h2>
+<table border=1 cellpadding=4>
+<tr><td>0</td><td>Success. A render prints one line: the file, its size, the family, the iteration limit and the time taken.</td></tr>
+<tr><td>1</td><td>The render failed or the view file could not be read.</td></tr>
+<tr><td>2</td><td>Bad arguments; the usage text is printed.</td></tr>
+</table>
+<p><tt>--render</tt> never starts the GUI toolkit, so it works on a machine without a display.</p>
+<hr>
+<p><a href="index.html">Contents</a></p>
+</body>
+</html>

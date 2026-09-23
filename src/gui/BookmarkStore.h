@@ -10,12 +10,11 @@
 namespace mandelbrotter::gui
 {
 
-/// The user's bookmark list, persisted as JSON in the per-user data directory.
+/// A bookmark list persisted as JSON at `path` (the application uses <user data
+/// dir>/bookmarks.json).
 class BookmarkStore
 {
 public:
-    /// Uses <user data dir>/bookmarks.json.
-    BookmarkStore();
     explicit BookmarkStore(std::filesystem::path path);
 
     [[nodiscard]] const std::filesystem::path& path() const noexcept { return m_path; }

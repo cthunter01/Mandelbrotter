@@ -17,6 +17,10 @@ macOS (Apple Clang) and Windows (MSVC).
   in a Developer PowerShell for VS. `tidy`, `asan`, `tsan` and `coverage` exist on Linux and macOS only
 - Formatting is automatic: a Claude Code hook (`.claude/hooks/format-cpp.sh`) runs clang-format on every C/C++
   file right after you edit it. The pre-commit hook and CI also reject unformatted files
+- Help book images: after a change to the window or to `helpImageSpecs()`, regenerate them with a release build on
+  a Linux desktop: `GDK_BACKEND=x11 build/clang-release/bin/Mandelbrotter --screenshots docs/help/images` (twice
+  when the rendered pictures changed, so the help-window screenshot shows them); `ctest --preset clang-debug -R
+  HelpBook` checks the book
 
 Other presets: `clang-release`, `gcc-debug`, `gcc-release`, `tsan`, `coverage`, `ci-gcc`, `ci-clang`
 (`gcc-debug` and the like are configure/build/test presets, not workflows).
@@ -31,7 +35,17 @@ shows this machine's.
   bookmarks (JSON), CLI, and the deep-zoom machinery: `BigFixed`/`BigComplex` (fixed-point big numbers),
   `ReferenceOrbit` and `perturbation.h`. **No wxWidgets here**, ever: the tests and the `--render` path must
   work headless
-- `src/gui/`: `Mandelbrotter_gui` — the wxWidgets layer; headers live beside sources, included as `"gui/x.h"`
+- `src/gui/`: `Mandelbrotter_gui` — the wxWidgets layer; headers live beside sources, included as `"gui/x.h"`.
+  Besides the frame, canvas, panel and dialogs: `HelpController` (the wxHTML help window over the embedded book),
+  `DemoPlayer` (plays a core `Flight`), `GuidedTour` + `TourCard` (the tour; the card is a child panel of the
+  frame, never a top-level window, because Wayland does not let apps position those), `ScreenshotRun` (the
+  `--screenshots DIR` developer mode) and `window_capture.cpp`, the one file with per-platform code
+- `src/tools/`: build-time tools; `embed_file.cpp` (`Mandelbrotter_embed`) turns the zipped help book into a C++
+  source of string-literal chunks (`cmake/HelpBook.cmake`)
+- `docs/help/`: the help book: `help.hhp`, `contents.hhc`, `index.hhk`, hand-written pages in wxHTML (ASCII, no
+  CSS) and `images/` (committed; `ui-*.png` are screenshots, the rest rendered examples from `helpImageSpecs()`).
+  Zipped and embedded at build time; `tests/help_book_tests.cpp` checks every link, image and action link.
+  Authoring notes in `docs/help/README.md`
 - `src/main.cpp`: the executable. `wxIMPLEMENT_APP_NO_MAIN` must stay in this file (in a static library the
   linker drops the app initializer); `main()` parses the command line, runs the CLI, or hands the resolved
   settings to the GUI and calls `wxEntry` with no arguments
@@ -39,8 +53,8 @@ shows this machine's.
   `*_tests.cpp`); `cli_render_test.cmake` runs the real executable with `DISPLAY` cleared
 - `cmake/ProjectOptions.cmake`: `Mandelbrotter_configure_target()` (warnings, sanitizers, coverage, tidy)
 - `cmake/Dependencies.cmake`: third-party libraries via FetchContent (GoogleTest, nlohmann/json, stb, wxWidgets
-  with its option block: static, native toolkit, unneeded components off, no `find_package` fallback because a shared
-  system wx would otherwise be picked up)
+  with its option block: static, native toolkit, unneeded components off except HTML and the help subsystem for the
+  in-app help, no `find_package` fallback because a shared system wx would otherwise be picked up)
 
 ## Conventions
 - Headers are `.h` (never `.hpp`) and use `#pragma once`
@@ -67,6 +81,12 @@ shows this machine's.
   and `toDecimal` prints enough digits that a saved view reloads bit-for-bit
 - Renderer callbacks run on worker threads: marshal to the GUI thread with `CallAfter`, never touch wx objects
   from a worker
+- Help actions: links of the form `mandelbrotter:<verb> ...` in the book (`help_action.h`: `view <CLI options>`,
+  `flight <id>`, `tour`, `orbit on|off`, `reset`, `export`) are executed by `MainFrame::runHelpAction`; `view`
+  reuses the CLI parser, so the words are the same as on the command line. Demo flights are data in
+  `flights.h` (`builtinFlights()`), interpolated by pure functions; the Demos menu, the demos page and the
+  `place-*` images all derive from them. The Save image dialog is modeless (the tour and the screenshot mode
+  drive it); `MainFrame`'s public methods are the automation surface the help system uses
 - wxWidgets rules: `Bind()` only (no event tables, no `wxIMPLEMENT_DYNAMIC_CLASS`); convert text with
   `toWx()`/`fromWx()` from `gui/wx_util.h` (UTF-8), never `wxString(std::string)`; keep string literals given
   to wx ASCII-only (a non-ASCII narrow literal becomes an empty `wxString` under the C locale); no

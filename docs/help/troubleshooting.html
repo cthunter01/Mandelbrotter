@@ -1,0 +1,36 @@
+<html>
+<head><title>Troubleshooting</title></head>
+<body>
+<h1>Troubleshooting</h1>
+<h2>Rendering is slow</h2>
+<p>Deep views and high iteration limits cost time; the first pass appears quickly and the picture
+sharpens over the following passes, and you can navigate while it does. A smaller window renders
+faster, and with Auto off a lower Maximum in the <a href="iterations.html">Iterations</a> section
+helps when the black interior dominates. If you built Mandelbrotter yourself, make sure it is a
+release build: a debug build is several times slower.</p>
+<h2>Nothing happens for a moment after zooming in deep</h2>
+<p>Above a zoom of 1e8 the reference orbit is computed before the first pass can appear; see
+<a href="deep-zoom.html">Deep zoom</a>. The pause grows with the iteration limit.</p>
+<h2>"The clipboard is busy"</h2>
+<p>Another program holds the clipboard. Wait a moment and copy again.</p>
+<h2>"Could not read ... bookmarks.json"</h2>
+<p>The bookmark file is damaged or unreadable. Mandelbrotter starts with an empty list and will
+overwrite the file the next time you add or delete a bookmark, so move or repair the file first if
+it holds anything you want to keep; see <a href="bookmarks.html">Bookmarks</a>.</p>
+<h2>Ctrl+C in a seed field copies the picture</h2>
+<p>Ctrl+C is the shortcut of File &gt; Copy image and wins over the text field. To copy the text of a
+seed field, select it and use the field's right-click menu.</p>
+<h2>A Try it link did nothing</h2>
+<p>The main window is busy with a dialog (a file chooser or the progress of a save); finish or close
+it and click the link again. If a message appears instead, the link is malformed: please report the
+page.</p>
+<h2>No window opens</h2>
+<p>On a machine without a display use the <a href="command-line.html">command line</a>:
+<tt>--render</tt> writes a PNG without opening a window.</p>
+<h2>The help window is behind the main window</h2>
+<p>Choose Help &gt; Contents again, or use the taskbar; the window is not modal, so both stay usable.
+Arrange the two side by side to use the Try it links.</p>
+<hr>
+<p><a href="index.html">Contents</a></p>
+</body>
+</html>

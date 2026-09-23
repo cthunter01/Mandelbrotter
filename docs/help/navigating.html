@@ -1,0 +1,60 @@
+<html>
+<head><title>Navigating</title></head>
+<body>
+<h1>Navigating</h1>
+<p><img src="images/ui-canvas-seahorse.png"></p>
+
+<a name="mouse"></a>
+<h2>Mouse</h2>
+<table border=1 cellpadding=4>
+<tr><th>Action</th><th>Effect</th></tr>
+<tr><td>Wheel</td><td>Zooms in or out around the pointer, 1.25x per notch. The point under the pointer stays put.</td></tr>
+<tr><td>Left drag</td><td>Pans. The old picture slides along until the new one arrives.</td></tr>
+<tr><td>Right drag, or Shift + left drag</td><td>Draws a rectangle and zooms so that the whole rectangle is visible (the aspect ratio of the window is kept).</td></tr>
+<tr><td>Right click</td><td>Zooms out 2x around the pointer.</td></tr>
+<tr><td>Esc</td><td>Cancels a drag or rectangle in progress.</td></tr>
+</table>
+<p>A movement of three pixels or less counts as a click, not a drag. The pointer is a crosshair, or a
+bullseye while <a href="julia.html">Pick seed from canvas</a> is on, when a left click picks a
+Julia constant instead of panning.</p>
+<p><a href="mandelbrotter:view --center -0.7436,0.1318 --zoom 40">Try it: the entrance to Seahorse Valley at zoom 40</a>, a good place to practise the wheel</p>
+
+<a name="keyboard"></a>
+<h2>Keyboard</h2>
+<p>The keys act on the picture when it has the keyboard focus; click it once if they do nothing.</p>
+<table border=1 cellpadding=4>
+<tr><th>Key</th><th>Effect</th></tr>
+<tr><td>Arrow keys</td><td>Pan by a tenth of the window.</td></tr>
+<tr><td>+, =, numeric +, Page Up</td><td>Zoom in 2x at the centre.</td></tr>
+<tr><td>-, numeric -, Page Down</td><td>Zoom out 2x at the centre.</td></tr>
+<tr><td>Home</td><td>Back to the default view of the current fractal.</td></tr>
+<tr><td>Esc</td><td>Cancels a drag; stops a <a href="demos.html">demo</a>.</td></tr>
+</table>
+
+<a name="menus"></a>
+<h2>The View menu</h2>
+<table border=1 cellpadding=4>
+<tr><th>Item</th><th>Shortcut</th><th>Effect</th></tr>
+<tr><td>Show side panel</td><td>Ctrl+B</td><td>Hides or shows the panel of settings.</td></tr>
+<tr><td>Show orbit under cursor</td><td>Ctrl+O</td><td>The <a href="orbit.html">orbit overlay</a>.</td></tr>
+<tr><td>Zoom in</td><td>Ctrl++</td><td>2x at the centre.</td></tr>
+<tr><td>Zoom out</td><td>Ctrl+-</td><td>2x at the centre.</td></tr>
+<tr><td>Reset view</td><td>Ctrl+Home</td><td>The default view of the current fractal.</td></tr>
+</table>
+<p>The zoom runs from 0.1 (the whole set fills a fifth of the window) to 1e300. Resizing the window
+keeps the centre and the zoom; the picture re-renders shortly after you stop resizing. At zoom 1 the
+shorter side of the window spans 3 units of the complex plane.</p>
+<p><a href="mandelbrotter:reset">Try it: reset the view</a></p>
+
+<a name="status"></a>
+<h2>The status bar</h2>
+<p>The leftmost field follows the pointer: it shows the complex number under it, with as many
+decimals as the zoom calls for (sixteen at most, then "..."). Next come the centre of the view, the
+zoom (with "(deep)" above 1e8, see <a href="deep-zoom.html">Deep zoom</a>), the
+<a href="iterations.html">iteration limit</a> in use, and the state of the render: "Rendering...",
+"Rendered in N ms", "Saved file" or "Image copied to clipboard". While a demo flight plays, the
+first field shows its progress instead.</p>
+<hr>
+<p><a href="index.html">Contents</a></p>
+</body>
+</html>

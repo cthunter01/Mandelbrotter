@@ -1,0 +1,34 @@
+<html>
+<head><title>Bookmarks</title></head>
+<body>
+<h1>Bookmarks</h1>
+<p><img src="images/ui-bookmarks-section.png"></p>
+<p>A bookmark remembers everything about a picture: the fractal, the view, the iteration settings and
+the colouring. The Bookmarks section of the side panel lists yours.</p>
+<ul>
+<li><b>Add...</b>, or Bookmarks &gt; Add bookmark (Ctrl+D), asks for a name and adds the current
+picture. The suggested name is the family and the zoom, such as "Mandelbrot at 5000x"; an empty name
+becomes "Untitled".</li>
+<li><b>Load</b>, or a double-click on the entry, returns to a bookmark.</li>
+<li><b>Delete</b> removes the selected entry, without asking.</li>
+</ul>
+<p><img src="images/ui-add-bookmark-dialog.png"></p>
+
+<h2>Where they are kept</h2>
+<p>Bookmarks are written to a file called <tt>bookmarks.json</tt> in your application data folder,
+every time you add or delete one:</p>
+<table border=1 cellpadding=4>
+<tr><td>Linux</td><td><tt>~/.local/share/Mandelbrotter/bookmarks.json</tt></td></tr>
+<tr><td>macOS</td><td><tt>~/Library/Application Support/Mandelbrotter/bookmarks.json</tt></td></tr>
+<tr><td>Windows</td><td><tt>%APPDATA%\Mandelbrotter\bookmarks.json</tt></td></tr>
+</table>
+<p>The file uses the same JSON as <a href="views.html">view files</a>, one entry per bookmark, and is
+written through a temporary file so a crash cannot leave it half written. You can copy it to
+another machine or edit it by hand.</p>
+<p>If the file cannot be read when Mandelbrotter starts (a message says so), the list starts empty,
+and the next Add or Delete overwrites the file. Fix or move the file first if it holds bookmarks you
+care about.</p>
+<hr>
+<p><a href="index.html">Contents</a></p>
+</body>
+</html>

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+#include <string_view>
 #include <utility>
 
 #include "Mandelbrotter/BigFixed.h"
@@ -29,10 +31,16 @@ struct BigComplex
     }
 
     [[nodiscard]] static BigComplex fromComplex(Complex c, int fractionBits);
+    /// Both parts from decimal strings (BigFixed::fromDecimal); nullopt if either is malformed.
+    [[nodiscard]] static std::optional<BigComplex> fromDecimal(std::string_view real,
+                                                               std::string_view imaginary,
+                                                               int              fractionBits);
     /// Both parts as the nearest doubles.
     [[nodiscard]] Complex    approx() const;
     [[nodiscard]] int        fractionBits() const noexcept { return re.fractionBits(); }
     [[nodiscard]] BigComplex withFractionBits(int fractionBits) const;
+    /// Both parts times `factor` (truncated like BigFixed's *), at `fractionBits`.
+    [[nodiscard]] BigComplex scaled(double factor, int fractionBits) const;
 
     [[nodiscard]] BigComplex conj() const;
     /// (|re|, |im|): the Burning Ship's fold.

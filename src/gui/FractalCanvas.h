@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <optional>
@@ -58,10 +59,23 @@ public:
     /// The picture currently on screen (possibly mid-render).
     [[nodiscard]] const RgbImage& currentImage() const noexcept { return m_rgb; }
 
+    /// The tour's accent border around the picture.
+    void setHighlighted(bool on);
+    /// Pins the orbit of `point` as if the mouse hovered there (the tour, screenshots) and reports
+    /// it through onPointerMoved; the next mouse movement or clearPinnedOrbit() ends it.
+    void showOrbitAt(Complex point);
+    void clearPinnedOrbit();
+    /// True once the render in progress has shown its coarsest pass (or finished): the moment a
+    /// new frame can replace it without waiting (demo playback).
+    [[nodiscard]] bool hasCoarsePicture() const noexcept { return m_coarsePass; }
+    [[nodiscard]] bool rendering() const noexcept { return m_renderer.busy(); }
+
     std::function<void(const ViewSpec&)>                  onViewChanged;
     std::function<void(const std::optional<BigComplex>&)> onPointerMoved;
     std::function<void(Complex)>                          onSeedPicked;
     std::function<void(const RenderStatus&)>              onRenderStatus;
+    /// Any mouse button or wheel input, reported before it is acted on (demos stop on it).
+    std::function<void()> onUserInput;
 
 private:
     enum class Drag : std::uint8_t
@@ -104,6 +118,7 @@ private:
     void finishRubberBand(wxPoint at);
     void updateOrbit(wxPoint at);
     void drawOverlays(wxDC& dc);
+    void notifyUserInput() const;
 
     RenderSettings      m_settings;
     ProgressiveRenderer m_renderer;
@@ -120,7 +135,13 @@ private:
     wxPoint              m_panOffset;
     bool                 m_pickSeedMode{false};
     bool                 m_showOrbit{false};
+    bool                 m_pinnedOrbit{false};
+    bool                 m_highlighted{false};
     std::vector<wxPoint> m_orbit;
+
+    bool        m_coarsePass{true};  ///< see hasCoarsePicture()
+    int         m_firstPass{0};
+    std::size_t m_firstPassTilesLeft{0};
 };
 
 }  // namespace mandelbrotter::gui

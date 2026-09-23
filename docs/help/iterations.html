@@ -1,0 +1,29 @@
+<html>
+<head><title>Iterations</title></head>
+<body>
+<h1>Iterations</h1>
+<p><img src="images/ui-iterations-section.png"></p>
+<p>Each point is iterated until it escapes or the limit is reached; points that reach the limit
+count as inside the set and are painted black. Near the edge of the set points take longer and
+longer to escape, so the deeper you zoom the more iterations the detail needs.</p>
+<ul>
+<li><b>Maximum</b> is the limit, from 1 to 1 000 000 (the default is 256).</li>
+<li><b>Auto: grow with zoom</b> (on by default) treats Maximum as the value for zoom 1 and raises the
+limit as you zoom in: 64 more per doubling of the zoom plus a term that grows with the square of the
+doublings. That gives about 3 400 at zoom 1e12 and about 560 000 at 1e300. With Auto off the limit is
+exactly Maximum, wherever you are.</li>
+<li><b>Effective limit</b> shows the value in use; the status bar shows it too.</li>
+</ul>
+<table cellpadding=4>
+<tr><td><img src="images/iterations-50.png"></td><td><img src="images/iterations-2000.png"></td></tr>
+<tr><td>Seahorse Valley with a limit of 50: the filaments dissolve into black</td><td>The same view with 2000</td></tr>
+</table>
+<p>Too few iterations lose the fine filaments in black; too many only cost time (the black interior
+is where the cost goes, since those points never escape).</p>
+<p><a href="mandelbrotter:view --center -0.7436,0.1318 --zoom 5000 --iterations 50">Try it: Seahorse Valley with 50 iterations</a>,
+<a href="mandelbrotter:view --center -0.7436,0.1318 --zoom 5000 --iterations 2000">Try it: with 2000</a>
+(a fixed limit from a link or the command line switches Auto off; tick it again in the panel)</p>
+<hr>
+<p><a href="index.html">Contents</a></p>
+</body>
+</html>

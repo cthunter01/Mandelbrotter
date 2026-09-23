@@ -3,18 +3,8 @@
 #include <exception>
 #include <utility>
 
-#include <wx/stdpaths.h>
-
-#include "gui/wx_util.h"
-
 namespace mandelbrotter::gui
 {
-
-BookmarkStore::BookmarkStore()
-  : m_path(std::filesystem::path(fromWx(wxStandardPaths::Get().GetUserDataDir())) /
-           "bookmarks.json")
-{
-}
 
 BookmarkStore::BookmarkStore(std::filesystem::path path) : m_path(std::move(path)) { }
 

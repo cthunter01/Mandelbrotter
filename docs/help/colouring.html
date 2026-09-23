@@ -1,0 +1,29 @@
+<html>
+<head><title>Colouring</title></head>
+<body>
+<h1>Colouring</h1>
+<p><img src="images/ui-colouring-section.png"></p>
+<p>Points outside the set are coloured by how quickly they escaped, measured smoothly (fractional
+iteration counts, so there are no bands). That count, divided by the <b>Density</b> and shifted by
+the <b>Offset</b>, picks a position on the palette, which repeats as a cycle. Points inside the set
+are black.</p>
+<ul>
+<li><b>Palette</b>: one of six built-in gradients, shown below.</li>
+<li><b>Density</b>: how many iterations one trip through the palette spans, from 1 to 4096 (default 64).
+Small values give many thin bands, large values broad washes of colour.</li>
+<li><b>Offset</b>: slides the colours along the cycle.</li>
+</ul>
+<p>Changing any of these recolours the picture at once, without recomputing it.</p>
+<table cellpadding=4>
+<tr><td><img src="images/palette-classic.png"></td><td><img src="images/palette-grayscale.png"></td></tr>
+<tr><td>classic <a href="mandelbrotter:view --palette classic">Try it</a></td><td>grayscale <a href="mandelbrotter:view --palette grayscale">Try it</a></td></tr>
+<tr><td><img src="images/palette-fire.png"></td><td><img src="images/palette-ocean.png"></td></tr>
+<tr><td>fire <a href="mandelbrotter:view --palette fire">Try it</a></td><td>ocean <a href="mandelbrotter:view --palette ocean">Try it</a></td></tr>
+<tr><td><img src="images/palette-rainbow.png"></td><td><img src="images/palette-electric.png"></td></tr>
+<tr><td>rainbow <a href="mandelbrotter:view --palette rainbow">Try it</a></td><td>electric <a href="mandelbrotter:view --palette electric">Try it</a></td></tr>
+</table>
+<p><a href="mandelbrotter:flight palette-sweep">Try it: watch the offset run through one full cycle</a></p>
+<hr>
+<p><a href="index.html">Contents</a></p>
+</body>
+</html>

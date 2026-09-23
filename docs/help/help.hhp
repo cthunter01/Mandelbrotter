@@ -1,0 +1,6 @@
+[OPTIONS]
+Title=Mandelbrotter Help
+Default topic=index.html
+Contents file=contents.hhc
+Index file=index.hhk
+Charset=UTF-8

@@ -1,0 +1,39 @@
+<html>
+<head><title>Julia sets</title></head>
+<body>
+<h1>Julia sets</h1>
+<p>Every point c of the plane has a Julia set: the picture you get by iterating the same formula
+with c held fixed and the pixel as the starting value z. Points c inside the Mandelbrot set give
+connected Julia sets, points outside give dust, and points near the edge give the most intricate
+shapes.</p>
+<table cellpadding=4>
+<tr><td><img src="images/julia-a.png"></td><td><img src="images/julia-b.png"></td></tr>
+<tr><td>c = -0.8 + 0.156i</td><td>c = -0.4 + 0.6i</td></tr>
+<tr><td><img src="images/julia-c.png"></td><td><img src="images/julia-d.png"></td></tr>
+<tr><td>c = 0.285 + 0.01i</td><td>c = -0.7269 + 0.1889i</td></tr>
+</table>
+<p><a href="mandelbrotter:view --julia -0.8,0.156 --palette ocean">Try it: c = -0.8 + 0.156i</a>,
+<a href="mandelbrotter:view --julia -0.4,0.6 --palette fire">Try it: c = -0.4 + 0.6i</a>,
+<a href="mandelbrotter:view --julia 0.285,0.01 --palette electric">Try it: c = 0.285 + 0.01i</a>,
+<a href="mandelbrotter:view --julia -0.7269,0.1889 --palette rainbow">Try it: c = -0.7269 + 0.1889i</a></p>
+
+<h2>The controls</h2>
+<p><img src="images/ui-fractal-section.png"></p>
+<ul>
+<li><b>Julia set (z0 = pixel, c = seed)</b> switches Julia mode on and off. Switching jumps to the
+default Julia view (centre 0, zoom 0.75). Julia mode works with every family and exponent.</li>
+<li>The <b>seed</b> fields hold the constant c. A new value takes effect when you press Enter or
+leave the field; something that is not a number is put back to the previous value.</li>
+<li><b>Pick seed from canvas</b>: press it, then click a point of the picture. Mandelbrotter switches
+to the Julia set of that point, resets the view and switches picking off again. Press the button
+once more to leave picking mode without clicking.</li>
+<li>The <b>Julia preview</b> follows the mouse: outside Julia mode it shows the Julia set of the point
+under the pointer, in Julia mode the set of the current seed. It uses 128 iterations and the current
+palette, and it is blank while the mouse is off the picture.</li>
+</ul>
+<p>The seed is an ordinary double-precision number, also at deep zoom.</p>
+<p><a href="mandelbrotter:flight julia-sweep">Try it: watch the Julia set change as c walks around a circle</a></p>
+<hr>
+<p><a href="index.html">Contents</a></p>
+</body>
+</html>

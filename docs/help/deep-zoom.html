@@ -1,0 +1,36 @@
+<html>
+<head><title>Deep zoom</title></head>
+<body>
+<h1>Deep zoom</h1>
+<p><img src="images/ui-deep-zoom.png"></p>
+<p>Ordinary double-precision numbers stop telling neighbouring pixels apart at a zoom of roughly
+1e13. Mandelbrotter goes to 1e300 by changing how it computes:</p>
+<ul>
+<li>The <b>centre</b> of the view is kept as a big number with as many binary digits as the zoom needs
+(plus some to spare), so it never loses its place however deep you go.</li>
+<li>Above a zoom of <b>1e8</b> the status bar adds <b>"(deep)"</b>: the centre's own orbit is computed
+once at full precision (the reference orbit), and every pixel is then iterated as a small difference
+from it, which fits into ordinary doubles again. This is called perturbation; when a pixel's difference
+drifts away from the reference it is re-based, which keeps the picture free of the glitches that
+plain perturbation shows.</li>
+<li>Long stretches where a pixel's difference stays tiny are skipped in one step (bilinear
+approximation), so deep frames take a fraction of the time of iterating them step by step.</li>
+</ul>
+<p>All of this is automatic and works for every family and in Julia mode. What you will notice:</p>
+<ul>
+<li>A short pause before the first coarse pass of a deep view, while the reference orbit is computed.</li>
+<li>Coordinates in the status bar show sixteen decimals at most and then "...". The full value is
+kept, and <a href="views.html">view files</a> and <a href="bookmarks.html">bookmarks</a> store it
+with every digit the zoom needs, so a saved view reloads exactly.</li>
+<li>The iteration limit rises steeply with the zoom when Auto is on (see
+<a href="iterations.html">Iterations</a>); deep views need it.</li>
+<li>The Julia seed stays a double-precision number.</li>
+</ul>
+<p><img src="images/deep-1e12.png"></p>
+<p><a href="mandelbrotter:view --center -0.743643887037158704752191506114774,0.131825904205311970493132056385139 --zoom 1e12 --palette electric">Try it:
+a spiral in Seahorse Valley at zoom 1e12</a>, and
+<a href="mandelbrotter:flight seahorse-dive">Try it: dive there from the whole set</a></p>
+<hr>
+<p><a href="index.html">Contents</a></p>
+</body>
+</html>

@@ -37,6 +37,9 @@ struct CliOptions
     bool                                 help{false};
     std::optional<std::filesystem::path> renderOutput;
     std::optional<std::filesystem::path> viewFile;
+    /// --screenshots DIR, a developer option: the window regenerates the help book's images into
+    /// DIR and quits. Not in the usage text.
+    std::optional<std::filesystem::path> screenshotsDir;
     CliOverrides                         overrides;
     ExportOptions                        exportOptions;
 

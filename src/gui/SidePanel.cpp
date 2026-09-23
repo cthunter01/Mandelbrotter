@@ -8,7 +8,9 @@
 #include <wx/button.h>
 #include <wx/checkbox.h>
 #include <wx/choice.h>
+#include <wx/dc.h>
 #include <wx/listbox.h>
+#include <wx/settings.h>
 #include <wx/sizer.h>
 #include <wx/slider.h>
 #include <wx/spinctrl.h>
@@ -31,6 +33,11 @@ namespace
 
 constexpr int kOffsetSliderSteps = 1000;
 constexpr int kBorder            = 6;
+
+constexpr std::size_t index(SidePanel::Section section)
+{
+    return static_cast<std::size_t>(section);
+}
 
 std::optional<double> parseDouble(const wxString& text)
 {
@@ -83,8 +90,9 @@ SidePanel::SidePanel(wxWindow* parent) : wxScrolledWindow(parent, wxID_ANY)
 
 void SidePanel::buildFractalSection(wxSizer& sizer)
 {
-    wxStaticBoxSizer* box   = section(this, sizer, "Fractal");
-    wxWindow*         owner = box->GetStaticBox();
+    wxStaticBoxSizer* box                  = section(this, sizer, "Fractal");
+    wxWindow*         owner                = box->GetStaticBox();
+    m_sections.at(index(Section::FRACTAL)) = box->GetStaticBox();
 
     m_family = new wxChoice(owner, wxID_ANY);
     for (const FractalFamily family : allFamilies())
@@ -160,8 +168,9 @@ void SidePanel::buildFractalSection(wxSizer& sizer)
 
 void SidePanel::buildIterationSection(wxSizer& sizer)
 {
-    wxStaticBoxSizer* box   = section(this, sizer, "Iterations");
-    wxWindow*         owner = box->GetStaticBox();
+    wxStaticBoxSizer* box                     = section(this, sizer, "Iterations");
+    wxWindow*         owner                   = box->GetStaticBox();
+    m_sections.at(index(Section::ITERATIONS)) = box->GetStaticBox();
 
     m_iterations =
         new wxSpinCtrl(owner, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS,
@@ -186,8 +195,9 @@ void SidePanel::buildIterationSection(wxSizer& sizer)
 
 void SidePanel::buildColoringSection(wxSizer& sizer)
 {
-    wxStaticBoxSizer* box   = section(this, sizer, "Colouring");
-    wxWindow*         owner = box->GetStaticBox();
+    wxStaticBoxSizer* box                    = section(this, sizer, "Colouring");
+    wxWindow*         owner                  = box->GetStaticBox();
+    m_sections.at(index(Section::COLOURING)) = box->GetStaticBox();
 
     m_palette = new wxChoice(owner, wxID_ANY);
     for (const auto name : paletteNames())
@@ -229,7 +239,8 @@ void SidePanel::buildColoringSection(wxSizer& sizer)
 
 void SidePanel::buildOverlaySection(wxSizer& sizer)
 {
-    wxStaticBoxSizer* box = section(this, sizer, "Overlay");
+    wxStaticBoxSizer* box                  = section(this, sizer, "Overlay");
+    m_sections.at(index(Section::OVERLAY)) = box->GetStaticBox();
     m_orbit =
         new wxCheckBox(box->GetStaticBox(), wxID_ANY, "Show orbit of the point under the cursor");
     m_orbit->Bind(wxEVT_CHECKBOX, [this](wxCommandEvent& event) {
@@ -243,8 +254,9 @@ void SidePanel::buildOverlaySection(wxSizer& sizer)
 
 void SidePanel::buildBookmarkSection(wxSizer& sizer)
 {
-    wxStaticBoxSizer* box   = section(this, sizer, "Bookmarks");
-    wxWindow*         owner = box->GetStaticBox();
+    wxStaticBoxSizer* box                    = section(this, sizer, "Bookmarks");
+    wxWindow*         owner                  = box->GetStaticBox();
+    m_sections.at(index(Section::BOOKMARKS)) = box->GetStaticBox();
 
     m_bookmarks = new wxListBox(owner, wxID_ANY);
     m_bookmarks->SetMinSize(FromDIP(wxSize(-1, 120)));
@@ -418,6 +430,83 @@ void SidePanel::syncEnabledState()
     const bool hasSelection = m_bookmarks->GetSelection() != wxNOT_FOUND;
     m_loadBookmark->Enable(hasSelection);
     m_deleteBookmark->Enable(hasSelection);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Sections (context help, the tour)
+
+wxStaticBox* SidePanel::box(Section section) const
+{
+    return m_sections.at(index(section));
+}
+
+std::optional<SidePanel::Section> SidePanel::sectionOf(wxWindow* window) const
+{
+    if (window == nullptr)
+    {
+        return std::nullopt;
+    }
+    for (std::size_t i = 0; i < kSectionCount; ++i)
+    {
+        const wxStaticBox* candidate = m_sections.at(i);
+        if (candidate != nullptr && (candidate == window || candidate->IsDescendant(window)))
+        {
+            return static_cast<Section>(i);
+        }
+    }
+    return std::nullopt;
+}
+
+bool SidePanel::isJuliaControl(const wxWindow* window) const
+{
+    return window == m_julia || window == m_seedRe || window == m_seedIm || window == m_pickSeed ||
+           window == m_preview;
+}
+
+wxRect SidePanel::sectionRect(Section section) const
+{
+    return box(section)->GetRect();
+}
+
+void SidePanel::scrollToSection(Section section)
+{
+    const wxRect rect   = sectionRect(section);
+    const wxSize client = GetClientSize();
+    if (rect.GetTop() >= 0 && rect.GetBottom() <= client.y)
+    {
+        return;  // already in view
+    }
+    int unitY = 1;
+    GetScrollPixelsPerUnit(nullptr, &unitY);
+    const wxPoint unscrolled = CalcUnscrolledPosition(rect.GetPosition());
+    Scroll(wxDefaultCoord, std::max(0, (unscrolled.y - kBorder) / std::max(1, unitY)));
+    Refresh();  // GTK may leave the static boxes' frames and titles undrawn after a long scroll
+}
+
+void SidePanel::setHighlightedSection(std::optional<Section> section)
+{
+    if (m_highlighted == section)
+    {
+        return;
+    }
+    m_highlighted = section;
+    Refresh();
+}
+
+void SidePanel::OnDraw(wxDC& dc)
+{
+    if (!m_highlighted)
+    {
+        return;
+    }
+    // The DC is already offset by the scroll position, so draw in unscrolled coordinates. The
+    // ring sits in the margin around the box (kBorder); the controls draw over the rest.
+    const wxRect rect = box(*m_highlighted)->GetRect();
+    wxRect       ring(CalcUnscrolledPosition(rect.GetPosition()), rect.GetSize());
+    ring.Inflate(FromDIP(3));
+    dc.SetBrush(*wxTRANSPARENT_BRUSH);
+    dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT), FromDIP(3)));
+    dc.DrawRoundedRectangle(ring, FromDIP(4));
 }
 
 }  // namespace mandelbrotter::gui

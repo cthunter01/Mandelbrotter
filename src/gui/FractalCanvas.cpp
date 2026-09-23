@@ -8,6 +8,7 @@
 #include <wx/dcbuffer.h>
 #include <wx/dcclient.h>
 #include <wx/pen.h>
+#include <wx/settings.h>
 
 #include "Mandelbrotter/Palette.h"
 #include "Mandelbrotter/ReferenceOrbit.h"
@@ -106,6 +107,49 @@ void FractalCanvas::resetView()
     changeView(defaultView(m_settings.fractal));
 }
 
+void FractalCanvas::setHighlighted(bool on)
+{
+    if (m_highlighted != on)
+    {
+        m_highlighted = on;
+        Refresh(false);
+    }
+}
+
+void FractalCanvas::showOrbitAt(Complex point)
+{
+    const Viewport vp = viewport();
+    m_pinnedOrbit     = true;
+    updateOrbit(toLogical(vp.toPixel(point)));
+    if (onPointerMoved)
+    {
+        onPointerMoved(BigComplex::fromComplex(point, fractionBitsFor(vp.view().zoom)));
+    }
+}
+
+void FractalCanvas::clearPinnedOrbit()
+{
+    if (!m_pinnedOrbit)
+    {
+        return;
+    }
+    m_pinnedOrbit = false;
+    m_orbit.clear();
+    Refresh(false);
+    if (onPointerMoved)
+    {
+        onPointerMoved(std::nullopt);  // as if the mouse had left
+    }
+}
+
+void FractalCanvas::notifyUserInput() const
+{
+    if (onUserInput)
+    {
+        onUserInput();
+    }
+}
+
 void FractalCanvas::zoomAtCenter(double factor)
 {
     const PixelSize size = renderSize();
@@ -184,6 +228,10 @@ void FractalCanvas::startRender()
     RenderJob job;
     job.settings = m_settings;
     job.size     = size;
+    m_coarsePass = false;
+    m_firstPass  = job.passes.empty() ? 1 : job.passes.front();
+    m_firstPassTilesLeft =
+        tileGrid({0, 0, size.width, size.height}, job.tileSize).size();  // the passes run in order
     m_generation = m_renderer.start(
         std::move(job),
         [this](const TileResult& tile) {
@@ -202,6 +250,14 @@ void FractalCanvas::applyTile(const TileResult& tile)
     {
         return;
     }
+    if (tile.pass == m_firstPass && m_firstPassTilesLeft > 0)
+    {
+        --m_firstPassTilesLeft;
+    }
+    if (tile.pass != m_firstPass || m_firstPassTilesLeft == 0)
+    {
+        m_coarsePass = true;
+    }
     tile.copyInto(m_iterations);
     colorize(m_iterations, tile.rect, paletteOrDefault(m_settings.coloring.palette),
              m_settings.coloring, m_rgb);
@@ -215,6 +271,7 @@ void FractalCanvas::finishRender(const RenderCompletion& completion)
     {
         return;
     }
+    m_coarsePass = true;
     reportStatus(false, completion.elapsed);
 }
 
@@ -282,6 +339,13 @@ void FractalCanvas::drawOverlays(wxDC& dc)
         dc.SetBrush(*wxTRANSPARENT_BRUSH);
         dc.DrawCircle(m_orbit.front(), FromDIP(4));
     }
+    if (m_highlighted)
+    {
+        const int width = FromDIP(3);
+        dc.SetBrush(*wxTRANSPARENT_BRUSH);
+        dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT), width));
+        dc.DrawRectangle(wxRect(GetClientSize()).Deflate(width / 2));
+    }
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -310,6 +374,7 @@ void FractalCanvas::onMouseWheel(wxMouseEvent& event)
     {
         return;
     }
+    notifyUserInput();
     const double notches = static_cast<double>(event.GetWheelRotation()) / event.GetWheelDelta();
     const double factor  = std::pow(kWheelZoomPerNotch, notches);
     changeView(viewport().zoomedAt(toDevice(event.GetPosition()), factor).view());
@@ -318,6 +383,7 @@ void FractalCanvas::onMouseWheel(wxMouseEvent& event)
 void FractalCanvas::onLeftDown(wxMouseEvent& event)
 {
     SetFocus();
+    notifyUserInput();
     if (m_pickSeedMode)
     {
         if (onSeedPicked)
@@ -332,6 +398,7 @@ void FractalCanvas::onLeftDown(wxMouseEvent& event)
 void FractalCanvas::onRightDown(wxMouseEvent& event)
 {
     SetFocus();
+    notifyUserInput();
     beginDrag(Drag::RUBBER_BAND, event.GetPosition());
 }
 
@@ -360,6 +427,7 @@ void FractalCanvas::onMotion(wxMouseEvent& event)
         m_dragCurrent = at;
         Refresh(false);
     }
+    m_pinnedOrbit = false;
     if (onPointerMoved)
     {
         onPointerMoved(bigAt(at));
@@ -437,6 +505,10 @@ void FractalCanvas::finishRubberBand(wxPoint at)
 
 void FractalCanvas::onLeave(wxMouseEvent& /*event*/)
 {
+    if (m_pinnedOrbit)
+    {
+        return;  // showOrbitAt() keeps its orbit until the mouse moves again
+    }
     if (onPointerMoved)
     {
         onPointerMoved(std::nullopt);

@@ -1,0 +1,33 @@
+<HTML>
+<HEAD><!-- Sitemap 1.0 --></HEAD>
+<BODY>
+<UL>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Welcome"><param name="Local" value="index.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Getting started"><param name="Local" value="getting-started.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Navigating"><param name="Local" value="navigating.html"></OBJECT>
+  <UL>
+    <LI><OBJECT type="text/sitemap"><param name="Name" value="Mouse"><param name="Local" value="navigating.html#mouse"></OBJECT>
+    <LI><OBJECT type="text/sitemap"><param name="Name" value="Keyboard"><param name="Local" value="navigating.html#keyboard"></OBJECT>
+    <LI><OBJECT type="text/sitemap"><param name="Name" value="The View menu"><param name="Local" value="navigating.html#menus"></OBJECT>
+    <LI><OBJECT type="text/sitemap"><param name="Name" value="The status bar"><param name="Local" value="navigating.html#status"></OBJECT>
+  </UL>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Fractal families"><param name="Local" value="fractals.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Julia sets"><param name="Local" value="julia.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Iterations"><param name="Local" value="iterations.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Colouring"><param name="Local" value="colouring.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="The orbit overlay"><param name="Local" value="orbit.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Deep zoom"><param name="Local" value="deep-zoom.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Saving images"><param name="Local" value="exporting.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Bookmarks"><param name="Local" value="bookmarks.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="View files"><param name="Local" value="views.html"></OBJECT>
+  <UL>
+    <LI><OBJECT type="text/sitemap"><param name="Name" value="The format"><param name="Local" value="views.html#schema"></OBJECT>
+  </UL>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Command line"><param name="Local" value="command-line.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Demos and the tour"><param name="Local" value="demos.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Keyboard and mouse reference"><param name="Local" value="reference.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Troubleshooting"><param name="Local" value="troubleshooting.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="About"><param name="Local" value="about.html"></OBJECT>
+</UL>
+</BODY>
+</HTML>

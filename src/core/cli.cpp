@@ -57,13 +57,7 @@ std::optional<BigComplex> parseCenter(std::string_view text, int fractionBits)
     {
         return std::nullopt;
     }
-    const auto re = BigFixed::fromDecimal(text.substr(0, comma), fractionBits);
-    const auto im = BigFixed::fromDecimal(text.substr(comma + 1), fractionBits);
-    if (!re || !im)
-    {
-        return std::nullopt;
-    }
-    return BigComplex{*re, *im};
+    return BigComplex::fromDecimal(text.substr(0, comma), text.substr(comma + 1), fractionBits);
 }
 
 std::string paletteList()
@@ -206,6 +200,12 @@ Outcome setHelp(std::string_view /*value*/, CliOptions& options)
     return {};
 }
 
+Outcome setScreenshots(std::string_view value, CliOptions& options)
+{
+    options.screenshotsDir = std::filesystem::path(value);
+    return {};
+}
+
 struct OptionSpec
 {
     std::string_view name;
@@ -228,6 +228,7 @@ constexpr std::array kOptions{
     OptionSpec{"--palette", true, setPalette},
     OptionSpec{"--size", true, setSize},
     OptionSpec{"--supersample", true, setSupersample},
+    OptionSpec{"--screenshots", true, setScreenshots},
 };
 
 const OptionSpec* findOption(std::string_view name)
@@ -284,6 +285,11 @@ std::expected<CliOptions, std::string> parseCommandLine(std::span<const std::str
         {
             return Error(applied.error());
         }
+    }
+    if (options.screenshotsDir && !options.wantsGui())
+    {
+        return Error(
+            "--screenshots needs the window; it cannot be combined with --help or --render");
     }
     return options;
 }

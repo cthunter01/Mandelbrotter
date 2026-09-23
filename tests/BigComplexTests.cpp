@@ -35,6 +35,25 @@ TEST(BigComplex, ComplexRoundTrip)
     EXPECT_EQ(big(1.5, -2.25).approx(), (Complex{1.5, -2.25}));
 }
 
+TEST(BigComplex, FromDecimalParsesBothParts)
+{
+    const auto z = BigComplex::fromDecimal("-0.75", "0.125", kBits);
+    ASSERT_TRUE(z.has_value());
+    EXPECT_EQ(*z, big(-0.75, 0.125));
+    EXPECT_EQ(z->fractionBits(), kBits);
+    EXPECT_FALSE(BigComplex::fromDecimal("x", "0", kBits).has_value());
+    EXPECT_FALSE(BigComplex::fromDecimal("0", "", kBits).has_value());
+}
+
+TEST(BigComplex, ScaledMultipliesBothParts)
+{
+    const BigComplex z = big(1.5, -0.5).scaled(0.5, 256);
+    EXPECT_EQ(z, big(0.75, -0.25));
+    EXPECT_EQ(z.fractionBits(), 256);
+    EXPECT_EQ(big(1.0, 1.0).scaled(0.0, kBits), big(0.0, 0.0));
+    EXPECT_EQ(big(-2.0, 4.0).scaled(-0.25, kBits), big(0.5, -1.0));
+}
+
 TEST(BigComplex, WithFractionBitsAppliesToBothParts)
 {
     const BigComplex z = big(0.5, -0.25).withFractionBits(256);

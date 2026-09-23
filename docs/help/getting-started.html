@@ -1,0 +1,36 @@
+<html>
+<head><title>Getting started</title></head>
+<body>
+<h1>Getting started</h1>
+<p>Mandelbrotter opens on the whole Mandelbrot set. Roll the mouse wheel over any part of its edge
+and the picture zooms in around the pointer: a coarse version appears at once and sharpens over the
+next moments. Drag with the left button to move around. That is most of what there is to know; the
+rest of this guide is detail.</p>
+<p><a href="mandelbrotter:view --center -0.7436,0.1318 --zoom 5000 --palette electric">Try it:
+jump into Seahorse Valley</a>, then <a href="mandelbrotter:reset">Try it: back to the whole set</a></p>
+
+<h2>The side panel</h2>
+<p><img src="images/ui-side-panel.png"></p>
+<p>Every setting lives in the panel on the right. From top to bottom: the <a href="fractals.html">fractal
+family</a> and <a href="julia.html">Julia mode</a>, the <a href="iterations.html">iteration
+limit</a>, the <a href="colouring.html">colouring</a>, the <a href="orbit.html">orbit overlay</a>
+and your <a href="bookmarks.html">bookmarks</a>. Changing a setting re-renders the picture (or just
+recolours it, when only the colours changed). View &gt; Show side panel (Ctrl+B) hides and shows the
+panel.</p>
+
+<h2>The status bar</h2>
+<p><img src="images/ui-status-bar.png"></p>
+<p>From left to right: the complex number under the pointer; the centre of the view; the zoom, with
+"(deep)" added when <a href="deep-zoom.html">deep rendering</a> is in use; the iteration limit in
+use; and "Rendering..." or "Rendered in N ms" for the picture on screen. Coordinates show at most
+sixteen decimals followed by "..." when there are more.</p>
+
+<h2>Speed</h2>
+<p>Rendering uses every processor core. A picture appears in four passes (blocks of 8, 4 and 2 pixels,
+then every pixel); anything you do while it renders cancels the render and starts a new one, so the
+window never waits for you. If you built Mandelbrotter yourself, a debug build renders several times
+slower than a release build; see the README for the release preset.</p>
+<hr>
+<p><a href="index.html">Contents</a></p>
+</body>
+</html>

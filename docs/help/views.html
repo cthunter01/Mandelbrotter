@@ -1,0 +1,40 @@
+<html>
+<head><title>View files</title></head>
+<body>
+<h1>View files</h1>
+<p>File &gt; Export view writes the current picture's settings to a JSON file (the suggested name is
+<tt>view.json</tt>); File &gt; Import view reads one back. A view file is what a single bookmark
+holds, in its own file: handy for sending a place to someone, for keeping a collection outside the
+bookmark list, or for the <a href="command-line.html">command line</a>, where
+<tt>--view FILE.json</tt> opens or renders it.</p>
+
+<a name="schema"></a>
+<h2>The format</h2>
+<pre>{
+  "version": 2,
+  "settings": {
+    "fractal":    {"family": "mandelbrot", "exponent": 2,
+                   "julia": false, "seed": {"re": 0.0, "im": 0.0}},
+    "view":       {"center": {"re": "-0.7436", "im": "0.1318"}, "zoom": 5000.0},
+    "iterations": {"max": 256, "auto": true},
+    "coloring":   {"palette": "electric", "density": 64.0, "offset": 0.0}
+  }
+}</pre>
+<ul>
+<li><b>family</b> is <tt>mandelbrot</tt>, <tt>burning-ship</tt> or <tt>tricorn</tt>; <b>exponent</b> 2 to 8.</li>
+<li><b>center</b> holds the two coordinates as decimal strings with as many digits as the zoom needs,
+so a deep view reloads bit for bit; a plain number is accepted too, and version 1 files, which
+stored numbers, still load.</li>
+<li><b>zoom</b> runs from 0.1 to 1e300, <b>max</b> from 1 to 1 000 000, <b>density</b> from 1 to 4096;
+values outside these ranges are clamped when the file is read.</li>
+<li>Unknown keys are ignored, so files written by a newer Mandelbrotter usually still load; a
+<b>version</b> above 2 is refused with a message. A file that holds only the <tt>settings</tt> object
+also loads. An unknown palette name falls back to <tt>classic</tt>.</li>
+</ul>
+<p>The bookmark file (<a href="bookmarks.html">Bookmarks</a>) is
+<tt>{"version": 2, "bookmarks": [{"name": "...", "settings": {...}}, ...]}</tt> with the same
+<tt>settings</tt> object.</p>
+<hr>
+<p><a href="index.html">Contents</a></p>
+</body>
+</html>

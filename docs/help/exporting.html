@@ -1,0 +1,29 @@
+<html>
+<head><title>Saving images</title></head>
+<body>
+<h1>Saving images</h1>
+<h2>Save image as PNG</h2>
+<p><img src="images/ui-export-dialog.png"></p>
+<p>File &gt; Save image as PNG (Ctrl+S) opens this dialog. It renders the view again at the size you
+ask for, so the picture is not limited to the window:</p>
+<ul>
+<li><b>Width</b> and <b>Height</b> in pixels, up to 16384 each; they start out as the current size of the picture.</li>
+<li><b>Anti-aliasing</b>: 1x renders one sample per pixel; 2x2 and 4x4 render four or sixteen samples
+per pixel and average them, which smooths the fine filaments at four or sixteen times the cost.</li>
+</ul>
+<p>The view keeps its centre and zoom, and the shorter side of the picture shows the same extent as
+the shorter side of the window. The dialog stays open while you carry on navigating; press OK when
+the view is right, choose a file name, and a progress dialog shows the render, which you can
+cancel. The file is an 8-bit RGB PNG. The settings themselves are not stored in it: export a
+<a href="views.html">view file</a> as well if you want to come back to the same place.</p>
+<p>F1 inside the dialog opens this page.</p>
+<p><a href="mandelbrotter:export">Try it: open the dialog</a></p>
+
+<h2>Copy image</h2>
+<p>File &gt; Copy image (Ctrl+C) puts the picture as it is on screen onto the clipboard, at the screen's
+resolution. If a render is in progress you get the picture as far as it has got. If another program
+holds the clipboard the message "The clipboard is busy" appears; try again in a moment.</p>
+<hr>
+<p><a href="index.html">Contents</a></p>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<html>
+<head><title>Fractal families</title></head>
+<body>
+<h1>Fractal families</h1>
+<p>Every picture is made the same way: for each pixel a complex number is iterated until it escapes
+(its size exceeds 256) or the <a href="iterations.html">iteration limit</a> is reached. Points that
+never escape belong to the set and are painted black; the others are coloured by how fast they
+escaped. The <b>Family</b> list in the side panel chooses the formula, and <b>Exponent n</b>, from 2
+to 8, its power.</p>
+<table border=1 cellpadding=4>
+<tr><th>Family</th><th>Formula</th><th>Default view</th></tr>
+<tr><td>Mandelbrot</td><td>z &lt;- z^n + c</td><td>Centre -0.5, zoom 1 (n = 2); centre 0 for other n</td></tr>
+<tr><td>Burning Ship</td><td>z &lt;- (|Re z| + i |Im z|)^n + c</td><td>Centre -0.4 - 0.6i, zoom 0.75</td></tr>
+<tr><td>Tricorn</td><td>z &lt;- conj(z)^n + c</td><td>Centre -0.25, zoom 0.8</td></tr>
+</table>
+<p>In the normal mode the pixel is the constant c and the iteration starts at z = 0; in
+<a href="julia.html">Julia mode</a> it is the other way round.</p>
+<p>Changing the family jumps to that family's default view, so the whole set is in sight. Changing
+the exponent keeps the view.</p>
+
+<h2>Mandelbrot and Multibrot</h2>
+<table cellpadding=4>
+<tr><td><img src="images/fractal-mandelbrot.png"></td><td><img src="images/fractal-multibrot-3.png"></td></tr>
+<tr><td>z^2 + c: the Mandelbrot set</td><td>z^3 + c: a Multibrot set with two-fold symmetry</td></tr>
+</table>
+<p>With n = 2 this is the classic Mandelbrot set. For n = 3 to 8 the sets are called Multibrot sets:
+they have n - 1 lobes around the centre and their own families of miniature copies.</p>
+<p><a href="mandelbrotter:view --fractal mandelbrot --exponent 3">Try it: the cubic Multibrot set</a>,
+<a href="mandelbrotter:view --fractal mandelbrot --exponent 5">Try it: the fifth power</a>,
+<a href="mandelbrotter:view --fractal mandelbrot --exponent 2">Try it: back to n = 2</a></p>
+
+<h2>Burning Ship</h2>
+<p><img src="images/fractal-burning-ship.png"></p>
+<p>Taking the absolute values of both parts before squaring folds the plane and gives the set its
+ragged, ship-like outline. The most famous detail is the "little ship" on the left, near -1.75 - 0.03i.</p>
+<p><a href="mandelbrotter:view --fractal burning-ship">Try it: the Burning Ship</a>,
+<a href="mandelbrotter:view --fractal burning-ship --center -1.75,-0.03 --zoom 40 --palette fire">Try it: the little ship</a></p>
+
+<h2>Tricorn</h2>
+<p><img src="images/fractal-tricorn.png"></p>
+<p>Conjugating z before raising it to the power gives a set with three-fold symmetry (for n = 2) whose
+cusps repeat at smaller and smaller scales.</p>
+<p><a href="mandelbrotter:view --fractal tricorn">Try it: the Tricorn</a>,
+<a href="mandelbrotter:view --fractal tricorn --center -1.0,0.0 --zoom 8 --palette ocean">Try it: one of its arms</a></p>
+<hr>
+<p><a href="index.html">Contents</a></p>
+</body>
+</html>

@@ -53,6 +53,18 @@ ExportDialog::ExportDialog(wxWindow* parent, PixelSize initialSize)
     sizer->Add(CreateStdDialogButtonSizer(wxOK | wxCANCEL),
                wxSizerFlags().Expand().Border(wxALL, FromDIP(8)));
     SetSizerAndFit(sizer);
+    Bind(wxEVT_CHAR_HOOK, &ExportDialog::onCharHook, this);
+}
+
+// Not const: wxEvtHandler::Bind takes a non-const member function.
+void ExportDialog::onCharHook(wxKeyEvent& event)  // NOLINT(readability-make-member-function-const)
+{
+    if (event.GetKeyCode() == WXK_F1 && onHelp)
+    {
+        onHelp();
+        return;
+    }
+    event.Skip();
 }
 
 ExportOptions ExportDialog::options() const

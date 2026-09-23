@@ -1,0 +1,61 @@
+<HTML>
+<HEAD><!-- Sitemap 1.0 --></HEAD>
+<BODY>
+<UL>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="anti-aliasing"><param name="Local" value="exporting.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="arrow keys"><param name="Local" value="navigating.html#keyboard"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Auto iterations"><param name="Local" value="iterations.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Back to where I was"><param name="Local" value="demos.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="bookmarks"><param name="Local" value="bookmarks.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="bookmarks.json"><param name="Local" value="bookmarks.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Burning Ship"><param name="Local" value="fractals.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="clipboard"><param name="Local" value="exporting.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="command line"><param name="Local" value="command-line.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Copy image"><param name="Local" value="exporting.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="deep zoom"><param name="Local" value="deep-zoom.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="demos"><param name="Local" value="demos.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="density"><param name="Local" value="colouring.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="drag"><param name="Local" value="navigating.html#mouse"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Esc"><param name="Local" value="navigating.html#keyboard"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="exponent"><param name="Local" value="fractals.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Export view"><param name="Local" value="views.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="F1"><param name="Local" value="index.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="flights"><param name="Local" value="demos.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Home key"><param name="Local" value="navigating.html#keyboard"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Import view"><param name="Local" value="views.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="iterations"><param name="Local" value="iterations.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="JSON"><param name="Local" value="views.html#schema"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Julia preview"><param name="Local" value="julia.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Julia set"><param name="Local" value="julia.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="keyboard shortcuts"><param name="Local" value="reference.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Mandelbrot set"><param name="Local" value="fractals.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Multibrot"><param name="Local" value="fractals.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="mouse wheel"><param name="Local" value="navigating.html#mouse"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="offset"><param name="Local" value="colouring.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="orbit overlay"><param name="Local" value="orbit.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="palette"><param name="Local" value="colouring.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="pan"><param name="Local" value="navigating.html#mouse"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="perturbation"><param name="Local" value="deep-zoom.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Pick seed from canvas"><param name="Local" value="julia.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="PNG"><param name="Local" value="exporting.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="precision"><param name="Local" value="deep-zoom.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="rectangle zoom"><param name="Local" value="navigating.html#mouse"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="--render"><param name="Local" value="command-line.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Reset view"><param name="Local" value="navigating.html#menus"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Save image as PNG"><param name="Local" value="exporting.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="seed"><param name="Local" value="julia.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="side panel"><param name="Local" value="getting-started.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="smooth colouring"><param name="Local" value="colouring.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="status bar"><param name="Local" value="navigating.html#status"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="supersample"><param name="Local" value="exporting.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="tour"><param name="Local" value="demos.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Tricorn"><param name="Local" value="fractals.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Try it links"><param name="Local" value="demos.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="version"><param name="Local" value="about.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="view files"><param name="Local" value="views.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="--view"><param name="Local" value="command-line.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="zoom"><param name="Local" value="navigating.html#mouse"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="zoom limits"><param name="Local" value="navigating.html#menus"></OBJECT>
+</UL>
+</BODY>
+</HTML>

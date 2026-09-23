@@ -1,6 +1,8 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <optional>
 #include <span>
@@ -8,10 +10,12 @@
 #include <wx/button.h>
 #include <wx/checkbox.h>
 #include <wx/choice.h>
+#include <wx/gdicmn.h>
 #include <wx/listbox.h>
 #include <wx/scrolwin.h>
 #include <wx/slider.h>
 #include <wx/spinctrl.h>
+#include <wx/statbox.h>
 #include <wx/stattext.h>
 #include <wx/textctrl.h>
 #include <wx/tglbtn.h>
@@ -30,6 +34,17 @@ class JuliaPreview;
 class SidePanel : public wxScrolledWindow
 {
 public:
+    /// The panel's boxes, top to bottom.
+    enum class Section : std::uint8_t
+    {
+        FRACTAL,
+        ITERATIONS,
+        COLOURING,
+        OVERLAY,
+        BOOKMARKS,
+    };
+    static constexpr std::size_t kSectionCount = 5;
+
     explicit SidePanel(wxWindow* parent);
 
     void setSettings(const RenderSettings& settings);
@@ -39,6 +54,19 @@ public:
     void setShowOrbit(bool enabled);
     /// The seed the Julia preview follows (the hovered point, or the current seed in Julia mode).
     void setPreviewSeed(std::optional<Complex> seed);
+
+    /// The section a control belongs to (context help, the tour); nullopt for the panel itself.
+    [[nodiscard]] std::optional<Section> sectionOf(wxWindow* window) const;
+    /// True for the Julia controls of the Fractal section.
+    [[nodiscard]] bool isJuliaControl(const wxWindow* window) const;
+    /// A section's box in the panel's client coordinates (as currently scrolled).
+    [[nodiscard]] wxRect sectionRect(Section section) const;
+    void                 scrollToSection(Section section);
+    /// The tour's accent frame around one section; nullopt removes it.
+    void setHighlightedSection(std::optional<Section> section);
+
+    /// wxScrolledWindow's paint hook: draws the highlight ring.
+    void OnDraw(wxDC& dc) override;
 
     std::function<void(const RenderSettings&)> onSettingsChanged;
     std::function<void(bool)>                  onPickSeedToggled;
@@ -58,8 +86,13 @@ private:
     void emitChange();
     void syncEnabledState();
 
+    [[nodiscard]] wxStaticBox* box(Section section) const;
+
     RenderSettings m_settings;
     bool           m_updating{false};
+
+    std::array<wxStaticBox*, kSectionCount> m_sections{};
+    std::optional<Section>                  m_highlighted;
 
     wxChoice*         m_family{nullptr};
     wxSpinCtrl*       m_exponent{nullptr};

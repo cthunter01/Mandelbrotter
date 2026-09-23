@@ -18,6 +18,9 @@ It builds and runs on Linux, macOS and Windows.
   changes recolour instantly without recomputing.
 - **Extras**: orbit overlay for the point under the cursor; supersampled PNG export at any resolution; copy to
   clipboard; bookmarks and view files (JSON); a headless `--render` mode for scripting.
+- **Help**: Help > Contents opens a built-in guide with screenshots (contents tree, index, full-text search);
+  its "Try it" links act on the window, Help > Demos plays animated dives into famous places, Help > Take a tour
+  walks through the window step by step, and F1 opens the page for the focused control.
 
 ## Requirements
 
@@ -130,9 +133,28 @@ Windows, and a clang-format check.
 - `include/Mandelbrotter/`, `src/core/`: the core library (`Mandelbrotter_lib`). Fractal kernels, viewport
   maths, palettes, the progressive multi-threaded renderer, PNG export, bookmarks and the command-line parser.
   No GUI dependency, fully unit-tested.
-- `src/gui/`: the wxWidgets layer (`Mandelbrotter_gui`): main frame, canvas, side panel, dialogs.
+- `src/gui/`: the wxWidgets layer (`Mandelbrotter_gui`): main frame, canvas, side panel, dialogs, the help
+  window, the demo player, the guided tour and the screenshot mode.
 - `src/main.cpp`: the executable; dispatches between the CLI and the GUI.
+- `src/tools/`: build-time tools (`Mandelbrotter_embed` turns the help book into a C++ source).
+- `docs/help/`: the help book: hand-written pages in wxHTML, the contents tree and index, and the images. It is
+  zipped and embedded into the executable at build time.
 - `tests/`: GoogleTest suites for the core, plus a headless integration test that runs the real executable.
 - `cmake/`: dependency and build configuration.
 
 Doxygen documentation: `cmake --build --preset clang-debug --target docs` (needs Doxygen).
+
+## The help book
+
+The pages under `docs/help/` are plain HTML (the subset wxHTML renders; see `docs/help/README.md`) and are
+checked by the tests: every link, image and "Try it" action must resolve. The images are committed; after a change
+to the window or to the rendered examples, regenerate them all on a Linux desktop with a release build:
+
+```sh
+cmake --build --preset clang-release
+./build/clang-release/bin/Mandelbrotter --screenshots docs/help/images   # on Wayland: GDK_BACKEND=x11 ...
+```
+
+The run renders the example pictures, opens the window, walks it through the documented states, saves each as a
+PNG and quits. Run it twice when the pictures themselves changed, so the screenshot of the help window shows the
+new ones. It never touches your own bookmarks.
