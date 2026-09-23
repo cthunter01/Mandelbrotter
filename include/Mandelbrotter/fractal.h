@@ -14,9 +14,9 @@ namespace mandelbrotter
 /// The iteration formula z <- f(z) + c. Every family takes an integer exponent.
 enum class FractalFamily : std::uint8_t
 {
-    Mandelbrot,   ///< f(z) = z^n (n = 2 is the classic set, n > 2 the "Multibrot" sets)
-    BurningShip,  ///< f(z) = (|Re z| + i |Im z|)^n
-    Tricorn,      ///< f(z) = conj(z)^n
+    MANDELBROT,    ///< f(z) = z^n (n = 2 is the classic set, n > 2 the "Multibrot" sets)
+    BURNING_SHIP,  ///< f(z) = (|Re z| + i |Im z|)^n
+    TRICORN,       ///< f(z) = conj(z)^n
 };
 
 inline constexpr int kMinExponent = 2;
@@ -26,7 +26,7 @@ inline constexpr int kMaxExponent = 8;
 /// constant c; otherwise z0 = 0 and the pixel is c.
 struct FractalSpec
 {
-    FractalFamily family{FractalFamily::Mandelbrot};
+    FractalFamily family{FractalFamily::MANDELBROT};
     int           exponent{2};
     bool          julia{false};
     Complex       seed{};

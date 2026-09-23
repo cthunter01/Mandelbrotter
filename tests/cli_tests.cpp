@@ -70,7 +70,7 @@ TEST(Cli, EveryOptionParsesInBothSpellings)
     ASSERT_TRUE(equals.has_value()) << equals.error();
     EXPECT_EQ(spaced->renderOutput, std::filesystem::path("a.png"));
     EXPECT_EQ(spaced->viewFile, std::filesystem::path("v.json"));
-    EXPECT_EQ(spaced->overrides.family, FractalFamily::BurningShip);
+    EXPECT_EQ(spaced->overrides.family, FractalFamily::BURNING_SHIP);
     EXPECT_EQ(spaced->overrides.exponent, 3);
     EXPECT_EQ(spaced->overrides.julia, (Complex{-0.8, 0.156}));
     EXPECT_EQ(spaced->overrides.center, (Complex{-0.75, 0.1}));
@@ -120,7 +120,7 @@ TEST(Cli, OverridesStartFromTheFamilyDefaultView)
     ASSERT_TRUE(options.has_value());
     const auto settings = mandelbrotter::resolveSettings(*options);
     ASSERT_TRUE(settings.has_value());
-    EXPECT_EQ(settings->fractal.family, FractalFamily::BurningShip);
+    EXPECT_EQ(settings->fractal.family, FractalFamily::BURNING_SHIP);
     EXPECT_EQ(settings->view, mandelbrotter::defaultView(settings->fractal));
     EXPECT_EQ(settings->maxIterations, 50);
     EXPECT_FALSE(settings->autoIterations);
@@ -142,7 +142,7 @@ TEST(Cli, ViewFileIsLoadedThenOverridden)
 {
     const mandelbrotter::test::TempDir dir;
     RenderSettings                     saved;
-    saved.fractal.family   = FractalFamily::Tricorn;
+    saved.fractal.family   = FractalFamily::TRICORN;
     saved.view             = {{0.3, 0.4}, 77.0};
     saved.maxIterations    = 500;
     saved.autoIterations   = false;
@@ -154,7 +154,7 @@ TEST(Cli, ViewFileIsLoadedThenOverridden)
     ASSERT_TRUE(options.has_value());
     const auto settings = mandelbrotter::resolveSettings(*options);
     ASSERT_TRUE(settings.has_value()) << settings.error();
-    EXPECT_EQ(settings->fractal.family, FractalFamily::Tricorn);
+    EXPECT_EQ(settings->fractal.family, FractalFamily::TRICORN);
     EXPECT_EQ(settings->view.center, (Complex{0.3, 0.4}));
     EXPECT_DOUBLE_EQ(settings->view.zoom, 10.0);
     EXPECT_EQ(settings->maxIterations, 500);

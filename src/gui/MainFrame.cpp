@@ -32,12 +32,12 @@ namespace
 
 enum class StatusField : std::uint8_t
 {
-    Pointer = 0,
-    Center,
-    Zoom,
-    Iterations,
-    Render,
-    Count,
+    POINTER = 0,
+    CENTER,
+    ZOOM,
+    ITERATIONS,
+    RENDER,
+    COUNT,
 };
 
 constexpr int field(StatusField f)
@@ -73,9 +73,9 @@ MainFrame::MainFrame(RenderSettings initial)
     sizer->Add(m_panel, wxSizerFlags().Expand());
     SetSizer(sizer);
 
-    CreateStatusBar(field(StatusField::Count));
-    constexpr std::array<int, field(StatusField::Count)> kWidths{-3, -3, -1, -1, -2};
-    GetStatusBar()->SetStatusWidths(field(StatusField::Count), kWidths.data());
+    CreateStatusBar(field(StatusField::COUNT));
+    constexpr std::array<int, field(StatusField::COUNT)> kWidths{-3, -3, -1, -1, -2};
+    GetStatusBar()->SetStatusWidths(field(StatusField::COUNT), kWidths.data());
 
     buildMenus();
     wireCanvas();
@@ -231,29 +231,29 @@ void MainFrame::applySettings(const RenderSettings& settings)
 void MainFrame::updateStatusBar()
 {
     SetStatusText(toWx("Centre " + formatComplex(m_settings.view.center)),
-                  field(StatusField::Center));
-    SetStatusText(toWx("Zoom " + formatZoom(m_settings.view.zoom)), field(StatusField::Zoom));
+                  field(StatusField::CENTER));
+    SetStatusText(toWx("Zoom " + formatZoom(m_settings.view.zoom)), field(StatusField::ZOOM));
     SetStatusText(toWx(std::format("{} iterations", effectiveIterations(m_settings))),
-                  field(StatusField::Iterations));
+                  field(StatusField::ITERATIONS));
     m_panel->setEffectiveIterations(effectiveIterations(m_settings));
 }
 
 void MainFrame::showPointer(std::optional<Complex> pointer)
 {
     SetStatusText(pointer ? toWx(formatComplex(*pointer)) : wxString(),
-                  field(StatusField::Pointer));
+                  field(StatusField::POINTER));
 }
 
 void MainFrame::showRenderStatus(const FractalCanvas::RenderStatus& status)
 {
     if (status.rendering)
     {
-        SetStatusText("Rendering...", field(StatusField::Render));
+        SetStatusText("Rendering...", field(StatusField::RENDER));
     }
     else
     {
         SetStatusText(toWx(std::format("Rendered in {} ms", status.elapsed.count())),
-                      field(StatusField::Render));
+                      field(StatusField::RENDER));
     }
 }
 
@@ -276,7 +276,7 @@ void MainFrame::saveImage()
     const std::filesystem::path path(fromWx(chooser.GetPath()));
     if (exportPngWithProgress(this, m_settings, dialog.options(), path))
     {
-        SetStatusText(toWx("Saved " + path.filename().string()), field(StatusField::Render));
+        SetStatusText(toWx("Saved " + path.filename().string()), field(StatusField::RENDER));
     }
 }
 
@@ -296,7 +296,7 @@ void MainFrame::copyImage()
     // The clipboard takes ownership of the data object.
     wxTheClipboard->SetData(new wxBitmapDataObject(wxBitmap(toWxImage(image))));
     wxTheClipboard->Flush();  // keep the image available after this window closes
-    SetStatusText("Image copied to clipboard", field(StatusField::Render));
+    SetStatusText("Image copied to clipboard", field(StatusField::RENDER));
 }
 
 void MainFrame::exportView()

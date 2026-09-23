@@ -18,11 +18,11 @@ namespace
 template <FractalFamily Family>
 constexpr Complex transform(Complex z) noexcept
 {
-    if constexpr (Family == FractalFamily::BurningShip)
+    if constexpr (Family == FractalFamily::BURNING_SHIP)
     {
         return {std::abs(z.re), std::abs(z.im)};
     }
-    else if constexpr (Family == FractalFamily::Tricorn)
+    else if constexpr (Family == FractalFamily::TRICORN)
     {
         return {z.re, -z.im};
     }
@@ -59,12 +59,12 @@ Complex stepAny(const FractalSpec& spec, Complex z, Complex c) noexcept
     const int n = clampExponent(spec.exponent);
     switch (spec.family)
     {
-        case FractalFamily::Mandelbrot:
-            return step<FractalFamily::Mandelbrot>(z, c, n);
-        case FractalFamily::BurningShip:
-            return step<FractalFamily::BurningShip>(z, c, n);
-        case FractalFamily::Tricorn:
-            return step<FractalFamily::Tricorn>(z, c, n);
+        case FractalFamily::MANDELBROT:
+            return step<FractalFamily::MANDELBROT>(z, c, n);
+        case FractalFamily::BURNING_SHIP:
+            return step<FractalFamily::BURNING_SHIP>(z, c, n);
+        case FractalFamily::TRICORN:
+            return step<FractalFamily::TRICORN>(z, c, n);
     }
     return z;
 }
@@ -112,12 +112,12 @@ RawResult runAny(const FractalSpec& spec, Complex z0, Complex c, int n, int maxI
 {
     switch (spec.family)
     {
-        case FractalFamily::Mandelbrot:
-            return runFamily<FractalFamily::Mandelbrot>(z0, c, n, maxIter);
-        case FractalFamily::BurningShip:
-            return runFamily<FractalFamily::BurningShip>(z0, c, n, maxIter);
-        case FractalFamily::Tricorn:
-            return runFamily<FractalFamily::Tricorn>(z0, c, n, maxIter);
+        case FractalFamily::MANDELBROT:
+            return runFamily<FractalFamily::MANDELBROT>(z0, c, n, maxIter);
+        case FractalFamily::BURNING_SHIP:
+            return runFamily<FractalFamily::BURNING_SHIP>(z0, c, n, maxIter);
+        case FractalFamily::TRICORN:
+            return runFamily<FractalFamily::TRICORN>(z0, c, n, maxIter);
     }
     return {maxIter, 0.0, false};
 }

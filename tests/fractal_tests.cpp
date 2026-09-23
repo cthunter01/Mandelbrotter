@@ -24,8 +24,8 @@ TEST(Fractal, NamesRoundTrip)
 
 TEST(Fractal, ParseAcceptsAliasesAndRejectsUnknown)
 {
-    EXPECT_EQ(mandelbrotter::parseFamily("burningship"), FractalFamily::BurningShip);
-    EXPECT_EQ(mandelbrotter::parseFamily("burning_ship"), FractalFamily::BurningShip);
+    EXPECT_EQ(mandelbrotter::parseFamily("burningship"), FractalFamily::BURNING_SHIP);
+    EXPECT_EQ(mandelbrotter::parseFamily("burning_ship"), FractalFamily::BURNING_SHIP);
     EXPECT_FALSE(mandelbrotter::parseFamily("Mandelbrot").has_value());
     EXPECT_FALSE(mandelbrotter::parseFamily("").has_value());
 }
@@ -56,7 +56,7 @@ TEST(Fractal, DefaultViewsAreValid)
 TEST(Fractal, SpecEquality)
 {
     const FractalSpec a{
-        .family = FractalFamily::Tricorn, .exponent = 3, .julia = true, .seed = {0.1, 0.2}};
+        .family = FractalFamily::TRICORN, .exponent = 3, .julia = true, .seed = {0.1, 0.2}};
     FractalSpec b = a;
     EXPECT_EQ(a, b);
     b.seed.im = 0.3;

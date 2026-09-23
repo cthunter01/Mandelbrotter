@@ -81,7 +81,7 @@ TEST(Kernel, SmoothCountIsContinuousAlongTheRealAxis)
 
 TEST(Kernel, MandelbrotAndTricornAreConjugateSymmetric)
 {
-    for (const FractalFamily family : {FractalFamily::Mandelbrot, FractalFamily::Tricorn})
+    for (const FractalFamily family : {FractalFamily::MANDELBROT, FractalFamily::TRICORN})
     {
         const FractalSpec spec{.family = family};
         for (const Complex c :
@@ -106,11 +106,11 @@ TEST(Kernel, FamiliesDiffer)
         {
             const Complex         c{-1.5 + (0.25 * i), -1.0 + (0.25 * j)};
             const IterationResult m =
-                mandelbrotter::iteratePixel({.family = FractalFamily::Mandelbrot}, c, kMaxIter);
+                mandelbrotter::iteratePixel({.family = FractalFamily::MANDELBROT}, c, kMaxIter);
             const IterationResult s =
-                mandelbrotter::iteratePixel({.family = FractalFamily::BurningShip}, c, kMaxIter);
+                mandelbrotter::iteratePixel({.family = FractalFamily::BURNING_SHIP}, c, kMaxIter);
             const IterationResult t =
-                mandelbrotter::iteratePixel({.family = FractalFamily::Tricorn}, c, kMaxIter);
+                mandelbrotter::iteratePixel({.family = FractalFamily::TRICORN}, c, kMaxIter);
             mandelbrotVsShip += m != s ? 1 : 0;
             mandelbrotVsTricorn += m != t ? 1 : 0;
             shipVsTricorn += s != t ? 1 : 0;
@@ -123,7 +123,7 @@ TEST(Kernel, FamiliesDiffer)
 
 TEST(Kernel, BurningShipBasics)
 {
-    const FractalSpec ship{.family = FractalFamily::BurningShip};
+    const FractalSpec ship{.family = FractalFamily::BURNING_SHIP};
     EXPECT_TRUE(mandelbrotter::iteratePixel(ship, {0.0, 0.0}, kMaxIter).interior);
     EXPECT_TRUE(mandelbrotter::iteratePixel(ship, {-1.0, 0.0}, kMaxIter).interior);
     EXPECT_FALSE(mandelbrotter::iteratePixel(ship, {2.0, 2.0}, kMaxIter).interior);

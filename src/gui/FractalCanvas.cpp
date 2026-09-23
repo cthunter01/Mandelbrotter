@@ -259,7 +259,7 @@ void FractalCanvas::onPaint(wxPaintEvent& /*event*/)
 
 void FractalCanvas::drawOverlays(wxDC& dc)
 {
-    if (m_drag == Drag::RubberBand)
+    if (m_drag == Drag::RUBBER_BAND)
     {
         const wxRect rect(m_dragStart, m_dragCurrent);
         dc.SetBrush(*wxTRANSPARENT_BRUSH);
@@ -320,13 +320,13 @@ void FractalCanvas::onLeftDown(wxMouseEvent& event)
         }
         return;
     }
-    beginDrag(event.ShiftDown() ? Drag::RubberBand : Drag::Pan, event.GetPosition());
+    beginDrag(event.ShiftDown() ? Drag::RUBBER_BAND : Drag::PAN, event.GetPosition());
 }
 
 void FractalCanvas::onRightDown(wxMouseEvent& event)
 {
     SetFocus();
-    beginDrag(Drag::RubberBand, event.GetPosition());
+    beginDrag(Drag::RUBBER_BAND, event.GetPosition());
 }
 
 void FractalCanvas::beginDrag(Drag kind, wxPoint at)
@@ -344,12 +344,12 @@ void FractalCanvas::beginDrag(Drag kind, wxPoint at)
 void FractalCanvas::onMotion(wxMouseEvent& event)
 {
     const wxPoint at = event.GetPosition();
-    if (m_drag == Drag::Pan)
+    if (m_drag == Drag::PAN)
     {
         m_panOffset = at - m_dragStart;
         Refresh(false);
     }
-    else if (m_drag == Drag::RubberBand)
+    else if (m_drag == Drag::RUBBER_BAND)
     {
         m_dragCurrent = at;
         Refresh(false);
@@ -358,7 +358,7 @@ void FractalCanvas::onMotion(wxMouseEvent& event)
     {
         onPointerMoved(complexAt(at));
     }
-    if (m_showOrbit && m_drag == Drag::None)
+    if (m_showOrbit && m_drag == Drag::NONE)
     {
         updateOrbit(at);
     }
@@ -366,7 +366,7 @@ void FractalCanvas::onMotion(wxMouseEvent& event)
 
 void FractalCanvas::onMouseUp(wxMouseEvent& event)
 {
-    if (m_drag == Drag::None)
+    if (m_drag == Drag::NONE)
     {
         return;
     }
@@ -380,10 +380,10 @@ void FractalCanvas::endDrag(wxPoint at, bool rightButton)
         ReleaseMouse();
     }
     const Drag kind     = m_drag;
-    m_drag              = Drag::None;
+    m_drag              = Drag::NONE;
     const wxPoint delta = at - m_dragStart;
     const bool moved = std::abs(delta.x) > kDragThresholdPx || std::abs(delta.y) > kDragThresholdPx;
-    if (kind == Drag::Pan)
+    if (kind == Drag::PAN)
     {
         finishPan(at);
     }
@@ -444,7 +444,7 @@ void FractalCanvas::onLeave(wxMouseEvent& /*event*/)
 
 void FractalCanvas::onCaptureLost(wxMouseCaptureLostEvent& /*event*/)
 {
-    m_drag      = Drag::None;
+    m_drag      = Drag::NONE;
     m_panOffset = wxPoint();
     Refresh(false);
 }
@@ -502,9 +502,9 @@ void FractalCanvas::onKeyDown(wxKeyEvent& event)
             resetView();
             break;
         case WXK_ESCAPE:
-            if (m_drag != Drag::None)
+            if (m_drag != Drag::NONE)
             {
-                m_drag      = Drag::None;
+                m_drag      = Drag::NONE;
                 m_panOffset = wxPoint();
                 if (HasCapture())
                 {

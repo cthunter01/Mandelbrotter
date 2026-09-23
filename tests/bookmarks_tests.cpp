@@ -25,7 +25,7 @@ RenderSettings fancySettings()
 {
     RenderSettings s;
     s.fractal = {
-        .family = FractalFamily::BurningShip, .exponent = 3, .julia = true, .seed = {-0.8, 0.156}};
+        .family = FractalFamily::BURNING_SHIP, .exponent = 3, .julia = true, .seed = {-0.8, 0.156}};
     s.view           = {{-1.7433419053, -0.0280023654}, 12345.678};
     s.maxIterations  = 4321;
     s.autoIterations = false;
@@ -51,7 +51,7 @@ TEST(Bookmarks, BareSettingsObjectAndUnknownKeysAreAccepted)
         "view": {"center": {"re": 0.1, "im": -0.2}, "zoom": 4.0},
         "extra": [1, 2, 3]
     })");
-    EXPECT_EQ(settings.fractal.family, FractalFamily::Tricorn);
+    EXPECT_EQ(settings.fractal.family, FractalFamily::TRICORN);
     EXPECT_EQ(settings.fractal.exponent, 2);
     EXPECT_FALSE(settings.fractal.julia);
     EXPECT_EQ(settings.view.center, (mandelbrotter::Complex{0.1, -0.2}));

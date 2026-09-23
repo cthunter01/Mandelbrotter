@@ -14,8 +14,8 @@ namespace mandelbrotter
 namespace
 {
 
-constexpr std::array kFamilies{FractalFamily::Mandelbrot, FractalFamily::BurningShip,
-                               FractalFamily::Tricorn};
+constexpr std::array kFamilies{FractalFamily::MANDELBROT, FractalFamily::BURNING_SHIP,
+                               FractalFamily::TRICORN};
 
 }  // namespace
 
@@ -23,11 +23,11 @@ std::string_view toString(FractalFamily family) noexcept
 {
     switch (family)
     {
-        case FractalFamily::Mandelbrot:
+        case FractalFamily::MANDELBROT:
             return "mandelbrot";
-        case FractalFamily::BurningShip:
+        case FractalFamily::BURNING_SHIP:
             return "burning-ship";
-        case FractalFamily::Tricorn:
+        case FractalFamily::TRICORN:
             return "tricorn";
     }
     return "mandelbrot";
@@ -37,11 +37,11 @@ std::string_view displayName(FractalFamily family) noexcept
 {
     switch (family)
     {
-        case FractalFamily::Mandelbrot:
+        case FractalFamily::MANDELBROT:
             return "Mandelbrot";
-        case FractalFamily::BurningShip:
+        case FractalFamily::BURNING_SHIP:
             return "Burning Ship";
-        case FractalFamily::Tricorn:
+        case FractalFamily::TRICORN:
             return "Tricorn";
     }
     return "Mandelbrot";
@@ -51,15 +51,15 @@ std::optional<FractalFamily> parseFamily(std::string_view name) noexcept
 {
     if (name == "mandelbrot")
     {
-        return FractalFamily::Mandelbrot;
+        return FractalFamily::MANDELBROT;
     }
     if (name == "burning-ship" || name == "burningship" || name == "burning_ship")
     {
-        return FractalFamily::BurningShip;
+        return FractalFamily::BURNING_SHIP;
     }
     if (name == "tricorn")
     {
-        return FractalFamily::Tricorn;
+        return FractalFamily::TRICORN;
     }
     return std::nullopt;
 }
@@ -82,11 +82,11 @@ ViewSpec defaultView(const FractalSpec& spec) noexcept
     }
     switch (spec.family)
     {
-        case FractalFamily::Mandelbrot:
+        case FractalFamily::MANDELBROT:
             return spec.exponent == 2 ? ViewSpec{{-0.5, 0.0}, 1.0} : ViewSpec{{0.0, 0.0}, 1.0};
-        case FractalFamily::BurningShip:
+        case FractalFamily::BURNING_SHIP:
             return {{-0.4, -0.6}, 0.75};
-        case FractalFamily::Tricorn:
+        case FractalFamily::TRICORN:
             return {{-0.25, 0.0}, 0.8};
     }
     return {};

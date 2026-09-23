@@ -65,9 +65,9 @@ public:
 private:
     enum class Drag : std::uint8_t
     {
-        None,
-        Pan,
-        RubberBand,
+        NONE,
+        PAN,
+        RUBBER_BAND,
     };
 
     void onPaint(wxPaintEvent& event);
@@ -112,7 +112,7 @@ private:
     bool                m_bitmapDirty{false};
     wxTimer             m_resizeTimer;
 
-    Drag                 m_drag{Drag::None};
+    Drag                 m_drag{Drag::NONE};
     wxPoint              m_dragStart;
     wxPoint              m_dragCurrent;
     wxPoint              m_panOffset;
