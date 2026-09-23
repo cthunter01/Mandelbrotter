@@ -8,8 +8,10 @@ add_executable(Mandelbrotter_tests
     image_tests.cpp
     kernel_tests.cpp
     PaletteTests.cpp
+    perturbation_tests.cpp
     png_writer_tests.cpp
     ProgressiveRendererTests.cpp
+    ReferenceOrbitTests.cpp
     RenderSettingsTests.cpp
     ViewportTests.cpp)
 target_link_libraries(Mandelbrotter_tests PRIVATE Mandelbrotter::lib GTest::gtest_main stb::stb)

@@ -9,8 +9,10 @@ add_library(Mandelbrotter_lib STATIC
     core/image.cpp
     core/kernel.cpp
     core/Palette.cpp
+    core/perturbation.cpp
     core/png_writer.cpp
     core/ProgressiveRenderer.cpp
+    core/ReferenceOrbit.cpp
     core/RenderSettings.cpp
     core/Viewport.cpp)
 add_library(Mandelbrotter::lib ALIAS Mandelbrotter_lib)

@@ -35,6 +35,11 @@ struct OrbitStart
 [[nodiscard]] IterationResult iterate(const FractalSpec& spec, Complex z0, Complex c,
                                       int maxIter) noexcept;
 
+/// The result iterate() reports for an orbit that took `steps` steps to reach |z|^2 = normSquared:
+/// the continuous count when it escaped, interior otherwise. Shared with the perturbation kernel.
+[[nodiscard]] IterationResult smoothIterationResult(int steps, double normSquared, bool escaped,
+                                                    int exponent) noexcept;
+
 /// iterate() for the pixel p (z0 = p, c = seed in Julia mode; z0 = 0, c = p otherwise).
 [[nodiscard]] IterationResult iteratePixel(const FractalSpec& spec, Complex p,
                                            int maxIter) noexcept;

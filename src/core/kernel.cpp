@@ -138,16 +138,23 @@ IterationResult iterate(const FractalSpec& spec, Complex z0, Complex c, int maxI
     maxIter             = std::max(maxIter, 0);
     const int       n   = clampExponent(spec.exponent);
     const RawResult raw = runAny(spec, z0, c, n, maxIter);
-    if (!raw.escaped)
+    return smoothIterationResult(raw.steps, raw.normSquared, raw.escaped, n);
+}
+
+IterationResult smoothIterationResult(int steps, double normSquared, bool escaped,
+                                      int exponent) noexcept
+{
+    if (!escaped)
     {
-        return {.smoothIter = static_cast<double>(maxIter), .interior = true};
+        return {.smoothIter = static_cast<double>(steps), .interior = true};
     }
     // |z| lies between B and roughly B^n at escape. log(log|z| / log B) / log n maps that range
     // onto [0, 1), which makes the count continuous across integer steps.
-    const double logModulus = 0.5 * std::log(raw.normSquared);
+    const int    n          = clampExponent(exponent);
+    const double logModulus = 0.5 * std::log(normSquared);
     const double fraction =
         std::log(logModulus / std::log(kBailoutRadius)) / std::log(static_cast<double>(n));
-    return {.smoothIter = std::max(0.0, raw.steps - fraction), .interior = false};
+    return {.smoothIter = std::max(0.0, steps - fraction), .interior = false};
 }
 
 IterationResult iteratePixel(const FractalSpec& spec, Complex p, int maxIter) noexcept
