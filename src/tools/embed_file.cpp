@@ -4,10 +4,10 @@
 //   Mandelbrotter_embed <input> <output.cpp> <header-to-include> <namespace> <function>
 //
 // The bytes are emitted as string literals of at most kChunkBytes each (MSVC caps a single literal
-// at 16380 bytes), printable ASCII as is and everything else as three-digit octal escapes, which a
-// following digit cannot extend. Compilers handle string literals far faster than brace-initialised
-// byte arrays of the same size. The output is only replaced when its content changes, so an
-// unchanged book does not recompile.
+// at 16380 bytes), printable ASCII as is and everything else as three-digit octal escapes; a digit
+// that follows an escape is escaped as well, so no compiler can misread the sequence. Compilers
+// handle string literals far faster than brace-initialised byte arrays of the same size. The output
+// is only replaced when its content changes, so an unchanged book does not recompile.
 #include <algorithm>
 #include <cstddef>
 #include <cstdio>
@@ -54,10 +54,14 @@ std::string escaped(std::span<const unsigned char> bytes)
 {
     std::string out;
     out.reserve(bytes.size() * 4);
+    bool afterEscape = false;
     for (const unsigned char byte : bytes)
     {
-        const bool plain =
-            byte >= 0x20 && byte < 0x7f && byte != '"' && byte != '\\' && byte != '?';
+        // A digit right after an octal escape is escaped too: the escape is complete after three
+        // digits, but MSVC warns about the sequence (C4125).
+        const bool digit = byte >= '0' && byte <= '9';
+        const bool plain = byte >= 0x20 && byte < 0x7f && byte != '"' && byte != '\\' &&
+                           byte != '?' && !(digit && afterEscape);
         if (plain)
         {
             out.push_back(static_cast<char>(byte));
@@ -69,6 +73,7 @@ std::string escaped(std::span<const unsigned char> bytes)
             out.push_back(static_cast<char>('0' + ((byte >> 3) & 7U)));
             out.push_back(static_cast<char>('0' + (byte & 7U)));
         }
+        afterEscape = !plain;
     }
     return out;
 }

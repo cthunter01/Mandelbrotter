@@ -38,7 +38,7 @@ CaptureResult failure(std::string why)
 
 CaptureResult captureWindow(wxWindow& window)
 {
-    auto* widget = static_cast<GtkWidget*>(window.GetHandle());
+    GtkWidget* widget = window.GetHandle();  // WXWidget is GtkWidget* on wxGTK
     if (widget == nullptr)
     {
         return failure("the window has no GTK widget");
