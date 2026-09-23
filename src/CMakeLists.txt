@@ -2,6 +2,7 @@
 add_library(Mandelbrotter_lib STATIC
     core/BigComplex.cpp
     core/BigFixed.cpp
+    core/BlaTable.cpp
     core/bookmarks.cpp
     core/cli.cpp
     core/exporter.cpp

@@ -60,7 +60,9 @@ shows this machine's.
 - Deep zoom: `ViewSpec::center` is a `BigComplex` whose precision follows the zoom (`fractionBitsFor`);
   kernels never see absolute big positions, only double offsets from the centre (`Viewport::offsetFromCenter`).
   Above `kPerturbationZoom` (1e8) the renderer iterates every pixel as a delta from the centre's
-  `ReferenceOrbit` (`iteratePerturbed`, with rebasing); below it the direct double kernel runs. Bookmarks and
+  `ReferenceOrbit` (`iteratePerturbed`, with rebasing) and jumps stretches where the delta is tiny through the
+  orbit's `BlaTable` (bilinear approximation; `kBlaEpsilon` trades speed for the last digits); below it the
+  direct double kernel runs. Bookmarks and
   view files store centres as decimal strings (schema version 2); `BigFixed::fromDecimal` rounds to nearest
   and `toDecimal` prints enough digits that a saved view reloads bit-for-bit
 - Renderer callbacks run on worker threads: marshal to the GUI thread with `CallAfter`, never touch wx objects

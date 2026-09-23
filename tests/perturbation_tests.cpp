@@ -9,6 +9,7 @@
 
 #include "Mandelbrotter/BigComplex.h"
 #include "Mandelbrotter/BigFixed.h"
+#include "Mandelbrotter/BlaTable.h"
 #include "Mandelbrotter/ReferenceOrbit.h"
 #include "Mandelbrotter/Viewport.h"
 #include "Mandelbrotter/fractal.h"
@@ -20,6 +21,7 @@ namespace
 
 using mandelbrotter::BigComplex;
 using mandelbrotter::BigFixed;
+using mandelbrotter::BlaTable;
 using mandelbrotter::Complex;
 using mandelbrotter::FractalFamily;
 using mandelbrotter::FractalSpec;
@@ -38,6 +40,13 @@ bool sameResult(IterationResult a, IterationResult b)
 {
     return a.interior == b.interior &&
            std::abs(a.smoothIter - b.smoothIter) <= 1e-6 * std::max(1.0, a.smoothIter);
+}
+
+/// The largest |delta-c| in a view (its half diagonal): what the renderer hands the jump table.
+double maxDeltaC(const Viewport& vp)
+{
+    const Complex corner = vp.offsetFromCenter(0.0, 0.0);
+    return std::hypot(corner.re, corner.im);
 }
 
 /// The exact result for a point: its own big-number orbit, at whatever precision `point` carries.
@@ -182,15 +191,18 @@ TEST(Perturbation, MatchesBigNumberIterationFarBeyondDoublePrecision)
         FractalSpec      spec;
         std::string_view re;
         std::string_view im;
+        double           minSkipped;  ///< of the iterations, at least
     };
     const auto cases = std::to_array<Case>({
-        {"mandelbrot at -2", FractalSpec{}, "-2", "0"},
-        {"cubic", FractalSpec{.exponent = 3}, "-0.39", "0"},
-        {"quintic", FractalSpec{.exponent = 5}, "-0.8", "0.1"},
-        {"burning ship at -2", FractalSpec{.family = FractalFamily::BURNING_SHIP}, "-2", "0"},
-        {"tricorn at -2", FractalSpec{.family = FractalFamily::TRICORN}, "-2", "0"},
-        {"julia inside", FractalSpec{.julia = true, .seed = {-1.0, 0.0}}, "0.1", "0.2"},
-        {"julia outside", FractalSpec{.julia = true, .seed = {-1.0, 0.0}}, "1.5", "0.5"},
+        {"mandelbrot at -2", FractalSpec{}, "-2", "0", 0.5},
+        {"cubic", FractalSpec{.exponent = 3}, "-0.39", "0", 0.5},
+        {"quintic", FractalSpec{.exponent = 5}, "0.3", "0.2", 0.5},
+        {"burning ship at -2", FractalSpec{.family = FractalFamily::BURNING_SHIP}, "-2", "0",
+         0.0},  // Im Z = 0: every delta crosses the fold
+        {"tricorn at -2", FractalSpec{.family = FractalFamily::TRICORN}, "-2", "0", 0.5},
+        {"julia inside", FractalSpec{.julia = true, .seed = {-1.0, 0.0}}, "0.1", "0.2",
+         0.01},  // Z hits the superattracting cycle exactly
+        {"julia outside", FractalSpec{.julia = true, .seed = {-1.0, 0.0}}, "1.5", "0.5", 0.5},
     });
     for (const Case& c : cases)
     {
@@ -198,19 +210,100 @@ TEST(Perturbation, MatchesBigNumberIterationFarBeyondDoublePrecision)
                                     *BigFixed::fromDecimal(c.im, bits)};
         const ReferenceOrbit ref(c.spec, center, kIter);
         const Viewport       vp{{center, kZoom}, kSize};
+        const BlaTable       table(ref, c.spec.julia ? 0.0 : maxDeltaC(vp));
+        int                  iterations = 0;
+        int                  skipped    = 0;
         for (const PixelPoint p : {PixelPoint{0, 0}, PixelPoint{kGrid - 1, kGrid - 1},
                                    PixelPoint{kGrid / 2, kGrid / 2}, PixelPoint{7, 40}})
         {
             const IterationResult expected = exactResult(c.spec, vp.pixelCenterBig(p), kIter);
-            const IterationResult actual   = mandelbrotter::iteratePerturbed(
-                ref, vp.offsetFromCenter(p.x + 0.5, p.y + 0.5), kIter);
+            const Complex         offset   = vp.offsetFromCenter(p.x + 0.5, p.y + 0.5);
+            const IterationResult actual   = mandelbrotter::iteratePerturbed(ref, offset, kIter);
             EXPECT_EQ(actual.interior, expected.interior)
                 << c.name << " pixel " << p.x << "," << p.y;
             EXPECT_NEAR(actual.smoothIter, expected.smoothIter,
                         1e-6 * std::max(1.0, expected.smoothIter))
                 << c.name << " pixel " << p.x << "," << p.y;
+            // With the jump table the answer is the same, and most of the steps are jumped.
+            mandelbrotter::PerturbationStats stats;
+            const IterationResult            jumped =
+                mandelbrotter::iteratePerturbed(ref, offset, kIter, &table, &stats);
+            EXPECT_EQ(jumped.interior, expected.interior)
+                << c.name << " (bla) pixel " << p.x << "," << p.y;
+            EXPECT_NEAR(jumped.smoothIter, expected.smoothIter,
+                        1e-6 * std::max(1.0, expected.smoothIter))
+                << c.name << " (bla) pixel " << p.x << "," << p.y;
+            EXPECT_LE(stats.skipped, stats.iterations) << c.name;
+            EXPECT_LE(stats.iterations, kIter) << c.name;
+            iterations += stats.iterations;
+            skipped += stats.skipped;
+        }
+        EXPECT_GE(skipped, c.minSkipped * iterations) << c.name;
+    }
+}
+
+TEST(Perturbation, BlaAgreesWithPlainPerturbationInAChaoticRegion)
+{
+    // The seahorse valley at 1e100, with digits a double cannot hold. Both are double computations
+    // of the same delta; they part ways only where chaos amplifies the epsilon of a linearisation,
+    // which must be rare, and the jumps must cover most of the work.
+    constexpr double kZoom = 1e100;
+    constexpr int    kIter = 3000;
+    const int        bits  = mandelbrotter::fractionBitsFor(kZoom);
+    const BigComplex center{
+        *BigFixed::fromDecimal("-0.743643887037158704752191506114774000000000000000000000000000000"
+                               "000000000000000000000000000000000000001",
+                               bits),
+        *BigFixed::fromDecimal("0.1318259042053119704931320563851390000000000000000000000000000000"
+                               "00000000000000000000000000000000000002",
+                               bits)};
+    const Viewport       vp{{center, kZoom}, kSize};
+    const ReferenceOrbit ref(FractalSpec{}, center, kIter);
+    const BlaTable       table(ref, maxDeltaC(vp));
+    EXPECT_GE(table.levels(), 8);
+    int mismatches = 0;
+    int iterations = 0;
+    int skipped    = 0;
+    int pixels     = 0;
+    for (int y = 0; y < kGrid; y += 2)
+    {
+        for (int x = 0; x < kGrid; x += 2)
+        {
+            const Complex         offset = vp.offsetFromCenter(x + 0.5, y + 0.5);
+            const IterationResult plain  = mandelbrotter::iteratePerturbed(ref, offset, kIter);
+            mandelbrotter::PerturbationStats stats;
+            const IterationResult            jumped =
+                mandelbrotter::iteratePerturbed(ref, offset, kIter, &table, &stats);
+            const bool same = plain.interior == jumped.interior &&
+                              std::abs(plain.smoothIter - jumped.smoothIter) <=
+                                  1e-4 * std::max(1.0, plain.smoothIter);
+            mismatches += same ? 0 : 1;
+            iterations += stats.iterations;
+            skipped += stats.skipped;
+            ++pixels;
         }
     }
+    EXPECT_LE(mismatches, pixels / 50);  // 2 %
+    EXPECT_GT(2 * skipped, iterations);
+}
+
+TEST(Perturbation, NoJumpsAcrossTheBurningShipFoldOnTheRealAxis)
+{
+    // With Im Z = 0 every delta crosses the fold |Im z|, which no linear map describes: the table
+    // is built, but no entry ever applies, and the pixel is iterated step by step.
+    constexpr double     kZoom = 1e50;
+    const FractalSpec    ship{.family = FractalFamily::BURNING_SHIP};
+    const int            bits = mandelbrotter::fractionBitsFor(kZoom);
+    const BigComplex     center{*BigFixed::fromDecimal("-2", bits), BigFixed{bits}};
+    const ReferenceOrbit ref(ship, center, 400);
+    const Viewport       vp{{center, kZoom}, kSize};
+    const BlaTable       table(ref, maxDeltaC(vp));
+    EXPECT_GT(table.levels(), 0);
+    mandelbrotter::PerturbationStats stats;
+    static_cast<void>(
+        mandelbrotter::iteratePerturbed(ref, vp.offsetFromCenter(7.5, 40.5), 400, &table, &stats));
+    EXPECT_EQ(stats.skipped, 0);
+    EXPECT_GT(stats.iterations, 50);
 }
 
 TEST(Perturbation, DegenerateReferencesDoNotStep)

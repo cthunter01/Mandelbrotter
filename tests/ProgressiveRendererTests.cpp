@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <future>
@@ -17,6 +18,7 @@
 #include <gtest/gtest.h>
 
 #include "Mandelbrotter/BigFixed.h"
+#include "Mandelbrotter/BlaTable.h"
 #include "Mandelbrotter/ReferenceOrbit.h"
 #include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/Viewport.h"
@@ -298,13 +300,16 @@ TEST(Renderer, DeepRenderIteratesEveryPixelAsADeltaFromTheCentre)
     const mandelbrotter::Viewport       vp(settings.view, kSize);
     const mandelbrotter::ReferenceOrbit ref(settings.fractal, settings.view.center,
                                             settings.maxIterations);
-    bool                                varied = false;
+    // The renderer's jump table covers every delta-c in the view: the half diagonal.
+    const mandelbrotter::Complex  corner = vp.offsetFromCenter(0.0, 0.0);
+    const mandelbrotter::BlaTable table(ref, std::hypot(corner.re, corner.im));
+    bool                          varied = false;
     for (int y = 0; y < kSize.height; ++y)
     {
         for (int x = 0; x < kSize.width; ++x)
         {
             const auto expected = mandelbrotter::iteratePerturbed(
-                ref, vp.offsetFromCenter(x + 0.5, y + 0.5), settings.maxIterations);
+                ref, vp.offsetFromCenter(x + 0.5, y + 0.5), settings.maxIterations, &table);
             const std::size_t i = buffer->index(x, y);
             EXPECT_FLOAT_EQ(buffer->smoothIter[i], static_cast<float>(expected.smoothIter))
                 << x << "," << y;

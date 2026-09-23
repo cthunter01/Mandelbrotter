@@ -11,7 +11,9 @@ It builds and runs on Linux, macOS and Windows.
   cancels the render in flight. Iteration limit (up to 1 000 000) is manual or grows automatically with the zoom.
 - **Deep zoom**: to 1e300, far past where doubles stop telling pixels apart (about 1e13). The view centre is a
   big number whose precision follows the zoom, and above 1e8 every pixel is iterated as a small delta from the
-  centre's reference orbit (perturbation with rebasing), for every fractal family and in Julia mode.
+  centre's reference orbit (perturbation with rebasing), for every fractal family and in Julia mode. Bilinear
+  approximation jumps the long stretches where a pixel's delta is tiny against the orbit, so deep frames take a
+  fraction of the time of iterating them step by step.
 - **Colouring**: smooth escape-time colouring with six palettes plus density and offset controls; palette
   changes recolour instantly without recomputing.
 - **Extras**: orbit overlay for the point under the cursor; supersampled PNG export at any resolution; copy to

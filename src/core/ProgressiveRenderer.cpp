@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -15,6 +16,7 @@
 #include <vector>
 
 #include "Mandelbrotter/BigComplex.h"
+#include "Mandelbrotter/BlaTable.h"
 #include "Mandelbrotter/ReferenceOrbit.h"
 #include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/Viewport.h"
@@ -37,8 +39,10 @@ struct Scene
     Viewport                      viewport;
     int                           maxIterations;
     std::optional<ReferenceOrbit> reference;  ///< the centre's orbit, in perturbation mode
+    std::optional<BlaTable>       bla;        ///< its jump table, unless the orbit was cut short
 
-    /// Computes the reference orbit when the zoom calls for one; `stop` cuts that short.
+    /// Computes the reference orbit and its BLA table when the zoom calls for them; `stop` cuts
+    /// the orbit short.
     Scene(const RenderSettings& settings, PixelSize size, const std::stop_token& stop)
       : fractal(settings.fractal),
         viewport(settings.view, size),
@@ -52,6 +56,12 @@ struct Scene
             const BigComplex& center = viewport.view().center;
             const int         bits   = std::max(center.fractionBits(), fractionBitsFor(zoom));
             reference.emplace(fractal, center.withFractionBits(bits), maxIterations, stop);
+            if (!reference->cancelled())
+            {
+                // Every pixel's delta-c lies within the half diagonal of the view.
+                const Complex corner = viewport.offsetFromCenter(0.0, 0.0);
+                bla.emplace(*reference, fractal.julia ? 0.0 : std::hypot(corner.re, corner.im));
+            }
         }
     }
 
@@ -60,7 +70,7 @@ struct Scene
         if (reference)
         {
             return iteratePerturbed(*reference, viewport.offsetFromCenter(x + 0.5, y + 0.5),
-                                    maxIterations);
+                                    maxIterations, bla ? &*bla : nullptr);
         }
         return iteratePixel(fractal, viewport.pixelCenter({x, y}), maxIterations);
     }

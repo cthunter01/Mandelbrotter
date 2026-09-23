@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <span>
 
+#include "Mandelbrotter/BlaTable.h"
 #include "Mandelbrotter/ReferenceOrbit.h"
 #include "Mandelbrotter/fractal.h"
 #include "Mandelbrotter/geometry.h"
@@ -75,17 +76,28 @@ struct RawResult
     bool   escaped;
 };
 
-/// The hot loop, on a reference of at least two points. `Square` selects the n == 2 path at
-/// compile time.
-template <FractalFamily Family, bool Square>
-RawResult run(std::span<const Complex> ref, Complex delta0, bool julia, int n, int maxIter) noexcept
+/// What run() needs beyond the reference: the pixel, the limits and the optional jump table.
+struct Task
 {
-    const Complex deltaC = julia ? Complex{} : delta0;  // the pixel's own c differs by this
-    Complex       delta  = julia ? delta0 : Complex{};  // z_0 - Z_0
+    Complex         delta0;
+    bool            julia;
+    int             n;
+    int             maxIter;
+    const BlaTable* bla;
+};
+
+/// The hot loop, on a reference of at least two points. `Square` selects the n == 2 path at
+/// compile time. `skipped` counts the steps covered by BLA jumps.
+template <FractalFamily Family, bool Square>
+RawResult run(std::span<const Complex> ref, const Task& task, int& skipped) noexcept
+{
+    const Complex deltaC = task.julia ? Complex{} : task.delta0;  // the pixel's c differs by this
+    Complex       delta  = task.julia ? task.delta0 : Complex{};  // z_0 - Z_0
     const auto    last   = static_cast<int>(ref.size()) - 1;
     int           k      = 0;
+    int           steps  = 0;
     Complex       z      = ref[0] + delta;
-    for (int steps = 0; steps < maxIter; ++steps)
+    while (steps < task.maxIter)
     {
         const double r2 = z.normSquared();
         if (r2 > kBailoutRadiusSquared)
@@ -97,52 +109,70 @@ RawResult run(std::span<const Complex> ref, Complex delta0, bool julia, int n, i
             delta = z - ref[0];
             k     = 0;
         }
+        if (task.bla != nullptr)
+        {
+            if (const Bla* jump =
+                    task.bla->longestValid(k, delta.normSquared(), task.maxIter - steps))
+            {
+                delta = jump->m.apply(delta) + jump->n.apply(deltaC);
+                k += static_cast<int>(jump->length);
+                steps += static_cast<int>(jump->length);
+                skipped += static_cast<int>(jump->length);
+                z = ref[static_cast<std::size_t>(k)] + delta;
+                continue;
+            }
+        }
         const auto [w, dw] = twist<Family>(ref[static_cast<std::size_t>(k)], delta);
-        delta              = (Square ? squareDelta(w, dw) : powerDelta(w, dw, n)) + deltaC;
+        delta              = (Square ? squareDelta(w, dw) : powerDelta(w, dw, task.n)) + deltaC;
         ++k;
+        ++steps;
         z = ref[static_cast<std::size_t>(k)] + delta;
     }
     const double r2 = z.normSquared();
-    return {maxIter, r2, r2 > kBailoutRadiusSquared};
+    return {task.maxIter, r2, r2 > kBailoutRadiusSquared};
 }
 
 template <FractalFamily Family>
-RawResult runFamily(std::span<const Complex> ref, Complex delta0, bool julia, int n,
-                    int maxIter) noexcept
+RawResult runFamily(std::span<const Complex> ref, const Task& task, int& skipped) noexcept
 {
-    return n == 2 ? run<Family, true>(ref, delta0, julia, n, maxIter)
-                  : run<Family, false>(ref, delta0, julia, n, maxIter);
+    return task.n == 2 ? run<Family, true>(ref, task, skipped)
+                       : run<Family, false>(ref, task, skipped);
 }
 
-RawResult runAny(const FractalSpec& spec, std::span<const Complex> ref, Complex delta0, int n,
-                 int maxIter) noexcept
+RawResult runAny(FractalFamily family, std::span<const Complex> ref, const Task& task,
+                 int& skipped) noexcept
 {
-    switch (spec.family)
+    switch (family)
     {
         case FractalFamily::MANDELBROT:
-            return runFamily<FractalFamily::MANDELBROT>(ref, delta0, spec.julia, n, maxIter);
+            return runFamily<FractalFamily::MANDELBROT>(ref, task, skipped);
         case FractalFamily::BURNING_SHIP:
-            return runFamily<FractalFamily::BURNING_SHIP>(ref, delta0, spec.julia, n, maxIter);
+            return runFamily<FractalFamily::BURNING_SHIP>(ref, task, skipped);
         case FractalFamily::TRICORN:
-            return runFamily<FractalFamily::TRICORN>(ref, delta0, spec.julia, n, maxIter);
+            return runFamily<FractalFamily::TRICORN>(ref, task, skipped);
     }
-    return {maxIter, 0.0, false};
+    return {task.maxIter, 0.0, false};
 }
 
 }  // namespace
 
-IterationResult iteratePerturbed(const ReferenceOrbit& reference, Complex delta0,
-                                 int maxIter) noexcept
+IterationResult iteratePerturbed(const ReferenceOrbit& reference, Complex delta0, int maxIter,
+                                 const BlaTable* bla, PerturbationStats* stats) noexcept
 {
     const FractalSpec& spec = reference.spec();
-    const int          n    = clampExponent(spec.exponent);
-    maxIter                 = std::max(maxIter, 0);
-    if (reference.length() < 2)
+    const Task         task{.delta0  = delta0,
+                            .julia   = spec.julia,
+                            .n       = clampExponent(spec.exponent),
+                            .maxIter = reference.length() < 2 ? 0  // a lone Z_0: nothing to step
+                                                              : std::max(maxIter, 0),
+                            .bla     = bla};
+    int                skipped = 0;
+    const RawResult    raw     = runAny(spec.family, reference.points(), task, skipped);
+    if (stats != nullptr)
     {
-        maxIter = 0;  // a lone Z_0 gives nothing to step along
+        *stats = {.iterations = raw.steps, .skipped = skipped};
     }
-    const RawResult raw = runAny(spec, reference.points(), delta0, n, maxIter);
-    return smoothIterationResult(raw.steps, raw.normSquared, raw.escaped, n);
+    return smoothIterationResult(raw.steps, raw.normSquared, raw.escaped, task.n);
 }
 
 }  // namespace mandelbrotter
