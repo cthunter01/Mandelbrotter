@@ -1,4 +1,6 @@
 add_executable(Mandelbrotter_tests
+    BigComplexTests.cpp
+    BigFixedTests.cpp
     bookmarks_tests.cpp
     cli_tests.cpp
     exporter_tests.cpp

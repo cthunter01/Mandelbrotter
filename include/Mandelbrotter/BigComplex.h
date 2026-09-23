@@ -1,0 +1,52 @@
+#pragma once
+
+#include <utility>
+
+#include "Mandelbrotter/BigFixed.h"
+#include "Mandelbrotter/geometry.h"
+
+namespace mandelbrotter
+{
+
+/// A complex number over BigFixed: the centre of a deep view and the reference orbit computed from
+/// it. Both parts are kept at the same precision.
+struct BigComplex
+{
+    BigFixed re;
+    BigFixed im;
+
+    explicit BigComplex(int fractionBits = BigFixed::kMinFractionBits)
+      : re(fractionBits), im(fractionBits)
+    {
+    }
+    BigComplex(BigFixed real, BigFixed imaginary)
+      : re(std::move(real)), im(std::move(imaginary)) { }
+
+    [[nodiscard]] static BigComplex fromComplex(Complex c, int fractionBits);
+    /// Both parts as the nearest doubles.
+    [[nodiscard]] Complex    approx() const;
+    [[nodiscard]] int        fractionBits() const noexcept { return re.fractionBits(); }
+    [[nodiscard]] BigComplex withFractionBits(int fractionBits) const;
+
+    [[nodiscard]] BigComplex conj() const;
+    /// (|re|, |im|): the Burning Ship's fold.
+    [[nodiscard]] BigComplex absParts() const;
+    /// z * z with two multiplications instead of four.
+    [[nodiscard]] BigComplex squared() const;
+    /// |z|^2 as a double: plenty for an escape test.
+    [[nodiscard]] double normSquaredApprox() const;
+
+    bool operator==(const BigComplex&) const = default;
+
+    friend BigComplex operator+(const BigComplex& a, const BigComplex& b)
+    {
+        return {a.re + b.re, a.im + b.im};
+    }
+    friend BigComplex operator-(const BigComplex& a, const BigComplex& b)
+    {
+        return {a.re - b.re, a.im - b.im};
+    }
+    friend BigComplex operator*(const BigComplex& a, const BigComplex& b);
+};
+
+}  // namespace mandelbrotter

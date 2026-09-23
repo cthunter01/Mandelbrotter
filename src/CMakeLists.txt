@@ -1,5 +1,7 @@
 # Core library: all the maths and rendering, free of any GUI dependency, so the tests and the CLI can use it.
 add_library(Mandelbrotter_lib STATIC
+    core/BigComplex.cpp
+    core/BigFixed.cpp
     core/bookmarks.cpp
     core/cli.cpp
     core/exporter.cpp
