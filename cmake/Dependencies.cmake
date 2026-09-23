@@ -54,7 +54,8 @@ add_library(stb::stb ALIAS stb_impl)
 target_include_directories(stb_impl SYSTEM PUBLIC ${stb_SOURCE_DIR})
 
 # wxWidgets 3.2, built in-tree as static libraries on the platform's native toolkit, which wx picks itself:
-# GTK3 on Linux (GTK stays a system shared library), Cocoa on macOS, Win32 on Windows. Link wx::core wx::base.
+# GTK3 on Linux (GTK stays a system shared library), Cocoa on macOS, Win32 on Windows. Link wx::html wx::core
+# wx::base.
 # Deliberately no FIND_PACKAGE_ARGS: a *shared* system wxWidgets would otherwise be picked up, and we want a
 # static, trimmed build with a known configuration.
 set(wxBUILD_SHARED     OFF  CACHE BOOL   "" FORCE)
@@ -67,11 +68,16 @@ set(wxBUILD_DEMOS      OFF  CACHE BOOL   "" FORCE)
 set(wxBUILD_BENCHMARKS OFF  CACHE BOOL   "" FORCE)
 set(wxBUILD_LOCALES    OFF  CACHE STRING "" FORCE)
 # Components we don't use; the GTK-only ones (libnotify, SDL, EGL, XTest) are simply ignored elsewhere.
-foreach(opt wxUSE_WEBVIEW wxUSE_MEDIACTRL wxUSE_STC wxUSE_XRC wxUSE_XML wxUSE_RICHTEXT wxUSE_HTML wxUSE_PROPGRID
+foreach(opt wxUSE_WEBVIEW wxUSE_MEDIACTRL wxUSE_STC wxUSE_XRC wxUSE_XML wxUSE_RICHTEXT wxUSE_PROPGRID
             wxUSE_RIBBON wxUSE_AUI wxUSE_OPENGL wxUSE_GLCANVAS_EGL wxUSE_SOUND wxUSE_LIBSDL wxUSE_LIBNOTIFY
             wxUSE_SECRETSTORE wxUSE_WEBREQUEST wxUSE_LIBMSPACK wxUSE_XTEST wxUSE_LIBLZMA wxUSE_DEBUGREPORT
-            wxUSE_HELP wxUSE_WXHTML_HELP)
+            wxUSE_MS_HTML_HELP)
     set(${opt} OFF CACHE BOOL "" FORCE)
+endforeach()
+# The in-app help is wxHTML (wxHtmlHelpController: contents tree, index, full-text search), which needs the html
+# library and the help subsystem; the Windows CHM controller (wxUSE_MS_HTML_HELP) stays off above.
+foreach(opt wxUSE_HTML wxUSE_HELP wxUSE_WXHTML_HELP)
+    set(${opt} ON CACHE BOOL "" FORCE)
 endforeach()
 set(wxUSE_LIBJPEG OFF CACHE STRING "" FORCE)
 set(wxUSE_LIBTIFF OFF CACHE STRING "" FORCE)
