@@ -95,26 +95,22 @@ std::string generate(std::span<const unsigned char> data, std::string_view input
     println(out, "namespace");
     println(out, "{{");
     println(out, "");
-    if (data.empty())
+    // The count is spelled out: deducing it instantiates a fold expression over every chunk, which
+    // exceeds Clang's default nesting limit of 256 once the book passes about 2 MB.
+    const std::size_t chunkCount = (data.size() + kChunkBytes - 1) / kChunkBytes;
+    println(out, "constexpr std::array<std::string_view, {}> kChunks{{", chunkCount);
+    for (std::size_t offset = 0; offset < data.size(); offset += kChunkBytes)
     {
-        println(out, "constexpr std::array<std::string_view, 0> kChunks{{}};");
-    }
-    else
-    {
-        println(out, "constexpr std::array kChunks{{");
-        for (std::size_t offset = 0; offset < data.size(); offset += kChunkBytes)
+        const auto chunk = data.subspan(offset, std::min(kChunkBytes, data.size() - offset));
+        println(out, "    std::string_view(");
+        for (std::size_t start = 0; start < chunk.size(); start += kLineBytes)
         {
-            const auto chunk = data.subspan(offset, std::min(kChunkBytes, data.size() - offset));
-            println(out, "    std::string_view(");
-            for (std::size_t start = 0; start < chunk.size(); start += kLineBytes)
-            {
-                println(out, "        \"{}\"",
-                        escaped(chunk.subspan(start, std::min(kLineBytes, chunk.size() - start))));
-            }
-            println(out, "        , {}),", chunk.size());
+            println(out, "        \"{}\"",
+                    escaped(chunk.subspan(start, std::min(kLineBytes, chunk.size() - start))));
         }
-        println(out, "}};");
+        println(out, "        , {}),", chunk.size());
     }
+    println(out, "}};");
     println(out, "");
     println(out, "}}  // namespace");
     println(out, "");

@@ -143,7 +143,7 @@ a GitHub release with the archives, a `SHA256SUMS` file and generated release no
 
 | Archive | Built with | Runs on |
 | --- | --- | --- |
-| `Mandelbrotter-<version>-linux-x86_64.tar.gz` | Clang 18, Ubuntu 24.04 | x86-64 Linux with glibc 2.39+ (Ubuntu 24.04+, Debian 13+, Fedora 40+, RHEL 10+) and GTK 3 installed |
+| `Mandelbrotter-<version>-linux-x86_64.tar.gz` | Clang 22, Ubuntu 24.04 | x86-64 Linux with glibc 2.39+ (Ubuntu 24.04+, Debian 13+, Fedora 40+, RHEL 10+) and GTK 3 installed |
 | `Mandelbrotter-<version>-macos-universal.tar.gz` | Apple Clang | macOS 26+, Apple silicon and Intel |
 | `Mandelbrotter-<version>-windows-x86_64.zip` | MSVC | 64-bit Windows |
 
