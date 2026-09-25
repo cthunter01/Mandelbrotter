@@ -143,8 +143,8 @@ a GitHub release with the archives, a `SHA256SUMS` file and generated release no
 
 | Archive | Built with | Runs on |
 | --- | --- | --- |
-| `Mandelbrotter-<version>-linux-x86_64.tar.gz` | GCC 14, Ubuntu 24.04 | x86-64 Linux with glibc 2.39+ (Ubuntu 24.04+, Debian 13+, Fedora 40+, RHEL 10+) and GTK 3 installed |
-| `Mandelbrotter-<version>-macos-universal.tar.gz` | Apple Clang | macOS 14+, Apple silicon and Intel |
+| `Mandelbrotter-<version>-linux-x86_64.tar.gz` | Clang 18, Ubuntu 24.04 | x86-64 Linux with glibc 2.39+ (Ubuntu 24.04+, Debian 13+, Fedora 40+, RHEL 10+) and GTK 3 installed |
+| `Mandelbrotter-<version>-macos-universal.tar.gz` | Apple Clang | macOS 26+, Apple silicon and Intel |
 | `Mandelbrotter-<version>-windows-x86_64.zip` | MSVC | 64-bit Windows |
 
 The C++ runtime is linked into the Linux and Windows executables, so users need no libstdc++ or VC++

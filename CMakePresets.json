@@ -123,8 +123,8 @@
     },
     {
       "name": "dist-linux",
-      "displayName": "Linux release archive: GCC Release, libstdc++ and libgcc linked statically",
-      "inherits": ["ci-gcc", "dist"],
+      "displayName": "Linux release archive: Clang Release, libstdc++ and libgcc linked statically",
+      "inherits": ["ci-clang", "dist"],
       "cacheVariables": {
         "CMAKE_EXE_LINKER_FLAGS": "-static-libstdc++ -static-libgcc",
         "CPACK_STRIP_FILES": "ON",
@@ -133,12 +133,12 @@
     },
     {
       "name": "dist-macos",
-      "displayName": "macOS release archive: Apple Clang Release, universal binary for macOS 14+",
+      "displayName": "macOS release archive: Apple Clang Release, universal binary for macOS 26+",
       "inherits": ["ci-clang", "dist"],
       "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Darwin" },
       "cacheVariables": {
         "CMAKE_OSX_ARCHITECTURES": "arm64;x86_64",
-        "CMAKE_OSX_DEPLOYMENT_TARGET": "14.0",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "26.0",
         "CPACK_SYSTEM_NAME": "macos-universal"
       }
     },
