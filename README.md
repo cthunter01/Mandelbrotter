@@ -121,12 +121,44 @@ Every preset builds into `build/<preset>/`. A preset only exists on the platform
 | `tidy` | Linux, macOS | Clang Debug with clang-tidy, warnings as errors |
 | `coverage` | Linux, macOS | Clang Debug with source-based coverage; report in `build/coverage/coverage/` |
 | `ci-gcc`, `ci-clang`, `ci-msvc` | Linux / Linux, macOS / Windows | Release, warnings as errors (what CI runs) |
+| `dist-linux`, `dist-macos`, `dist-windows` | Linux, macOS, Windows | The release archives (see [Releases](#releases)) |
 
 Configure, build and test can also be run separately: `cmake --preset clang-debug`,
-`cmake --build --preset clang-debug`, `ctest --preset clang-debug`.
+`cmake --build --preset clang-debug`, `ctest --preset clang-debug`. The `dist-*` workflow presets also package.
 
 CI (GitHub Actions) runs `ci-gcc`, `ci-clang`, `asan` and `tidy` on Arch Linux, `ci-clang` on macOS, `ci-msvc` on
 Windows, and a clang-format check.
+
+## Releases
+
+The `Release` GitHub workflow (`.github/workflows/release.yml`) runs only when started by hand, never on a push:
+
+1. Raise `VERSION` in `project()` in `CMakeLists.txt`, then commit and push.
+2. Start it from the Actions tab (Release > Run workflow, pick the branch) or with `gh workflow run release.yml`
+   (`-f prerelease=true` marks it a pre-release).
+
+It stops at once if the tag `v<version>` already exists. Otherwise it runs all of CI and builds, tests and
+packages an archive on each platform. Only when every job passes does it tag the commit `v<version>` and publish
+a GitHub release with the archives, a `SHA256SUMS` file and generated release notes.
+
+| Archive | Built with | Runs on |
+| --- | --- | --- |
+| `Mandelbrotter-<version>-linux-x86_64.tar.gz` | GCC 14, Ubuntu 24.04 | x86-64 Linux with glibc 2.39+ (Ubuntu 24.04+, Debian 13+, Fedora 40+, RHEL 10+) and GTK 3 installed |
+| `Mandelbrotter-<version>-macos-universal.tar.gz` | Apple Clang | macOS 14+, Apple silicon and Intel |
+| `Mandelbrotter-<version>-windows-x86_64.zip` | MSVC | 64-bit Windows |
+
+The C++ runtime is linked into the Linux and Windows executables, so users need no libstdc++ or VC++
+Redistributable. GTK 3 itself stays a system shared library on Linux (as in a normal build), so it must already
+be installed; it is the default on virtually every Linux desktop. macOS and Windows archives are otherwise fully
+self-contained. Dependencies (wxWidgets, GoogleTest, nlohmann/json) are always built from source for a release,
+never taken from the build machine. An archive holds what the `install()` rules install: add rules for anything
+else it should ship.
+
+Build one locally with `cmake --workflow --preset dist-linux` (or `dist-macos`, `dist-windows`); it lands in
+`build/dist-<os>/package/`.
+
+The executable is not code-signed. A macOS browser download needs
+`xattr -d com.apple.quarantine bin/Mandelbrotter` before it runs, and Windows SmartScreen warns the first time.
 
 ## Layout
 

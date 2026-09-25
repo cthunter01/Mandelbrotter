@@ -7,6 +7,7 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_call:   # the Release workflow runs all of CI before it tags
 
 env:
   CCACHE_DIR: ${{ github.workspace }}/.ccache

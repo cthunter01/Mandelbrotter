@@ -57,3 +57,9 @@ endif()
 if(MANDELBROTTER_BUILD_DOCS)
     include(${PROJECT_SOURCE_DIR}/cmake/Docs.cmake)
 endif()
+
+# Release archives of what the install() rules install, named <project>-<version>-<CPACK_SYSTEM_NAME>.
+# Made by the dist-* workflow presets (cmake --workflow --preset dist-linux) and the Release GitHub workflow.
+if(PROJECT_IS_TOP_LEVEL)
+    include(CPack)
+endif()

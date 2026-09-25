@@ -22,12 +22,17 @@ macOS (Apple Clang) and Windows (MSVC).
   when the rendered pictures changed, so the help-window screenshot shows them); `ctest --preset clang-debug -R
   HelpBook` checks the book
 
-Other presets: `clang-release`, `gcc-debug`, `gcc-release`, `tsan`, `coverage`, `ci-gcc`, `ci-clang`
+Other presets: `clang-release`, `gcc-debug`, `gcc-release`, `tsan`, `coverage`, `ci-gcc`, `ci-clang`, and
+`dist-linux`, `dist-macos`, `dist-windows` (release archives, in `build/dist-<os>/package/`)
 (`gcc-debug` and the like are configure/build/test presets, not workflows).
 Each builds into `build/<preset>/`; never edit anything under `build/`. The first configure of a preset
 downloads and compiles wxWidgets (minutes); ccache makes later presets fast. A preset is only available on the
 platforms it supports (`gcc-*`: Linux; `clang-*`: Linux and macOS; `msvc-*`: Windows); `cmake --list-presets`
 shows this machine's.
+
+Releases: the `Release` GitHub workflow (`.github/workflows/release.yml`) runs only when started by hand. It
+tags `v<project VERSION>` and publishes the `dist-*` archives (the Linux one still needs system GTK 3 at
+runtime; macOS and Windows are self-contained), so raise `VERSION` in `project()` in `CMakeLists.txt` first.
 
 ## Layout
 - `include/Mandelbrotter/`: public headers of the core library

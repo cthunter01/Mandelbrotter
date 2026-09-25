@@ -114,6 +114,42 @@
       "name": "ci-msvc",
       "displayName": "MSVC Release, warnings as errors",
       "inherits": ["msvc-release", "werror"]
+    },
+    {
+      "name": "dist",
+      "hidden": true,
+      "description": "Release archives: dependencies are built from source and linked in, never taken from the build machine",
+      "cacheVariables": { "FETCHCONTENT_TRY_FIND_PACKAGE_MODE": "NEVER" }
+    },
+    {
+      "name": "dist-linux",
+      "displayName": "Linux release archive: GCC Release, libstdc++ and libgcc linked statically",
+      "inherits": ["ci-gcc", "dist"],
+      "cacheVariables": {
+        "CMAKE_EXE_LINKER_FLAGS": "-static-libstdc++ -static-libgcc",
+        "CPACK_STRIP_FILES": "ON",
+        "CPACK_SYSTEM_NAME": "linux-x86_64"
+      }
+    },
+    {
+      "name": "dist-macos",
+      "displayName": "macOS release archive: Apple Clang Release, universal binary for macOS 14+",
+      "inherits": ["ci-clang", "dist"],
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Darwin" },
+      "cacheVariables": {
+        "CMAKE_OSX_ARCHITECTURES": "arm64;x86_64",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "14.0",
+        "CPACK_SYSTEM_NAME": "macos-universal"
+      }
+    },
+    {
+      "name": "dist-windows",
+      "displayName": "Windows release archive: MSVC Release, C/C++ runtime linked statically",
+      "inherits": ["ci-msvc", "dist"],
+      "cacheVariables": {
+        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded",
+        "CPACK_SYSTEM_NAME": "windows-x86_64"
+      }
     }
   ],
   "buildPresets": [
@@ -129,7 +165,10 @@
     { "name": "tidy", "configurePreset": "tidy" },
     { "name": "ci-gcc", "configurePreset": "ci-gcc" },
     { "name": "ci-clang", "configurePreset": "ci-clang" },
-    { "name": "ci-msvc", "configurePreset": "ci-msvc" }
+    { "name": "ci-msvc", "configurePreset": "ci-msvc" },
+    { "name": "dist-linux", "configurePreset": "dist-linux" },
+    { "name": "dist-macos", "configurePreset": "dist-macos" },
+    { "name": "dist-windows", "configurePreset": "dist-windows" }
   ],
   "testPresets": [
     {
@@ -162,7 +201,35 @@
     { "name": "tidy", "inherits": "test-base", "configurePreset": "tidy" },
     { "name": "ci-gcc", "inherits": "test-base", "configurePreset": "ci-gcc" },
     { "name": "ci-clang", "inherits": "test-base", "configurePreset": "ci-clang" },
-    { "name": "ci-msvc", "inherits": "test-base", "configurePreset": "ci-msvc" }
+    { "name": "ci-msvc", "inherits": "test-base", "configurePreset": "ci-msvc" },
+    { "name": "dist-linux", "inherits": "test-base", "configurePreset": "dist-linux" },
+    { "name": "dist-macos", "inherits": "test-base", "configurePreset": "dist-macos" },
+    { "name": "dist-windows", "inherits": "test-base", "configurePreset": "dist-windows" }
+  ],
+  "packagePresets": [
+    {
+      "name": "package-base",
+      "hidden": true,
+      "packageDirectory": "${sourceDir}/build/${presetName}/package"
+    },
+    {
+      "name": "dist-linux",
+      "inherits": "package-base",
+      "configurePreset": "dist-linux",
+      "generators": ["TGZ"]
+    },
+    {
+      "name": "dist-macos",
+      "inherits": "package-base",
+      "configurePreset": "dist-macos",
+      "generators": ["TGZ"]
+    },
+    {
+      "name": "dist-windows",
+      "inherits": "package-base",
+      "configurePreset": "dist-windows",
+      "generators": ["ZIP"]
+    }
   ],
   "workflowPresets": [
     {
@@ -237,6 +304,36 @@
       "steps": [
         { "type": "configure", "name": "coverage" },
         { "type": "build", "name": "coverage" }
+      ]
+    },
+    {
+      "name": "dist-linux",
+      "displayName": "Build, test and package the Linux release archive",
+      "steps": [
+        { "type": "configure", "name": "dist-linux" },
+        { "type": "build", "name": "dist-linux" },
+        { "type": "test", "name": "dist-linux" },
+        { "type": "package", "name": "dist-linux" }
+      ]
+    },
+    {
+      "name": "dist-macos",
+      "displayName": "Build, test and package the macOS release archive",
+      "steps": [
+        { "type": "configure", "name": "dist-macos" },
+        { "type": "build", "name": "dist-macos" },
+        { "type": "test", "name": "dist-macos" },
+        { "type": "package", "name": "dist-macos" }
+      ]
+    },
+    {
+      "name": "dist-windows",
+      "displayName": "Build, test and package the Windows release archive",
+      "steps": [
+        { "type": "configure", "name": "dist-windows" },
+        { "type": "build", "name": "dist-windows" },
+        { "type": "test", "name": "dist-windows" },
+        { "type": "package", "name": "dist-windows" }
       ]
     }
   ]
