@@ -34,6 +34,7 @@
 #include "gui/GuidedTour.h"
 #include "gui/ScreenshotRun.h"
 #include "gui/SidePanel.h"
+#include "gui/app_icon.h"
 #include "gui/export_runner.h"
 #include "gui/wx_util.h"
 
@@ -117,6 +118,7 @@ MainFrame::MainFrame(RenderSettings initial, std::filesystem::path bookmarksPath
     m_canvas(new FractalCanvas(this, m_settings)),
     m_panel(new SidePanel(this))
 {
+    applyAppIcon(*this);
     SetClientSize(FromDIP(wxSize(1280, 800)));
 
     auto* sizer = new wxBoxSizer(wxHORIZONTAL);

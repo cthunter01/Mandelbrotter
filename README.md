@@ -28,8 +28,9 @@ On every platform: CMake 3.28+, Ninja and Git. wxWidgets is downloaded and built
 libraries by the first configure (a few minutes); GoogleTest and nlohmann/json are used from the system if
 installed, otherwise downloaded.
 
-- **Linux**: GCC 14+ or Clang 18+ (C++23 including `<print>` and `<expected>`), plus the GTK 3 development
-  files and `pkg-config` (GTK itself stays a system library). On Arch: `pacman -S cmake ninja gtk3 pkgconf`;
+- **Linux**: GCC 14+, or Clang 22+ with GCC 14+'s libstdc++ (C++23 including `<print>` and `<expected>`; Clang
+  18 cannot build it, 19 to 21 are untested), plus the GTK 3 development files and `pkg-config` (GTK itself
+  stays a system library). On Arch: `pacman -S cmake ninja gtk3 pkgconf`;
   on Debian/Ubuntu: `apt install cmake ninja-build libgtk-3-dev pkg-config`.
 - **macOS**: Xcode 26.6 or later (its Apple Clang is what CI uses; earlier Xcode 26 releases are untested), and
   Ninja and CMake from Homebrew: `brew install cmake ninja`. wxWidgets uses Cocoa, so nothing else is needed.
@@ -168,6 +169,8 @@ The executable is not code-signed. A macOS browser download needs
 - `src/gui/`: the wxWidgets layer (`Mandelbrotter_gui`): main frame, canvas, side panel, dialogs, the help
   window, the demo player, the guided tour and the screenshot mode.
 - `src/main.cpp`: the executable; dispatches between the CLI and the GUI.
+- `src/icons/`: the application icon, rendered by Mandelbrotter itself; `src/icons/make_icons.sh` regenerates it
+  from a release build (needs ImageMagick 7).
 - `src/tools/`: build-time tools (`Mandelbrotter_embed` turns the help book into a C++ source).
 - `docs/help/`: the help book: hand-written pages in wxHTML, the contents tree and index, and the images. It is
   zipped and embedded into the executable at build time.

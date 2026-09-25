@@ -32,6 +32,7 @@ Mandelbrotter_configure_target(Mandelbrotter_embed)
 
 # GUI library: the wxWidgets layer. Headers live next to the sources and are included as "gui/<name>.h".
 add_library(Mandelbrotter_gui STATIC
+    gui/app_icon.cpp
     gui/BookmarkStore.cpp
     gui/DemoPlayer.cpp
     gui/export_runner.cpp
@@ -56,6 +57,17 @@ if(UNIX AND NOT APPLE)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(GTK3 REQUIRED IMPORTED_TARGET gtk+-3.0)
     target_link_libraries(Mandelbrotter_gui PRIVATE PkgConfig::GTK3)
+
+    # The window icon (gui/app_icon.cpp), compiled in so the executable needs no files beside it.
+    set(icon_png ${CMAKE_CURRENT_SOURCE_DIR}/icons/mandelbrotter.png)
+    set(icon_cpp ${PROJECT_BINARY_DIR}/icons/app_icon_data.cpp)
+    add_custom_command(OUTPUT ${icon_cpp}
+        COMMAND Mandelbrotter_embed ${icon_png} ${icon_cpp} gui/app_icon.h mandelbrotter::gui appIconPngChunks
+        DEPENDS ${icon_png} Mandelbrotter_embed
+        COMMENT "Embedding the application icon"
+        VERBATIM)
+    set_source_files_properties(${icon_cpp} PROPERTIES GENERATED TRUE SKIP_LINTING ON)
+    target_sources(Mandelbrotter_gui PRIVATE ${icon_cpp})
 endif()
 target_compile_definitions(Mandelbrotter_gui PRIVATE MANDELBROTTER_VERSION="${PROJECT_VERSION}")
 include(${PROJECT_SOURCE_DIR}/cmake/HelpBook.cmake)
@@ -66,6 +78,16 @@ Mandelbrotter_configure_target(Mandelbrotter_gui)
 # the app initializer object.
 add_executable(Mandelbrotter main.cpp)
 target_link_libraries(Mandelbrotter PRIVATE Mandelbrotter::gui)
+# Windows: the application icon and wxWidgets' resources (wxMSW loads its stock cursors from the executable),
+# and wx's per-monitor DPI manifest, which the linker merges into the one it writes so Windows stops
+# bitmap-scaling the window.
+if(WIN32)
+    target_sources(Mandelbrotter PRIVATE
+        Mandelbrotter.rc
+        ${wxwidgets_SOURCE_DIR}/include/wx/msw/wx_dpi_aware_pmv2.manifest)
+    set_source_files_properties(Mandelbrotter.rc PROPERTIES
+        OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/icons/mandelbrotter.ico)
+endif()
 Mandelbrotter_configure_target(Mandelbrotter)
 
 include(GNUInstallDirs)

@@ -326,16 +326,16 @@ void FractalCanvas::drawOverlays(wxDC& dc)
     {
         const wxRect rect(m_dragStart, m_dragCurrent);
         dc.SetBrush(*wxTRANSPARENT_BRUSH);
-        dc.SetPen(wxPen(*wxBLACK, 1, wxPENSTYLE_SOLID));
+        dc.SetPen(wxPen(*wxBLACK, FromDIP(1), wxPENSTYLE_SOLID));
         dc.DrawRectangle(rect);
-        dc.SetPen(wxPen(*wxWHITE, 1, wxPENSTYLE_SHORT_DASH));
+        dc.SetPen(wxPen(*wxWHITE, FromDIP(1), wxPENSTYLE_SHORT_DASH));
         dc.DrawRectangle(rect);
     }
     if (m_showOrbit && m_orbit.size() > 1)
     {
-        dc.SetPen(wxPen(wxColour(255, 255, 255, 200), 1, wxPENSTYLE_SOLID));
+        dc.SetPen(wxPen(wxColour(255, 255, 255, 200), FromDIP(1), wxPENSTYLE_SOLID));
         dc.DrawLines(static_cast<int>(m_orbit.size()), m_orbit.data());
-        dc.SetPen(wxPen(wxColour(255, 80, 80), 2, wxPENSTYLE_SOLID));
+        dc.SetPen(wxPen(wxColour(255, 80, 80), FromDIP(2), wxPENSTYLE_SOLID));
         dc.SetBrush(*wxTRANSPARENT_BRUSH);
         dc.DrawCircle(m_orbit.front(), FromDIP(4));
     }

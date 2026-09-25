@@ -12,6 +12,7 @@
 #include <wx/utils.h>
 
 #include "Mandelbrotter/help_action.h"
+#include "gui/app_icon.h"
 #include "gui/help_book.h"
 #include "gui/wx_util.h"
 
@@ -94,6 +95,7 @@ void HelpController::showPage(std::string_view page)
 wxHtmlHelpFrame* HelpController::CreateHelpFrame(wxHtmlHelpData* data)
 {
     wxHtmlHelpFrame* frame = wxHtmlHelpController::CreateHelpFrame(data);
+    applyAppIcon(*frame);
     frame->Bind(wxEVT_HTML_LINK_CLICKED, &HelpController::onLinkClicked, this);
     // The tree starts with the book collapsed to its title; open it once the frame is up.
     frame->CallAfter([frame] {

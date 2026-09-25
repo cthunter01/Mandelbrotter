@@ -1,0 +1,7 @@
+// Windows resources. The application icon comes first: Explorer shows the first icon, and resource names
+// sort, so "appicon" precedes wxWidgets' own. wxMSW loads its stock cursors (wxCURSOR_BULLSEYE and the like)
+// from wx.rc. No manifest from here: the linker writes it, merged with the DPI manifest in src/CMakeLists.txt.
+appicon ICON "icons/mandelbrotter.ico"
+
+#define wxUSE_NO_MANIFEST 1
+#include "wx/msw/wx.rc"

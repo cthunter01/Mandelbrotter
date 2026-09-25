@@ -35,7 +35,7 @@ endif()
 # Call it for every target you add.
 function(Mandelbrotter_configure_target target)
     if(MSVC)   # cl, and clang-cl (which takes the same options)
-        target_compile_options(${target} PRIVATE
+        set(msvc_options
             /W4 /permissive- /utf-8 /Zc:__cplusplus $<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>
             # Off-by-default warnings, enabled at level 1: narrowing conversions (4242, 4254, 4826),
             # a missed override (4263), a non-virtual destructor (4265), always-false comparisons
@@ -44,6 +44,8 @@ function(Mandelbrotter_configure_target target)
             /w14242 /w14254 /w14263 /w14265 /w14287 /w14296 /w14311 /w14545 /w14546 /w14547 /w14549
             /w14555 /w14640 /w14826 /w14905 /w14906 /w14928
             $<$<BOOL:${MANDELBROTTER_WARNINGS_AS_ERRORS}>:/WX>)
+        # C++ sources only: the resource compiler (rc) stops at options it does not know.
+        target_compile_options(${target} PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${msvc_options}>")
     elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         target_compile_options(${target} PRIVATE
             -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Wnon-virtual-dtor
