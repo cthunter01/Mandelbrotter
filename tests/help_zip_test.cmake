@@ -1,6 +1,8 @@
 # Checks the help book zip built by cmake/HelpBook.cmake (invoked by ctest with -DZIP=...): wx's help controller
 # looks for the .hhp at the archive root, and every page and picture must sit beside it, not under docs/help/.
 
+cmake_minimum_required(VERSION 3.28)   # a cmake -P script does not inherit the project's policies
+
 if(NOT EXISTS "${ZIP}")
     message(FATAL_ERROR "${ZIP} was not built")
 endif()

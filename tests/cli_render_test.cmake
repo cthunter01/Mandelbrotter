@@ -1,6 +1,8 @@
 # Integration test: the built executable renders headlessly. Invoked by ctest with -DEXE=... -DOUT_DIR=...
 # and an empty DISPLAY, which proves the --render path never touches the GUI toolkit.
 
+cmake_minimum_required(VERSION 3.28)   # a cmake -P script does not inherit the project's policies
+
 file(REMOVE_RECURSE "${OUT_DIR}")
 file(MAKE_DIRECTORY "${OUT_DIR}")
 

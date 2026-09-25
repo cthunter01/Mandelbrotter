@@ -1,6 +1,8 @@
 # Script mode (cmake -P), driven by the 'coverage' target in Coverage.cmake.
 # Runs ctest with LLVM_PROFILE_FILE set, merges the raw profiles, then prints and writes the report.
 
+cmake_minimum_required(VERSION 3.28)   # a cmake -P script does not inherit the project's policies
+
 foreach(var BUILD_DIR SOURCE_DIR BINARIES IGNORE_REGEX LLVM_PROFDATA LLVM_COV CTEST)
     if(NOT DEFINED ${var} OR "${${var}}" STREQUAL "")
         message(FATAL_ERROR "RunCoverage.cmake requires -D${var}=...")
