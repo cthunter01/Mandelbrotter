@@ -35,8 +35,11 @@ Mandelbrotter_configure_target(Mandelbrotter_embed)
 add_library(Mandelbrotter_app STATIC
     app/BookmarkStore.cpp
     app/format.cpp
+    app/help_routing.cpp
+    app/panel_model.cpp
     app/scenes.cpp
-    app/startup.cpp)
+    app/startup.cpp
+    app/tour_layout.cpp)
 add_library(Mandelbrotter::app ALIAS Mandelbrotter_app)
 target_include_directories(Mandelbrotter_app PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(Mandelbrotter_app PUBLIC Mandelbrotter::lib)   # never wx

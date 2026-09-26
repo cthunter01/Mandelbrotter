@@ -1,6 +1,5 @@
 #include "gui/TourCard.h"
 
-#include <algorithm>
 #include <cstddef>
 #include <format>
 #include <string_view>
@@ -9,6 +8,7 @@
 #include <wx/settings.h>
 #include <wx/sizer.h>
 
+#include "Mandelbrotter/app/tour_layout.h"
 #include "gui/wx_util.h"
 
 namespace mandelbrotter::gui
@@ -97,27 +97,8 @@ void TourCard::setStep(std::string_view title, std::string_view text, std::size_
 
 void TourCard::placeNear(const wxRect& anchor)
 {
-    const wxSize client = GetParent()->GetClientSize();
-    const wxSize size   = GetSize();
-    const int    gap    = FromDIP(kGapDip);
-
-    wxPoint at;
-    if (anchor.width > 2 * size.x)
-    {
-        // A large area (the canvas): sit inside its top-left corner.
-        at = wxPoint(anchor.x + gap, anchor.y + gap);
-    }
-    else if (anchor.x - size.x - gap >= 0)
-    {
-        at = wxPoint(anchor.x - size.x - gap, anchor.y);
-    }
-    else
-    {
-        at = wxPoint(anchor.GetRight() + gap, anchor.y);
-    }
-    at.x = std::clamp(at.x, 0, std::max(0, client.x - size.x));
-    at.y = std::clamp(at.y, 0, std::max(0, client.y - size.y));
-    SetPosition(at);
+    SetPosition(toWx(app::placeTourCard(fromWx(anchor), fromWx(GetSize()),
+                                        fromWx(GetParent()->GetClientSize()), FromDIP(kGapDip))));
     Raise();
     Show();
 }

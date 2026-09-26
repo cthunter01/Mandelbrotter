@@ -11,10 +11,12 @@ add_executable(Mandelbrotter_tests
     fractal_tests.cpp
     help_action_tests.cpp
     help_book_tests.cpp
+    help_routing_tests.cpp
     help_images_tests.cpp
     image_tests.cpp
     kernel_tests.cpp
     PaletteTests.cpp
+    panel_model_tests.cpp
     perturbation_tests.cpp
     png_writer_tests.cpp
     ProgressiveRendererTests.cpp
@@ -22,6 +24,7 @@ add_executable(Mandelbrotter_tests
     RenderSettingsTests.cpp
     scenes_tests.cpp
     startup_tests.cpp
+    tour_layout_tests.cpp
     ViewportTests.cpp)
 target_link_libraries(Mandelbrotter_tests PRIVATE Mandelbrotter::app Mandelbrotter::lib GTest::gtest_main stb::stb)
 # The help book's sources, for the tests that check its pages, links and images (help_book_tests.cpp).

@@ -11,6 +11,7 @@
 #include <wx/treectrl.h>
 #include <wx/utils.h>
 
+#include "Mandelbrotter/app/help_routing.h"
 #include "Mandelbrotter/help_action.h"
 #include "gui/app_icon.h"
 #include "gui/help_book.h"
@@ -116,27 +117,30 @@ void HelpController::onLinkClicked(wxHtmlLinkEvent& event)
 {
     const wxString&   href = event.GetLinkInfo().GetHref();
     const std::string url  = fromWx(href);
-    if (isHelpActionUrl(url))
+    switch (app::classifyHelpLink(url))
     {
-        // Handled here (no Skip): the help window stays on its page.
-        const auto action = parseHelpAction(url);
-        if (action)
+        case app::HelpLinkKind::ACTION:
         {
-            if (onAction)
+            // Handled here (no Skip): the help window stays on its page.
+            const auto action = parseHelpAction(url);
+            if (action)
             {
-                onAction(*action);
+                if (onAction)
+                {
+                    onAction(*action);
+                }
             }
+            else if (onError)
+            {
+                onError(action.error());
+            }
+            return;
         }
-        else if (onError)
-        {
-            onError(action.error());
-        }
-        return;
-    }
-    if (url.starts_with("http://") || url.starts_with("https://"))
-    {
-        wxLaunchDefaultBrowser(href);
-        return;
+        case app::HelpLinkKind::EXTERNAL:
+            wxLaunchDefaultBrowser(href);
+            return;
+        case app::HelpLinkKind::PAGE:
+            break;
     }
     event.Skip();  // a page of the book
 }

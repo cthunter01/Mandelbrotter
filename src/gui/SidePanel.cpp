@@ -1,7 +1,6 @@
 #include "gui/SidePanel.h"
 
-#include <cmath>
-#include <format>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -21,8 +20,8 @@
 
 #include "Mandelbrotter/Palette.h"
 #include "Mandelbrotter/app/format.h"
+#include "Mandelbrotter/app/panel_model.h"
 #include "Mandelbrotter/fractal.h"
-#include "Mandelbrotter/parse.h"
 #include "gui/JuliaPreview.h"
 #include "gui/wx_util.h"
 
@@ -32,18 +31,11 @@ namespace mandelbrotter::gui
 namespace
 {
 
-constexpr int kOffsetSliderSteps = 1000;
-constexpr int kBorderDip         = 6;
+constexpr int kBorderDip = 6;
 
 constexpr std::size_t index(SidePanel::Section section)
 {
     return static_cast<std::size_t>(section);
-}
-
-std::optional<double> parseDouble(const wxString& text)
-{
-    const std::string utf8 = fromWx(text);
-    return parseNumber<double>(trimSpaces(utf8));
 }
 
 wxString formatDouble(double value)
@@ -228,10 +220,10 @@ void SidePanel::buildColoringSection(wxSizer& sizer)
     box->Add(labelled(owner, "Density", m_density),
              wxSizerFlags().Expand().Border(wxALL, FromDIP(kBorderDip / 2)));
 
-    m_offset = new wxSlider(owner, wxID_ANY, 0, 0, kOffsetSliderSteps);
+    m_offset = new wxSlider(owner, wxID_ANY, 0, 0, app::kOffsetSliderSteps);
     m_offset->SetToolTip("Palette phase shift");
     m_offset->Bind(wxEVT_SLIDER, [this](wxCommandEvent& event) {
-        m_settings.coloring.offset = static_cast<double>(event.GetInt()) / kOffsetSliderSteps;
+        m_settings.coloring.offset = app::sliderToOffset(event.GetInt());
         emitChange();
     });
     box->Add(labelled(owner, "Offset", m_offset),
@@ -309,13 +301,9 @@ void SidePanel::setSettings(const RenderSettings& settings)
     m_updating = true;
     m_settings = settings;
 
-    const auto families = allFamilies();
-    for (std::size_t i = 0; i < families.size(); ++i)
+    if (const auto family = app::familyIndex(settings.fractal.family))
     {
-        if (families[i] == settings.fractal.family)
-        {
-            m_family->SetSelection(static_cast<int>(i));
-        }
+        m_family->SetSelection(static_cast<int>(*family));
     }
     m_exponent->SetValue(settings.fractal.exponent);
     m_julia->SetValue(settings.fractal.julia);
@@ -325,17 +313,12 @@ void SidePanel::setSettings(const RenderSettings& settings)
     m_autoIterations->SetValue(settings.autoIterations);
     setEffectiveIterations(effectiveIterations(settings));
 
-    const auto names = paletteNames();
-    for (std::size_t i = 0; i < names.size(); ++i)
+    if (const auto palette = app::paletteIndex(settings.coloring.palette))
     {
-        if (names[i] == settings.coloring.palette)
-        {
-            m_palette->SetSelection(static_cast<int>(i));
-        }
+        m_palette->SetSelection(static_cast<int>(*palette));
     }
     m_density->SetValue(settings.coloring.density);
-    const double phase = settings.coloring.offset - std::floor(settings.coloring.offset);
-    m_offset->SetValue(static_cast<int>(std::lround(phase * kOffsetSliderSteps)));
+    m_offset->SetValue(app::offsetToSlider(settings.coloring.offset));
 
     m_preview->setFractal(settings.fractal);
     m_preview->setColoring(settings.coloring);
@@ -349,7 +332,7 @@ void SidePanel::setSettings(const RenderSettings& settings)
 
 void SidePanel::setEffectiveIterations(int iterations)
 {
-    m_effectiveIterations->SetLabel(toWx(std::format("Effective limit: {}", iterations)));
+    m_effectiveIterations->SetLabel(toWx(app::effectiveLimitText(iterations)));
 }
 
 void SidePanel::setBookmarks(std::span<const Bookmark> bookmarks)
@@ -379,14 +362,7 @@ void SidePanel::setShowOrbit(bool enabled)
 
 void SidePanel::setPreviewSeed(std::optional<Complex> seed)
 {
-    if (m_settings.fractal.julia)
-    {
-        m_preview->setSeed(m_settings.fractal.seed);
-    }
-    else
-    {
-        m_preview->setSeed(seed);
-    }
+    m_preview->setSeed(app::previewSeedFor(m_settings.fractal, seed));
 }
 
 void SidePanel::readSeedFields()
@@ -395,21 +371,20 @@ void SidePanel::readSeedFields()
     {
         return;
     }
-    const std::optional<double> re = parseDouble(m_seedRe->GetValue());
-    const std::optional<double> im = parseDouble(m_seedIm->GetValue());
-    if (!re || !im)
+    const std::optional<Complex> seed =
+        app::parseSeed(fromWx(m_seedRe->GetValue()), fromWx(m_seedIm->GetValue()));
+    if (!seed)
     {
         // Restore the last valid values rather than guessing.
         m_seedRe->ChangeValue(formatDouble(m_settings.fractal.seed.re));
         m_seedIm->ChangeValue(formatDouble(m_settings.fractal.seed.im));
         return;
     }
-    const Complex seed{*re, *im};
-    if (seed == m_settings.fractal.seed)
+    if (*seed == m_settings.fractal.seed)
     {
         return;
     }
-    m_settings.fractal.seed = seed;
+    m_settings.fractal.seed = *seed;
     emitChange();
 }
 

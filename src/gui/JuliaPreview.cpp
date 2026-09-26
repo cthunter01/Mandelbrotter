@@ -6,20 +6,12 @@
 #include <wx/dcbuffer.h>
 
 #include "Mandelbrotter/ProgressiveRenderer.h"
-#include "Mandelbrotter/RenderSettings.h"
+#include "Mandelbrotter/app/panel_model.h"
 #include "Mandelbrotter/image.h"
 #include "gui/wx_util.h"
 
 namespace mandelbrotter::gui
 {
-
-namespace
-{
-
-constexpr int kThrottleMs        = 50;
-constexpr int kPreviewIterations = 128;
-
-}  // namespace
 
 JuliaPreview::JuliaPreview(wxWindow* parent)
   : wxWindow(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize,
@@ -68,7 +60,7 @@ void JuliaPreview::schedule()
 {
     if (!m_timer.IsRunning())
     {
-        m_timer.StartOnce(kThrottleMs);
+        m_timer.StartOnce(static_cast<int>(app::kPreviewThrottle.count()));
     }
 }
 
@@ -96,15 +88,7 @@ void JuliaPreview::render()
     const PixelSize size{std::max(1, static_cast<int>(std::lround(client.x * scale))),
                          std::max(1, static_cast<int>(std::lround(client.y * scale)))};
 
-    RenderSettings settings;
-    settings.fractal = {
-        .family = m_spec.family, .exponent = m_spec.exponent, .julia = true, .seed = *m_seed};
-    settings.view           = defaultView(settings.fractal);
-    settings.maxIterations  = kPreviewIterations;
-    settings.autoIterations = false;
-    settings.coloring       = m_coloring;
-
-    const auto buffer = renderSync(settings, size);
+    const auto buffer = renderSync(app::previewSettings(m_spec, *m_seed, m_coloring), size);
     if (!buffer)
     {
         return;

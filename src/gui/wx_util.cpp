@@ -30,4 +30,29 @@ wxImage toWxImage(const RgbImage& image)
     return out;
 }
 
+wxPoint toWx(PixelPoint point)
+{
+    return {point.x, point.y};
+}
+
+PixelPoint fromWx(wxPoint point)
+{
+    return {point.x, point.y};
+}
+
+wxRect toWx(PixelRect rect)
+{
+    return {rect.x, rect.y, rect.width, rect.height};
+}
+
+PixelRect fromWx(const wxRect& rect)
+{
+    return {rect.x, rect.y, rect.width, rect.height};
+}
+
+PixelSize fromWx(wxSize size)
+{
+    return {size.x, size.y};
+}
+
 }  // namespace mandelbrotter::gui

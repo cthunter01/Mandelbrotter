@@ -2,7 +2,6 @@
 
 #include <array>
 #include <cstddef>
-#include <cstdint>
 #include <functional>
 #include <optional>
 #include <span>
@@ -21,6 +20,7 @@
 #include <wx/tglbtn.h>
 
 #include "Mandelbrotter/RenderSettings.h"
+#include "Mandelbrotter/app/panel_model.h"
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/geometry.h"
 
@@ -35,15 +35,8 @@ class SidePanel : public wxScrolledWindow
 {
 public:
     /// The panel's boxes, top to bottom.
-    enum class Section : std::uint8_t
-    {
-        FRACTAL,
-        ITERATIONS,
-        COLOURING,
-        OVERLAY,
-        BOOKMARKS,
-    };
-    static constexpr std::size_t kSectionCount = 5;
+    using Section                              = app::PanelSection;
+    static constexpr std::size_t kSectionCount = app::kPanelSectionCount;
 
     explicit SidePanel(wxWindow* parent);
 

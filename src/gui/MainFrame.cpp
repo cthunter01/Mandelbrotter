@@ -26,6 +26,7 @@
 #include "Mandelbrotter/ProgressiveRenderer.h"
 #include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/app/format.h"
+#include "Mandelbrotter/app/help_routing.h"
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/exporter.h"
 #include "Mandelbrotter/flights.h"
@@ -79,24 +80,6 @@ constexpr int kMenuBackToView  = wxID_HIGHEST + 15;
 constexpr int kMenuFlightFirst = wxID_HIGHEST + 100;
 
 constexpr double kMenuZoomFactor = 2.0;
-
-std::string_view helpPageFor(SidePanel::Section section, bool juliaControl)
-{
-    switch (section)
-    {
-        case SidePanel::Section::FRACTAL:
-            return juliaControl ? "julia.html" : "fractals.html";
-        case SidePanel::Section::ITERATIONS:
-            return "iterations.html";
-        case SidePanel::Section::COLOURING:
-            return "colouring.html";
-        case SidePanel::Section::OVERLAY:
-            return "orbit.html";
-        case SidePanel::Section::BOOKMARKS:
-            return "bookmarks.html";
-    }
-    return "index.html";
-}
 
 }  // namespace
 
@@ -451,25 +434,27 @@ void MainFrame::showHelpPage(std::string_view page)
 
 void MainFrame::showContextHelp()
 {
-    std::string_view page  = "index.html";
+    app::HelpContext context;
     wxWindow*        focus = wxWindow::FindFocus();
     if (focus != nullptr)
     {
         if (focus == m_canvas || m_canvas->IsDescendant(focus))
         {
-            page = "navigating.html";
+            context.area = app::HelpContext::Area::CANVAS;
         }
         else if (const auto section = m_panel->sectionOf(focus))
         {
-            page = helpPageFor(*section, m_panel->isJuliaControl(focus));
+            context.area         = app::HelpContext::Area::PANEL;
+            context.section      = section;
+            context.juliaControl = m_panel->isJuliaControl(focus);
         }
         else if (m_exportDialog != nullptr &&
                  (focus == m_exportDialog || m_exportDialog->IsDescendant(focus)))
         {
-            page = "exporting.html";
+            context.area = app::HelpContext::Area::EXPORT_DIALOG;
         }
     }
-    m_help.showPage(page);
+    m_help.showPage(app::helpPageFor(context));
 }
 
 void MainFrame::runHelpAction(const HelpAction& action)
