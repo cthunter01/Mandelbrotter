@@ -6,12 +6,7 @@
 #include <utility>
 #include <vector>
 
-#include "Mandelbrotter/BigComplex.h"
-#include "Mandelbrotter/RenderSettings.h"
-#include "Mandelbrotter/Viewport.h"
-#include "Mandelbrotter/flights.h"
-#include "Mandelbrotter/fractal.h"
-#include "Mandelbrotter/geometry.h"
+#include "Mandelbrotter/app/scenes.h"
 #include "gui/FractalCanvas.h"
 #include "gui/MainFrame.h"
 #include "gui/SidePanel.h"
@@ -19,37 +14,6 @@
 
 namespace mandelbrotter::gui
 {
-
-namespace
-{
-
-constexpr Complex kSeahorseValley{-0.7436, 0.1318};
-constexpr Complex kJuliaSeed{-0.8, 0.156};
-constexpr Complex kOrbitPoint{0.285, 0.01};
-constexpr double  kDeepZoom = 1e10;
-
-RenderSettings at(RenderSettings settings, Complex center, double zoom)
-{
-    settings.view.zoom   = clampZoom(zoom);
-    settings.view.center = BigComplex::fromComplex(center, fractionBitsFor(settings.view.zoom));
-    return settings;
-}
-
-RenderSettings mandelbrotDefault()
-{
-    RenderSettings settings;
-    settings.view = defaultView(settings.fractal);
-    return settings;
-}
-
-RenderSettings seahorse(const char* palette = "electric")
-{
-    RenderSettings settings   = at(mandelbrotDefault(), kSeahorseValley, 5000.0);
-    settings.coloring.palette = palette;
-    return settings;
-}
-
-}  // namespace
 
 GuidedTour::GuidedTour(MainFrame& frame) : m_frame(frame), m_steps(buildSteps()) { }
 
@@ -68,7 +32,7 @@ std::vector<GuidedTour::Step> GuidedTour::buildSteps()
                   "where you are.",
          .helpPage = "getting-started.html",
          .target   = Target::CANVAS,
-         .perform  = [this] { m_frame.applySettings(mandelbrotDefault()); }},
+         .perform  = [this] { m_frame.applySettings(app::mandelbrotDefault()); }},
         {.title = "Zooming and panning",
          .text  = "We have jumped into Seahorse Valley at zoom 5000. The mouse wheel zooms at the "
                   "pointer, dragging pans, dragging with the right button (or Shift) zooms to a "
@@ -76,20 +40,14 @@ std::vector<GuidedTour::Step> GuidedTour::buildSteps()
                   "too. Try a few wheel notches now; the tour will not mind.",
          .helpPage = "navigating.html",
          .target   = Target::CANVAS,
-         .perform  = [this] { m_frame.applySettings(seahorse()); }},
+         .perform  = [this] { m_frame.applySettings(app::seahorse()); }},
         {.title    = "Fractal families",
          .text     = "The Family list switches between the Mandelbrot set, the Burning Ship (shown "
                      "now) and the Tricorn; Exponent n turns z^2 + c into z^n + c. Changing the "
                      "family resets the view to show the whole set; changing n keeps it.",
          .helpPage = "fractals.html",
          .target   = Target::FRACTAL,
-         .perform =
-             [this] {
-                 RenderSettings settings;
-                 settings.fractal.family = FractalFamily::BURNING_SHIP;
-                 settings.view           = defaultView(settings.fractal);
-                 m_frame.applySettings(settings);
-             }},
+         .perform  = [this] { m_frame.applySettings(app::burningShipDefault()); }},
         {.title = "Julia sets",
          .text  = "Tick Julia set to draw the Julia set of the constant c typed into the seed "
                   "fields; this one is c = -0.8 + 0.156i. Pick seed from canvas lets you click a "
@@ -99,12 +57,8 @@ std::vector<GuidedTour::Step> GuidedTour::buildSteps()
          .target   = Target::FRACTAL,
          .perform =
              [this] {
-                 RenderSettings settings;
-                 settings.fractal.julia = true;
-                 settings.fractal.seed  = kJuliaSeed;
-                 settings.view          = defaultView(settings.fractal);
-                 m_frame.applySettings(settings);
-                 m_frame.panel().setPreviewSeed(kJuliaSeed);
+                 m_frame.applySettings(app::juliaExample());
+                 m_frame.panel().setPreviewSeed(app::kJuliaSeed);
              }},
         {.title = "Iterations",
          .text  = "Every point is iterated until it escapes or the limit is reached; points that "
@@ -113,7 +67,7 @@ std::vector<GuidedTour::Step> GuidedTour::buildSteps()
                   "blur the fine detail; too many just cost time.",
          .helpPage = "iterations.html",
          .target   = Target::ITERATIONS,
-         .perform  = [this] { m_frame.applySettings(seahorse()); }},
+         .perform  = [this] { m_frame.applySettings(app::seahorse()); }},
         {.title = "Colouring",
          .text  = "The palette maps how fast a point escapes onto a colour cycle. Density sets how "
                   "many iterations one cycle spans and Offset shifts the cycle. Changing any of "
@@ -121,13 +75,7 @@ std::vector<GuidedTour::Step> GuidedTour::buildSteps()
                   "to the fire palette with a denser cycle.",
          .helpPage = "colouring.html",
          .target   = Target::COLOURING,
-         .perform =
-             [this] {
-                 RenderSettings settings   = seahorse("fire");
-                 settings.coloring.density = 32.0;
-                 settings.coloring.offset  = 0.25;
-                 m_frame.applySettings(settings);
-             }},
+         .perform  = [this] { m_frame.applySettings(app::seahorseFire()); }},
         {.title    = "The orbit overlay",
          .text     = "With the overlay on, the path of the point under the mouse is drawn as it is "
                      "iterated: the red circle is where it starts and the white line is where it "
@@ -137,9 +85,9 @@ std::vector<GuidedTour::Step> GuidedTour::buildSteps()
          .target   = Target::OVERLAY,
          .perform =
              [this] {
-                 m_frame.applySettings(mandelbrotDefault());
+                 m_frame.applySettings(app::mandelbrotDefault());
                  m_frame.setShowOrbit(true);
-                 m_frame.canvas().showOrbitAt(kOrbitPoint);
+                 m_frame.canvas().showOrbitAt(app::kOrbitPoint);
              }},
         {.title    = "Bookmarks",
          .text     = "Add... saves the current view, fractal and colours under a name; Load (or a "
@@ -150,7 +98,7 @@ std::vector<GuidedTour::Step> GuidedTour::buildSteps()
          .target   = Target::BOOKMARKS,
          .perform =
              [this] {
-                 m_frame.applySettings(seahorse());
+                 m_frame.applySettings(app::seahorse());
                  m_frame.addTemporaryBookmark("Tour example");
              }},
         {.title = "Saving a picture",
@@ -168,15 +116,7 @@ std::vector<GuidedTour::Step> GuidedTour::buildSteps()
                   "pixel is computed as a small difference from it. You can go on to 1e300.",
          .helpPage = "deep-zoom.html",
          .target   = Target::CANVAS,
-         .perform =
-             [this] {
-                 // The seahorse dive's destination has structure at every depth.
-                 RenderSettings settings = findFlight("seahorse-dive")->keyframes.back().settings;
-                 settings.view.zoom      = kDeepZoom;
-                 settings.view.center =
-                     settings.view.center.withFractionBits(fractionBitsFor(kDeepZoom));
-                 m_frame.applySettings(settings);
-             }},
+         .perform  = [this] { m_frame.applySettings(app::deepSeahorse(app::kTourDeepZoom)); }},
         {.title = "That is the tour",
          .text  = "Your view, overlay and bookmarks are back as they were. Help > Contents holds "
                   "the full guide (F1 opens the page for whatever has the focus), Help > Demos "

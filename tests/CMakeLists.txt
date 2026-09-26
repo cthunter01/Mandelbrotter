@@ -20,6 +20,8 @@ add_executable(Mandelbrotter_tests
     ProgressiveRendererTests.cpp
     ReferenceOrbitTests.cpp
     RenderSettingsTests.cpp
+    scenes_tests.cpp
+    startup_tests.cpp
     ViewportTests.cpp)
 target_link_libraries(Mandelbrotter_tests PRIVATE Mandelbrotter::app Mandelbrotter::lib GTest::gtest_main stb::stb)
 # The help book's sources, for the tests that check its pages, links and images (help_book_tests.cpp).

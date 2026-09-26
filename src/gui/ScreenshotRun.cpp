@@ -17,12 +17,7 @@
 #include <wx/statusbr.h>
 #include <wx/textdlg.h>
 
-#include "Mandelbrotter/BigComplex.h"
-#include "Mandelbrotter/RenderSettings.h"
-#include "Mandelbrotter/Viewport.h"
-#include "Mandelbrotter/flights.h"
-#include "Mandelbrotter/fractal.h"
-#include "Mandelbrotter/geometry.h"
+#include "Mandelbrotter/app/scenes.h"
 #include "gui/FractalCanvas.h"
 #include "gui/GuidedTour.h"
 #include "gui/HelpController.h"
@@ -38,46 +33,12 @@ namespace mandelbrotter::gui
 namespace
 {
 
-constexpr int     kSettleMs     = 500;
-constexpr int     kWatchdogMs   = 120'000;
-constexpr int     kMaxWidth     = 800;   ///< saved pictures are scaled down to this
-constexpr int     kWindowWidth  = 1000;  ///< DIP; the whole window fits a help page after scaling
-constexpr int     kWindowHeight = 640;
-constexpr int     kCropMargin   = 4;
-constexpr Complex kSeahorseValley{-0.7436, 0.1318};
-constexpr Complex kOrbitPoint{0.285, 0.01};
-constexpr Complex kJuliaSeed{-0.8, 0.156};
-constexpr double  kDeepZoom = 1e12;
-
-RenderSettings at(RenderSettings settings, Complex center, double zoom)
-{
-    settings.view.zoom   = clampZoom(zoom);
-    settings.view.center = BigComplex::fromComplex(center, fractionBitsFor(settings.view.zoom));
-    return settings;
-}
-
-RenderSettings mandelbrotDefault()
-{
-    RenderSettings settings;
-    settings.view = defaultView(settings.fractal);
-    return settings;
-}
-
-RenderSettings seahorse(const char* palette)
-{
-    RenderSettings settings   = at(mandelbrotDefault(), kSeahorseValley, 5000.0);
-    settings.coloring.palette = palette;
-    return settings;
-}
-
-/// The seahorse dive's destination (a point with structure at every depth) at `zoom`.
-RenderSettings deepSeahorse(double zoom)
-{
-    RenderSettings settings = findFlight("seahorse-dive")->keyframes.back().settings;
-    settings.view.zoom      = zoom;
-    settings.view.center    = settings.view.center.withFractionBits(fractionBitsFor(zoom));
-    return settings;
-}
+constexpr int kSettleMs     = 500;
+constexpr int kWatchdogMs   = 120'000;
+constexpr int kMaxWidth     = 800;   ///< saved pictures are scaled down to this
+constexpr int kWindowWidth  = 1000;  ///< DIP; the whole window fits a help page after scaling
+constexpr int kWindowHeight = 640;
+constexpr int kCropMargin   = 4;
 
 /// `rect` (client coordinates of `window`) in screen coordinates, with a small margin.
 wxRect screenRectOf(wxWindow& window, const wxRect& rect)
@@ -132,7 +93,7 @@ std::vector<ScreenshotRun::Shot> ScreenshotRun::buildShots()
     return {
         {.file         = "ui-main-window.png",
          .rendersFirst = true,
-         .prepare      = [&frame] { frame.applySettings(mandelbrotDefault()); },
+         .prepare      = [&frame] { frame.applySettings(app::mandelbrotDefault()); },
          .target       = whole,
          .crop         = noCrop,
          .cleanup      = nothing},
@@ -155,34 +116,24 @@ std::vector<ScreenshotRun::Shot> ScreenshotRun::buildShots()
          .rendersFirst = true,
          .prepare =
              [&frame] {
-                 RenderSettings settings;
-                 settings.fractal.julia = true;
-                 settings.fractal.seed  = kJuliaSeed;
-                 settings.view          = defaultView(settings.fractal);
-                 frame.applySettings(settings);
-                 frame.panel().setPreviewSeed(kJuliaSeed);
+                 frame.applySettings(app::juliaExample());
+                 frame.panel().setPreviewSeed(app::kJuliaSeed);
              },
          .target  = whole,
          .crop    = sectionCrop(SidePanel::Section::FRACTAL),
          .cleanup = nothing},
         {.file         = "ui-iterations-section.png",
          .rendersFirst = true,
-         .prepare      = [&frame] { frame.applySettings(seahorse("classic")); },
+         .prepare      = [&frame] { frame.applySettings(app::seahorse("classic")); },
          .target       = whole,
          .crop         = sectionCrop(SidePanel::Section::ITERATIONS),
          .cleanup      = nothing},
         {.file         = "ui-colouring-section.png",
          .rendersFirst = false,
-         .prepare =
-             [&frame] {
-                 RenderSettings settings   = seahorse("fire");
-                 settings.coloring.density = 32.0;
-                 settings.coloring.offset  = 0.25;
-                 frame.applySettings(settings);
-             },
-         .target  = whole,
-         .crop    = sectionCrop(SidePanel::Section::COLOURING),
-         .cleanup = nothing},
+         .prepare      = [&frame] { frame.applySettings(app::seahorseFire()); },
+         .target       = whole,
+         .crop         = sectionCrop(SidePanel::Section::COLOURING),
+         .cleanup      = nothing},
         {.file         = "ui-overlay-section.png",
          .rendersFirst = false,
          .prepare =
@@ -203,9 +154,9 @@ std::vector<ScreenshotRun::Shot> ScreenshotRun::buildShots()
          .rendersFirst = true,
          .prepare =
              [&frame] {
-                 frame.applySettings(mandelbrotDefault());
+                 frame.applySettings(app::mandelbrotDefault());
                  frame.setShowOrbit(true);
-                 frame.canvas().showOrbitAt(kOrbitPoint);
+                 frame.canvas().showOrbitAt(app::kOrbitPoint);
              },
          .target  = whole,
          .crop    = canvasCrop,
@@ -215,7 +166,7 @@ std::vector<ScreenshotRun::Shot> ScreenshotRun::buildShots()
          .prepare =
              [&frame] {
                  frame.setShowOrbit(false);
-                 frame.applySettings(seahorse("electric"));
+                 frame.applySettings(app::seahorse("electric"));
              },
          .target  = whole,
          .crop    = canvasCrop,
@@ -225,7 +176,7 @@ std::vector<ScreenshotRun::Shot> ScreenshotRun::buildShots()
          .prepare =
              [&frame] {
                  frame.panel().scrollToSection(SidePanel::Section::FRACTAL);
-                 frame.applySettings(deepSeahorse(kDeepZoom));
+                 frame.applySettings(app::deepSeahorse(app::kScreenshotDeepZoom));
              },
          .target = whole,
          .crop   = [&frame]() -> std::optional<wxRect> {

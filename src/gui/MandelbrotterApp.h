@@ -1,25 +1,15 @@
 #pragma once
 
-#include <filesystem>
-#include <optional>
-
 #include <wx/app.h>
 
-#include "Mandelbrotter/RenderSettings.h"
+#include "Mandelbrotter/app/startup.h"
 
 namespace mandelbrotter::gui
 {
 
-/// What main() hands to the GUI before wxEntry: the view to open with and, for the developer
-/// screenshot mode (--screenshots DIR), where to write the help book's pictures.
-struct StartupOptions
-{
-    RenderSettings                       settings;
-    std::optional<std::filesystem::path> screenshotsDir;
-};
-
-void                                setStartupOptions(StartupOptions options);
-[[nodiscard]] const StartupOptions& startupOptions();
+/// What main() hands to the GUI before wxEntry (app::StartupOptions).
+void                                     setStartupOptions(app::StartupOptions options);
+[[nodiscard]] const app::StartupOptions& startupOptions();
 
 class MandelbrotterApp : public wxApp
 {

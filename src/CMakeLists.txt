@@ -34,7 +34,9 @@ Mandelbrotter_configure_target(Mandelbrotter_embed)
 # Links only the core, never wx, so the tests cover it and a second toolkit could sit on it.
 add_library(Mandelbrotter_app STATIC
     app/BookmarkStore.cpp
-    app/format.cpp)
+    app/format.cpp
+    app/scenes.cpp
+    app/startup.cpp)
 add_library(Mandelbrotter::app ALIAS Mandelbrotter_app)
 target_include_directories(Mandelbrotter_app PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(Mandelbrotter_app PUBLIC Mandelbrotter::lib)   # never wx
