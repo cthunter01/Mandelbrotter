@@ -312,8 +312,12 @@ Build one locally with `cmake --workflow --preset dist-linux` (or `dist-macos`, 
 - `include/Mandelbrotter/`, `src/core/`: the core library (`Mandelbrotter_lib`). Fractal kernels, viewport
   maths, palettes, the progressive multi-threaded renderer, PNG export, bookmarks, the demo flights and the
   command-line parser. No GUI dependency, fully unit-tested.
-- `src/gui/`: the wxWidgets layer (`Mandelbrotter_gui`): main frame, canvas, side panel, dialogs, the help
-  window, the demo player, the guided tour and the screenshot mode.
+- `include/Mandelbrotter/app/`, `src/app/`: the application layer (`Mandelbrotter_app`): the window's logic
+  without a toolkit. The application and canvas controllers, the demo player, the guided tour's script, the PNG
+  export task, the bookmark store and the side panel's and help system's rules. It links only the core and is
+  unit-tested; a second GUI toolkit could sit on it.
+- `src/gui/`: the wxWidgets layer (`Mandelbrotter_gui`), a thin view over the application layer: main frame,
+  canvas, side panel, dialogs, the help window, the tour's card and the screenshot mode.
 - `src/main.cpp`: the executable; dispatches between the CLI and the GUI. Beside it, what each platform needs
   around the executable: `Mandelbrotter.rc` (Windows resources), `Mandelbrotter.plist.in` (the macOS bundle's
   Info.plist) and `Mandelbrotter.desktop` (the Linux menu entry).
@@ -322,7 +326,8 @@ Build one locally with `cmake --workflow --preset dist-linux` (or `dist-macos`, 
 - `docs/help/`: the help book: hand-written pages in wxHTML, the contents tree and index, and the images. It is
   zipped and embedded into the executable at build time.
 - `docs/readme/`: this page's banner and animations.
-- `tests/`: GoogleTest suites for the core, plus a headless integration test that runs the real executable.
+- `tests/`: GoogleTest suites for the core and the application layer (driven through recording stand-ins for
+  the toolkit), plus a headless integration test that runs the real executable.
 - `cmake/`: dependency and build configuration.
 
 Doxygen documentation: `cmake --build --preset clang-debug --target docs` (needs Doxygen).
