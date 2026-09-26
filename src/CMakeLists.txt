@@ -34,6 +34,7 @@ Mandelbrotter_configure_target(Mandelbrotter_embed)
 # Links only the core, never wx, so the tests cover it and a second toolkit could sit on it.
 add_library(Mandelbrotter_app STATIC
     app/BookmarkStore.cpp
+    app/CanvasController.cpp
     app/DemoPlayer.cpp
     app/ExportTask.cpp
     app/format.cpp

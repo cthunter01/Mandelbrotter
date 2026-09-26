@@ -99,7 +99,7 @@ private:
 
     void updateStatusBar();
     void showPointer(const std::optional<BigComplex>& pointer);
-    void showRenderStatus(const FractalCanvas::RenderStatus& status);
+    void showRenderStatus(const app::RenderStatus& status);
     void onCharHook(wxKeyEvent& event);
     void onClose(wxCloseEvent& event);
 

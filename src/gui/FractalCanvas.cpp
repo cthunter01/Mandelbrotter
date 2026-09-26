@@ -1,54 +1,55 @@
 #include "gui/FractalCanvas.h"
 
-#include <algorithm>
-#include <cmath>
-#include <memory>
+#include <functional>
+#include <optional>
+#include <span>
 #include <utility>
+#include <vector>
 
 #include <wx/dcbuffer.h>
 #include <wx/dcclient.h>
 #include <wx/pen.h>
 #include <wx/settings.h>
 
-#include "Mandelbrotter/Palette.h"
-#include "Mandelbrotter/ReferenceOrbit.h"
-#include "Mandelbrotter/fractal.h"
-#include "Mandelbrotter/kernel.h"
+#include "Mandelbrotter/geometry.h"
 #include "gui/wx_util.h"
 
 namespace mandelbrotter::gui
 {
 
-namespace
-{
-
-constexpr int    kResizeDebounceMs       = 150;
-constexpr int    kDragThresholdPx        = 3;
-constexpr double kWheelZoomPerNotch      = 1.25;
-constexpr double kKeyZoomFactor          = 2.0;
-constexpr double kKeyPanFraction         = 0.1;
-constexpr int    kMaxOrbitPoints         = 512;
-constexpr int    kOverlayCoordinateLimit = 10000;
-
-int clampCoordinate(int value)
-{
-    return std::clamp(value, -kOverlayCoordinateLimit, kOverlayCoordinateLimit);
-}
-
-}  // namespace
-
 FractalCanvas::FractalCanvas(wxWindow* parent, RenderSettings initial)
   : wxWindow(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize,
              wxWANTS_CHARS | wxFULL_REPAINT_ON_RESIZE),
-    m_settings(std::move(initial)),
+    m_controller(
+        std::move(initial),
+        {.post           = [this](const std::function<void()>& work) { CallAfter(work); },
+         .requestRepaint = [this] { Refresh(false); },
+         .setCursor =
+             [this](app::CanvasCursor cursor) {
+                 SetCursor(wxCursor(cursor == app::CanvasCursor::BULLSEYE ? wxCURSOR_BULLSEYE
+                                                                          : wxCURSOR_CROSS));
+             },
+         .captureMouse =
+             [this](bool on) {
+                 if (on && !HasCapture())
+                 {
+                     CaptureMouse();
+                 }
+                 else if (!on && HasCapture())
+                 {
+                     ReleaseMouse();
+                 }
+             }}),
     m_resizeTimer(this)
 {
     SetBackgroundStyle(wxBG_STYLE_PAINT);
     SetMinSize(FromDIP(wxSize(200, 150)));
     SetCursor(wxCursor(wxCURSOR_CROSS));
+    updateSize();
 
     Bind(wxEVT_PAINT, &FractalCanvas::onPaint, this);
     Bind(wxEVT_SIZE, &FractalCanvas::onSize, this);
+    Bind(wxEVT_DPI_CHANGED, &FractalCanvas::onDpiChanged, this);
     Bind(wxEVT_TIMER, &FractalCanvas::onResizeTimer, this, m_resizeTimer.GetId());
     Bind(wxEVT_MOUSEWHEEL, &FractalCanvas::onMouseWheel, this);
     Bind(wxEVT_LEFT_DOWN, &FractalCanvas::onLeftDown, this);
@@ -64,237 +65,13 @@ FractalCanvas::FractalCanvas(wxWindow* parent, RenderSettings initial)
 FractalCanvas::~FractalCanvas()
 {
     // Stop the workers before wxWindow tears down: their callbacks post events to this handler.
-    m_renderer.cancel();
+    m_controller.cancelRender();
     DeletePendingEvents();
 }
 
-// ---------------------------------------------------------------------------------------------------------------
-// Settings
-
-void FractalCanvas::setSettings(const RenderSettings& settings)
+void FractalCanvas::updateSize()
 {
-    const bool rerender =
-        needsRerender(m_settings, settings) || m_iterations.size() != renderSize();
-    m_settings = settings;
-    if (rerender)
-    {
-        startRender();
-    }
-    else
-    {
-        recolor();
-    }
-}
-
-void FractalCanvas::setPickSeedMode(bool enabled)
-{
-    m_pickSeedMode = enabled;
-    SetCursor(wxCursor(enabled ? wxCURSOR_BULLSEYE : wxCURSOR_CROSS));
-}
-
-void FractalCanvas::setShowOrbit(bool enabled)
-{
-    m_showOrbit = enabled;
-    if (!enabled)
-    {
-        m_orbit.clear();
-    }
-    Refresh(false);
-}
-
-void FractalCanvas::resetView()
-{
-    changeView(defaultView(m_settings.fractal));
-}
-
-void FractalCanvas::setHighlighted(bool on)
-{
-    if (m_highlighted != on)
-    {
-        m_highlighted = on;
-        Refresh(false);
-    }
-}
-
-void FractalCanvas::showOrbitAt(Complex point)
-{
-    const Viewport vp = viewport();
-    m_pinnedOrbit     = true;
-    updateOrbit(toLogical(vp.toPixel(point)));
-    if (onPointerMoved)
-    {
-        onPointerMoved(BigComplex::fromComplex(point, fractionBitsFor(vp.view().zoom)));
-    }
-}
-
-void FractalCanvas::clearPinnedOrbit()
-{
-    if (!m_pinnedOrbit)
-    {
-        return;
-    }
-    m_pinnedOrbit = false;
-    m_orbit.clear();
-    Refresh(false);
-    if (onPointerMoved)
-    {
-        onPointerMoved(std::nullopt);  // as if the mouse had left
-    }
-}
-
-void FractalCanvas::notifyUserInput() const
-{
-    if (onUserInput)
-    {
-        onUserInput();
-    }
-}
-
-void FractalCanvas::zoomAtCenter(double factor)
-{
-    const PixelSize size = renderSize();
-    changeView(viewport().zoomedAt({size.width / 2, size.height / 2}, factor).view());
-}
-
-// ---------------------------------------------------------------------------------------------------------------
-// Geometry helpers
-
-double FractalCanvas::scale() const
-{
-    return GetContentScaleFactor();
-}
-
-PixelSize FractalCanvas::renderSize() const
-{
-    const wxSize client = GetClientSize();
-    const double s      = scale();
-    return {std::max(1, static_cast<int>(std::lround(client.x * s))),
-            std::max(1, static_cast<int>(std::lround(client.y * s)))};
-}
-
-Viewport FractalCanvas::viewport() const
-{
-    return {m_settings.view, renderSize()};
-}
-
-PixelPoint FractalCanvas::toDevice(wxPoint p) const
-{
-    const double s = scale();
-    return {static_cast<int>(std::floor(p.x * s)), static_cast<int>(std::floor(p.y * s))};
-}
-
-wxPoint FractalCanvas::toLogical(PixelPoint p) const
-{
-    const double s = scale();
-    return {static_cast<int>(std::lround(p.x / s)), static_cast<int>(std::lround(p.y / s))};
-}
-
-Complex FractalCanvas::complexAt(wxPoint p) const
-{
-    return viewport().pixelCenter(toDevice(p));
-}
-
-BigComplex FractalCanvas::bigAt(wxPoint p) const
-{
-    return viewport().pixelCenterBig(toDevice(p));
-}
-
-// ---------------------------------------------------------------------------------------------------------------
-// Rendering
-
-void FractalCanvas::changeView(const ViewSpec& view)
-{
-    m_settings.view = view;
-    startRender();
-    if (onViewChanged)
-    {
-        onViewChanged(view);
-    }
-}
-
-void FractalCanvas::startRender()
-{
-    const PixelSize size = renderSize();
-    if (m_iterations.size() != size)
-    {
-        m_iterations = IterationBuffer(size.width, size.height);
-    }
-    if (m_rgb.size() != size)
-    {
-        m_rgb         = RgbImage(size.width, size.height);
-        m_bitmapDirty = true;
-    }
-
-    RenderJob job;
-    job.settings = m_settings;
-    job.size     = size;
-    m_coarsePass = false;
-    m_firstPass  = job.passes.empty() ? 1 : job.passes.front();
-    m_firstPassTilesLeft =
-        tileGrid({0, 0, size.width, size.height}, job.tileSize).size();  // the passes run in order
-    m_generation = m_renderer.start(
-        std::move(job),
-        [this](const TileResult& tile) {
-            auto copy = std::make_shared<TileResult>(tile);
-            CallAfter([this, copy] { applyTile(*copy); });
-        },
-        [this](const RenderCompletion& completion) {
-            CallAfter([this, completion] { finishRender(completion); });
-        });
-    reportStatus(true, {});
-}
-
-void FractalCanvas::applyTile(const TileResult& tile)
-{
-    if (tile.generation != m_generation)
-    {
-        return;
-    }
-    if (tile.pass == m_firstPass && m_firstPassTilesLeft > 0)
-    {
-        --m_firstPassTilesLeft;
-    }
-    if (tile.pass != m_firstPass || m_firstPassTilesLeft == 0)
-    {
-        m_coarsePass = true;
-    }
-    tile.copyInto(m_iterations);
-    colorize(m_iterations, tile.rect, paletteOrDefault(m_settings.coloring.palette),
-             m_settings.coloring, m_rgb);
-    m_bitmapDirty = true;
-    Refresh(false);
-}
-
-void FractalCanvas::finishRender(const RenderCompletion& completion)
-{
-    if (completion.generation != m_generation || completion.cancelled)
-    {
-        return;
-    }
-    m_coarsePass = true;
-    reportStatus(false, completion.elapsed);
-}
-
-void FractalCanvas::recolor()
-{
-    if (m_iterations.size().empty())
-    {
-        return;
-    }
-    colorize(m_iterations, paletteOrDefault(m_settings.coloring.palette), m_settings.coloring,
-             m_rgb);
-    m_bitmapDirty = true;
-    Refresh(false);
-}
-
-void FractalCanvas::reportStatus(bool rendering, std::chrono::milliseconds elapsed)
-{
-    if (onRenderStatus)
-    {
-        onRenderStatus({.rendering  = rendering,
-                        .elapsed    = elapsed,
-                        .iterations = effectiveIterations(m_settings)});
-    }
+    m_controller.setSize(fromWx(GetClientSize()), GetContentScaleFactor());
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -303,43 +80,52 @@ void FractalCanvas::reportStatus(bool rendering, std::chrono::milliseconds elaps
 void FractalCanvas::onPaint(wxPaintEvent& /*event*/)
 {
     wxAutoBufferedPaintDC dc(this);
-    if (m_bitmapDirty && !m_rgb.size().empty())
+    const RgbImage&       image = m_controller.image();
+    if (m_bitmapVersion != m_controller.imageVersion() && !image.size().empty())
     {
-        m_bitmap      = wxBitmap(toWxImage(m_rgb), -1, scale());
-        m_bitmapDirty = false;
+        m_bitmap        = wxBitmap(toWxImage(image), -1, GetContentScaleFactor());
+        m_bitmapVersion = m_controller.imageVersion();
     }
-    if (m_panOffset != wxPoint() || !m_bitmap.IsOk())
+    const wxPoint offset = toWx(m_controller.panOffset());
+    if (offset != wxPoint() || !m_bitmap.IsOk())
     {
         dc.SetBackground(*wxBLACK_BRUSH);
         dc.Clear();
     }
     if (m_bitmap.IsOk())
     {
-        dc.DrawBitmap(m_bitmap, m_panOffset.x, m_panOffset.y, false);
+        dc.DrawBitmap(m_bitmap, offset.x, offset.y, false);
     }
     drawOverlays(dc);
 }
 
 void FractalCanvas::drawOverlays(wxDC& dc)
 {
-    if (m_drag == Drag::RUBBER_BAND)
+    if (const std::optional<PixelRect> band = m_controller.rubberBand())
     {
-        const wxRect rect(m_dragStart, m_dragCurrent);
+        const wxRect rect = toWx(*band);
         dc.SetBrush(*wxTRANSPARENT_BRUSH);
         dc.SetPen(wxPen(*wxBLACK, FromDIP(1), wxPENSTYLE_SOLID));
         dc.DrawRectangle(rect);
         dc.SetPen(wxPen(*wxWHITE, FromDIP(1), wxPENSTYLE_SHORT_DASH));
         dc.DrawRectangle(rect);
     }
-    if (m_showOrbit && m_orbit.size() > 1)
+    const std::span<const PixelPoint> orbit = m_controller.orbit();
+    if (m_controller.showOrbit() && orbit.size() > 1)
     {
+        std::vector<wxPoint> points;
+        points.reserve(orbit.size());
+        for (const PixelPoint point : orbit)
+        {
+            points.push_back(toWx(point));
+        }
         dc.SetPen(wxPen(wxColour(255, 255, 255, 200), FromDIP(1), wxPENSTYLE_SOLID));
-        dc.DrawLines(static_cast<int>(m_orbit.size()), m_orbit.data());
+        dc.DrawLines(static_cast<int>(points.size()), points.data());
         dc.SetPen(wxPen(wxColour(255, 80, 80), FromDIP(2), wxPENSTYLE_SOLID));
         dc.SetBrush(*wxTRANSPARENT_BRUSH);
-        dc.DrawCircle(m_orbit.front(), FromDIP(4));
+        dc.DrawCircle(points.front(), FromDIP(4));
     }
-    if (m_highlighted)
+    if (m_controller.highlighted())
     {
         const int width = FromDIP(3);
         dc.SetBrush(*wxTRANSPARENT_BRUSH);
@@ -353,16 +139,20 @@ void FractalCanvas::drawOverlays(wxDC& dc)
 
 void FractalCanvas::onSize(wxSizeEvent& event)
 {
-    m_resizeTimer.StartOnce(kResizeDebounceMs);
+    updateSize();
+    m_resizeTimer.StartOnce(static_cast<int>(app::kResizeDebounce.count()));
+    event.Skip();
+}
+
+void FractalCanvas::onDpiChanged(wxDPIChangedEvent& event)
+{
+    updateSize();  // the content scale may change without a size event
     event.Skip();
 }
 
 void FractalCanvas::onResizeTimer(wxTimerEvent& /*event*/)
 {
-    if (m_iterations.size() != renderSize())
-    {
-        startRender();
-    }
+    m_controller.resizeSettled();
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -374,188 +164,43 @@ void FractalCanvas::onMouseWheel(wxMouseEvent& event)
     {
         return;
     }
-    notifyUserInput();
-    const double notches = static_cast<double>(event.GetWheelRotation()) / event.GetWheelDelta();
-    const double factor  = std::pow(kWheelZoomPerNotch, notches);
-    changeView(viewport().zoomedAt(toDevice(event.GetPosition()), factor).view());
+    m_controller.wheel(fromWx(event.GetPosition()),
+                       static_cast<double>(event.GetWheelRotation()) / event.GetWheelDelta());
 }
 
 void FractalCanvas::onLeftDown(wxMouseEvent& event)
 {
     SetFocus();
-    notifyUserInput();
-    if (m_pickSeedMode)
-    {
-        if (onSeedPicked)
-        {
-            onSeedPicked(complexAt(event.GetPosition()));
-        }
-        return;
-    }
-    beginDrag(event.ShiftDown() ? Drag::RUBBER_BAND : Drag::PAN, event.GetPosition());
+    m_controller.buttonDown(app::MouseButton::LEFT, fromWx(event.GetPosition()), event.ShiftDown());
 }
 
 void FractalCanvas::onRightDown(wxMouseEvent& event)
 {
     SetFocus();
-    notifyUserInput();
-    beginDrag(Drag::RUBBER_BAND, event.GetPosition());
-}
-
-void FractalCanvas::beginDrag(Drag kind, wxPoint at)
-{
-    m_drag        = kind;
-    m_dragStart   = at;
-    m_dragCurrent = at;
-    m_panOffset   = wxPoint();
-    if (!HasCapture())
-    {
-        CaptureMouse();
-    }
+    m_controller.buttonDown(app::MouseButton::RIGHT, fromWx(event.GetPosition()),
+                            event.ShiftDown());
 }
 
 void FractalCanvas::onMotion(wxMouseEvent& event)
 {
-    const wxPoint at = event.GetPosition();
-    if (m_drag == Drag::PAN)
-    {
-        m_panOffset = at - m_dragStart;
-        Refresh(false);
-    }
-    else if (m_drag == Drag::RUBBER_BAND)
-    {
-        m_dragCurrent = at;
-        Refresh(false);
-    }
-    m_pinnedOrbit = false;
-    if (onPointerMoved)
-    {
-        onPointerMoved(bigAt(at));
-    }
-    if (m_showOrbit && m_drag == Drag::NONE)
-    {
-        updateOrbit(at);
-    }
+    m_controller.pointerMoved(fromWx(event.GetPosition()));
 }
 
 void FractalCanvas::onMouseUp(wxMouseEvent& event)
 {
-    if (m_drag == Drag::NONE)
-    {
-        return;
-    }
-    endDrag(event.GetPosition(), event.GetButton() == wxMOUSE_BTN_RIGHT);
-}
-
-void FractalCanvas::endDrag(wxPoint at, bool rightButton)
-{
-    if (HasCapture())
-    {
-        ReleaseMouse();
-    }
-    const Drag kind     = m_drag;
-    m_drag              = Drag::NONE;
-    const wxPoint delta = at - m_dragStart;
-    const bool moved = std::abs(delta.x) > kDragThresholdPx || std::abs(delta.y) > kDragThresholdPx;
-    if (kind == Drag::PAN)
-    {
-        finishPan(at);
-    }
-    else if (moved)
-    {
-        finishRubberBand(at);
-    }
-    else if (rightButton)
-    {
-        changeView(viewport().zoomedAt(toDevice(at), 1.0 / kKeyZoomFactor).view());
-    }
-    else
-    {
-        Refresh(false);
-    }
-}
-
-void FractalCanvas::finishPan(wxPoint at)
-{
-    const wxPoint delta = at - m_dragStart;
-    m_panOffset         = wxPoint();
-    if (delta == wxPoint())
-    {
-        Refresh(false);
-        return;
-    }
-    const PixelPoint deviceDelta = toDevice(delta);
-    // Keep the old picture, shifted, as the placeholder until the new render's first pass lands.
-    RgbImage shifted(m_rgb.width, m_rgb.height);
-    blitShifted(m_rgb, deviceDelta.x, deviceDelta.y, shifted);
-    m_rgb         = std::move(shifted);
-    m_bitmapDirty = true;
-    changeView(viewport().panned(deviceDelta.x, deviceDelta.y).view());
-}
-
-void FractalCanvas::finishRubberBand(wxPoint at)
-{
-    const wxRect     logical(m_dragStart, at);
-    const PixelPoint topLeft     = toDevice(logical.GetTopLeft());
-    const PixelPoint bottomRight = toDevice(logical.GetBottomRight() + wxPoint(1, 1));
-    const PixelRect  rect{topLeft.x, topLeft.y, bottomRight.x - topLeft.x,
-                          bottomRight.y - topLeft.y};
-    changeView(viewport().zoomedToRect(rect).view());
+    m_controller.buttonUp(
+        event.GetButton() == wxMOUSE_BTN_RIGHT ? app::MouseButton::RIGHT : app::MouseButton::LEFT,
+        fromWx(event.GetPosition()));
 }
 
 void FractalCanvas::onLeave(wxMouseEvent& /*event*/)
 {
-    if (m_pinnedOrbit)
-    {
-        return;  // showOrbitAt() keeps its orbit until the mouse moves again
-    }
-    if (onPointerMoved)
-    {
-        onPointerMoved(std::nullopt);
-    }
-    if (!m_orbit.empty())
-    {
-        m_orbit.clear();
-        Refresh(false);
-    }
+    m_controller.pointerLeft();
 }
 
 void FractalCanvas::onCaptureLost(wxMouseCaptureLostEvent& /*event*/)
 {
-    m_drag      = Drag::NONE;
-    m_panOffset = wxPoint();
-    Refresh(false);
-}
-
-void FractalCanvas::updateOrbit(wxPoint at)
-{
-    const Viewport       vp        = viewport();
-    const int            maxPoints = std::min(effectiveIterations(m_settings), kMaxOrbitPoints);
-    const bool           deep      = usesPerturbation(vp.view().zoom);
-    std::vector<Complex> points;
-    if (deep)
-    {
-        // Doubles cannot place the pointer this deep, but its exact orbit can be computed; it
-        // leaves the view within a few steps anyway.
-        const ReferenceOrbit exact(m_settings.fractal, bigAt(at), maxPoints - 1);
-        points.assign(exact.points().begin(), exact.points().end());
-    }
-    else
-    {
-        points = orbit(m_settings.fractal, complexAt(at), maxPoints);
-    }
-    m_orbit.clear();
-    m_orbit.reserve(points.size());
-    for (const Complex z : points)
-    {
-        const wxPoint p = toLogical(vp.toPixel(z));
-        m_orbit.emplace_back(clampCoordinate(p.x), clampCoordinate(p.y));
-    }
-    if (deep && m_settings.fractal.julia && !m_orbit.empty())
-    {
-        m_orbit.front() = at;  // z0 is the pointer itself, which toPixel(Complex) cannot resolve
-    }
-    Refresh(false);
+    m_controller.captureLost();
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -563,52 +208,44 @@ void FractalCanvas::updateOrbit(wxPoint at)
 
 void FractalCanvas::onKeyDown(wxKeyEvent& event)
 {
-    const PixelSize size  = renderSize();
-    const int       stepX = std::max(1, static_cast<int>(size.width * kKeyPanFraction));
-    const int       stepY = std::max(1, static_cast<int>(size.height * kKeyPanFraction));
+    std::optional<app::CanvasKey> key;
     switch (event.GetKeyCode())
     {
         case WXK_LEFT:
-            changeView(viewport().panned(stepX, 0).view());
+            key = app::CanvasKey::LEFT;
             break;
         case WXK_RIGHT:
-            changeView(viewport().panned(-stepX, 0).view());
+            key = app::CanvasKey::RIGHT;
             break;
         case WXK_UP:
-            changeView(viewport().panned(0, stepY).view());
+            key = app::CanvasKey::UP;
             break;
         case WXK_DOWN:
-            changeView(viewport().panned(0, -stepY).view());
+            key = app::CanvasKey::DOWN;
             break;
         case '+':
         case '=':
         case WXK_NUMPAD_ADD:
         case WXK_PAGEUP:
-            zoomAtCenter(kKeyZoomFactor);
+            key = app::CanvasKey::ZOOM_IN;
             break;
         case '-':
         case WXK_NUMPAD_SUBTRACT:
         case WXK_PAGEDOWN:
-            zoomAtCenter(1.0 / kKeyZoomFactor);
+            key = app::CanvasKey::ZOOM_OUT;
             break;
         case WXK_HOME:
-            resetView();
+            key = app::CanvasKey::HOME;
             break;
         case WXK_ESCAPE:
-            if (m_drag != Drag::NONE)
-            {
-                m_drag      = Drag::NONE;
-                m_panOffset = wxPoint();
-                if (HasCapture())
-                {
-                    ReleaseMouse();
-                }
-                Refresh(false);
-            }
+            key = app::CanvasKey::ESCAPE;
             break;
         default:
-            event.Skip();
             break;
+    }
+    if (!key || !m_controller.key(*key))
+    {
+        event.Skip();
     }
 }
 

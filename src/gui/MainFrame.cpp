@@ -91,10 +91,10 @@ MainFrame::MainFrame(RenderSettings initial, std::filesystem::path bookmarksPath
     m_demo({.applyFrame =
                 [this](const RenderSettings& frame) {
                     m_settings = frame;
-                    m_canvas->setSettings(frame);
+                    m_canvas->controller().setSettings(frame);
                     updateStatusBar();  // the panel catches up when the flight ends
                 },
-            .canvasReady = [this] { return m_canvas->hasCoarsePicture(); },
+            .canvasReady = [this] { return m_canvas->controller().hasCoarsePicture(); },
             .showStatus =
                 [this](std::string_view text) {
                     SetStatusText(toWx(text), field(StatusField::POINTER));
@@ -200,21 +200,21 @@ void MainFrame::buildMenus()
         wxEVT_MENU,
         [this](wxCommandEvent&) {
             stopFlight();
-            m_canvas->zoomAtCenter(kMenuZoomFactor);
+            m_canvas->controller().zoomAtCenter(kMenuZoomFactor);
         },
         kMenuZoomIn);
     Bind(
         wxEVT_MENU,
         [this](wxCommandEvent&) {
             stopFlight();
-            m_canvas->zoomAtCenter(1.0 / kMenuZoomFactor);
+            m_canvas->controller().zoomAtCenter(1.0 / kMenuZoomFactor);
         },
         kMenuZoomOut);
     Bind(
         wxEVT_MENU,
         [this](wxCommandEvent&) {
             stopFlight();
-            m_canvas->resetView();
+            m_canvas->controller().resetView();
         },
         kMenuResetView);
     Bind(wxEVT_MENU, [this](wxCommandEvent&) { addBookmark(); }, kMenuAddBookmark);
@@ -290,28 +290,28 @@ void MainFrame::showAbout()
 
 void MainFrame::wireCanvas()
 {
-    m_canvas->onUserInput   = [this] { stopFlight(); };
-    m_canvas->onViewChanged = [this](const ViewSpec& view) {
+    m_canvas->controller().onUserInput   = [this] { stopFlight(); };
+    m_canvas->controller().onViewChanged = [this](const ViewSpec& view) {
         stopFlight();
         m_settings.view = view;
         m_panel->setSettings(m_settings);
         updateStatusBar();
     };
-    m_canvas->onPointerMoved = [this](const std::optional<BigComplex>& pointer) {
+    m_canvas->controller().onPointerMoved = [this](const std::optional<BigComplex>& pointer) {
         showPointer(pointer);
         m_panel->setPreviewSeed(pointer ? std::optional<Complex>(pointer->approx())
                                         : std::optional<Complex>());
     };
-    m_canvas->onSeedPicked = [this](Complex seed) {
+    m_canvas->controller().onSeedPicked = [this](Complex seed) {
         RenderSettings next = m_settings;
         next.fractal.julia  = true;
         next.fractal.seed   = seed;
         next.view           = defaultView(next.fractal);
-        m_canvas->setPickSeedMode(false);
+        m_canvas->controller().setPickSeedMode(false);
         m_panel->setPickSeedMode(false);
         applySettings(next);
     };
-    m_canvas->onRenderStatus = [this](const FractalCanvas::RenderStatus& status) {
+    m_canvas->controller().onRenderStatus = [this](const app::RenderStatus& status) {
         showRenderStatus(status);
     };
 }
@@ -329,11 +329,13 @@ void MainFrame::wirePanel()
         }
         applySettings(next);
     };
-    m_panel->onPickSeedToggled = [this](bool enabled) { m_canvas->setPickSeedMode(enabled); };
-    m_panel->onOrbitToggled    = [this](bool enabled) { setShowOrbit(enabled); };
-    m_panel->onBookmarkAdd     = [this] { addBookmark(); };
-    m_panel->onBookmarkLoad    = [this](std::size_t index) { loadBookmark(index); };
-    m_panel->onBookmarkDelete  = [this](std::size_t index) { deleteBookmark(index); };
+    m_panel->onPickSeedToggled = [this](bool enabled) {
+        m_canvas->controller().setPickSeedMode(enabled);
+    };
+    m_panel->onOrbitToggled   = [this](bool enabled) { setShowOrbit(enabled); };
+    m_panel->onBookmarkAdd    = [this] { addBookmark(); };
+    m_panel->onBookmarkLoad   = [this](std::size_t index) { loadBookmark(index); };
+    m_panel->onBookmarkDelete = [this](std::size_t index) { deleteBookmark(index); };
 }
 
 void MainFrame::wireHelp()
@@ -370,14 +372,14 @@ void MainFrame::onClose(wxCloseEvent& event)
 void MainFrame::applySettings(const RenderSettings& settings)
 {
     m_settings = settings;
-    m_canvas->setSettings(settings);
+    m_canvas->controller().setSettings(settings);
     m_panel->setSettings(settings);
     updateStatusBar();
 }
 
 void MainFrame::setShowOrbit(bool on)
 {
-    m_canvas->setShowOrbit(on);
+    m_canvas->controller().setShowOrbit(on);
     m_panel->setShowOrbit(on);
     m_showOrbitItem->Check(on);
 }
@@ -412,7 +414,7 @@ void MainFrame::showPointer(const std::optional<BigComplex>& pointer)
                   field(StatusField::POINTER));
 }
 
-void MainFrame::showRenderStatus(const FractalCanvas::RenderStatus& status)
+void MainFrame::showRenderStatus(const app::RenderStatus& status)
 {
     if (status.rendering)
     {
@@ -507,7 +509,7 @@ void MainFrame::runHelpAction(const HelpAction& action)
     {
         takeSnapshot();
         stopFlight();
-        m_canvas->resetView();
+        m_canvas->controller().resetView();
     }
     else if (std::holds_alternative<ExportDialogAction>(action))
     {
@@ -562,7 +564,7 @@ void MainFrame::takeSnapshot()
     {
         return;  // keep the view from before the demo that is running
     }
-    m_snapshot = Snapshot{.settings = m_settings, .showOrbit = m_canvas->showOrbit()};
+    m_snapshot = Snapshot{.settings = m_settings, .showOrbit = m_canvas->controller().showOrbit()};
 }
 
 void MainFrame::restoreSnapshot()
@@ -622,7 +624,7 @@ void MainFrame::showExportDialog()
         m_exportDialog->Raise();
         return;
     }
-    m_exportDialog         = new ExportDialog(this, m_canvas->currentImage().size());
+    m_exportDialog         = new ExportDialog(this, m_canvas->controller().image().size());
     m_exportDialog->onHelp = [this] { showHelpPage("exporting.html"); };
     m_exportDialog->Bind(
         wxEVT_BUTTON,
@@ -666,7 +668,7 @@ void MainFrame::saveImage(const ExportOptions& options)
 
 void MainFrame::copyImage()
 {
-    const RgbImage& image = m_canvas->currentImage();
+    const RgbImage& image = m_canvas->controller().image();
     if (image.size().empty())
     {
         return;

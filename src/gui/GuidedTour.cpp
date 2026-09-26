@@ -87,7 +87,7 @@ std::vector<GuidedTour::Step> GuidedTour::buildSteps()
              [this] {
                  m_frame.applySettings(app::mandelbrotDefault());
                  m_frame.setShowOrbit(true);
-                 m_frame.canvas().showOrbitAt(app::kOrbitPoint);
+                 m_frame.canvas().controller().showOrbitAt(app::kOrbitPoint);
              }},
         {.title    = "Bookmarks",
          .text     = "Add... saves the current view, fractal and colours under a name; Load (or a "
@@ -139,12 +139,13 @@ void GuidedTour::start()
         showStep(0);
         return;
     }
-    m_running       = true;
-    m_baseline      = {.settings = m_frame.settings(), .showOrbit = m_frame.canvas().showOrbit()};
-    m_card          = new TourCard(&m_frame);
-    m_card->onBack  = [this] { back(); };
-    m_card->onNext  = [this] { next(); };
-    m_card->onClose = [this] { stop(); };
+    m_running           = true;
+    m_baseline          = {.settings  = m_frame.settings(),
+                           .showOrbit = m_frame.canvas().controller().showOrbit()};
+    m_card              = new TourCard(&m_frame);
+    m_card->onBack      = [this] { back(); };
+    m_card->onNext      = [this] { next(); };
+    m_card->onClose     = [this] { stop(); };
     m_card->onLearnMore = [this] {
         if (m_index < m_steps.size())
         {
@@ -209,12 +210,12 @@ void GuidedTour::showStep(std::size_t index)
 void GuidedTour::leaveCurrentStep()
 {
     m_frame.closeExportDialog();
-    m_frame.canvas().clearPinnedOrbit();
+    m_frame.canvas().controller().clearPinnedOrbit();
 }
 
 void GuidedTour::highlight(Target target)
 {
-    m_frame.canvas().setHighlighted(target == Target::CANVAS);
+    m_frame.canvas().controller().setHighlighted(target == Target::CANVAS);
     std::optional<SidePanel::Section> section;
     switch (target)
     {
@@ -246,7 +247,7 @@ void GuidedTour::highlight(Target target)
 
 void GuidedTour::clearHighlights()
 {
-    m_frame.canvas().setHighlighted(false);
+    m_frame.canvas().controller().setHighlighted(false);
     m_frame.panel().setHighlightedSection(std::nullopt);
 }
 

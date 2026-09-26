@@ -4,6 +4,7 @@ add_executable(Mandelbrotter_tests
     BlaTableTests.cpp
     bookmarks_tests.cpp
     BookmarkStoreTests.cpp
+    CanvasControllerTests.cpp
     cli_tests.cpp
     DemoPlayerTests.cpp
     exporter_tests.cpp

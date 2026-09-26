@@ -156,11 +156,11 @@ std::vector<ScreenshotRun::Shot> ScreenshotRun::buildShots()
              [&frame] {
                  frame.applySettings(app::mandelbrotDefault());
                  frame.setShowOrbit(true);
-                 frame.canvas().showOrbitAt(app::kOrbitPoint);
+                 frame.canvas().controller().showOrbitAt(app::kOrbitPoint);
              },
          .target  = whole,
          .crop    = canvasCrop,
-         .cleanup = [&frame] { frame.canvas().clearPinnedOrbit(); }},
+         .cleanup = [&frame] { frame.canvas().controller().clearPinnedOrbit(); }},
         {.file         = "ui-canvas-seahorse.png",
          .rendersFirst = true,
          .prepare =
@@ -262,7 +262,7 @@ void ScreenshotRun::runCurrent()
     const Shot& shot = m_shots[m_index];
     m_watchdog.StartOnce(kWatchdogMs);  // per shot
     shot.prepare();
-    m_waitingForRender = shot.rendersFirst && m_frame.canvas().rendering();
+    m_waitingForRender = shot.rendersFirst && m_frame.canvas().controller().rendering();
     if (!m_waitingForRender)
     {
         settle();
