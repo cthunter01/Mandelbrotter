@@ -30,10 +30,19 @@ Mandelbrotter_configure_target(Mandelbrotter_lib)
 add_executable(Mandelbrotter_embed tools/embed_file.cpp)
 Mandelbrotter_configure_target(Mandelbrotter_embed)
 
+# Application layer: the window's logic without a toolkit (controllers, demo player, tour script, view-models).
+# Links only the core, never wx, so the tests cover it and a second toolkit could sit on it.
+add_library(Mandelbrotter_app STATIC
+    app/BookmarkStore.cpp
+    app/format.cpp)
+add_library(Mandelbrotter::app ALIAS Mandelbrotter_app)
+target_include_directories(Mandelbrotter_app PUBLIC ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(Mandelbrotter_app PUBLIC Mandelbrotter::lib)   # never wx
+Mandelbrotter_configure_target(Mandelbrotter_app)
+
 # GUI library: the wxWidgets layer. Headers live next to the sources and are included as "gui/<name>.h".
 add_library(Mandelbrotter_gui STATIC
     gui/app_icon.cpp
-    gui/BookmarkStore.cpp
     gui/DemoPlayer.cpp
     gui/export_runner.cpp
     gui/ExportDialog.cpp
@@ -50,7 +59,7 @@ add_library(Mandelbrotter_gui STATIC
     gui/wx_util.cpp)
 add_library(Mandelbrotter::gui ALIAS Mandelbrotter_gui)
 target_include_directories(Mandelbrotter_gui PUBLIC ${PROJECT_SOURCE_DIR}/src)
-target_link_libraries(Mandelbrotter_gui PUBLIC Mandelbrotter::lib wx::html wx::core wx::base)
+target_link_libraries(Mandelbrotter_gui PUBLIC Mandelbrotter::app Mandelbrotter::lib wx::html wx::core wx::base)
 # window_capture.cpp reads a window's pixels back through GDK on Linux; wx keeps its GTK include directories
 # private, so the file needs them itself (an imported target: the headers count as system headers).
 if(UNIX AND NOT APPLE)

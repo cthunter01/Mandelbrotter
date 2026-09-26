@@ -25,6 +25,7 @@
 
 #include "Mandelbrotter/ProgressiveRenderer.h"
 #include "Mandelbrotter/RenderSettings.h"
+#include "Mandelbrotter/app/format.h"
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/exporter.h"
 #include "Mandelbrotter/flights.h"
@@ -390,10 +391,10 @@ void MainFrame::setSidePanelShown(bool shown)
 
 void MainFrame::updateStatusBar()
 {
-    SetStatusText(toWx("Centre " + formatCenter(m_settings.view.center, m_settings.view.zoom)),
+    SetStatusText(toWx("Centre " + app::formatCenter(m_settings.view.center, m_settings.view.zoom)),
                   field(StatusField::CENTER));
     const std::string zoomText =
-        formatZoom(m_settings.view.zoom) +
+        app::formatZoom(m_settings.view.zoom) +
         (usesPerturbation(m_settings.view.zoom) ? " (deep)" : "");  // perturbation rendering
     SetStatusText(toWx("Zoom " + zoomText), field(StatusField::ZOOM));
     SetStatusText(toWx(std::format("{} iterations", effectiveIterations(m_settings))),
@@ -407,7 +408,7 @@ void MainFrame::showPointer(const std::optional<BigComplex>& pointer)
     {
         return;  // the field shows the flight's progress
     }
-    SetStatusText(pointer ? toWx(formatCenter(*pointer, m_settings.view.zoom)) : wxString(),
+    SetStatusText(pointer ? toWx(app::formatCenter(*pointer, m_settings.view.zoom)) : wxString(),
                   field(StatusField::POINTER));
 }
 
@@ -725,8 +726,7 @@ void MainFrame::addBookmark()
 {
     stopDemos();  // the tour's temporary bookmark must never be saved
     wxTextEntryDialog dialog(this, "Name for this view:", "Add bookmark",
-                             toWx(std::string(displayName(m_settings.fractal.family)) + " at " +
-                                  formatZoom(m_settings.view.zoom)));
+                             toWx(app::defaultBookmarkName(m_settings)));
     if (dialog.ShowModal() != wxID_OK)
     {
         return;

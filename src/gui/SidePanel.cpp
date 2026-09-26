@@ -20,6 +20,7 @@
 #include <wx/tglbtn.h>
 
 #include "Mandelbrotter/Palette.h"
+#include "Mandelbrotter/app/format.h"
 #include "Mandelbrotter/fractal.h"
 #include "Mandelbrotter/parse.h"
 #include "gui/JuliaPreview.h"
@@ -47,7 +48,7 @@ std::optional<double> parseDouble(const wxString& text)
 
 wxString formatDouble(double value)
 {
-    return toWx(std::format("{:.10g}", value));
+    return toWx(app::formatSeedComponent(value));
 }
 
 wxStaticBoxSizer* section(wxWindow* parent, wxSizer& into, const char* title)

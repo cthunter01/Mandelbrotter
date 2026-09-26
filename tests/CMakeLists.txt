@@ -3,9 +3,11 @@ add_executable(Mandelbrotter_tests
     BigFixedTests.cpp
     BlaTableTests.cpp
     bookmarks_tests.cpp
+    BookmarkStoreTests.cpp
     cli_tests.cpp
     exporter_tests.cpp
     flights_tests.cpp
+    format_tests.cpp
     fractal_tests.cpp
     help_action_tests.cpp
     help_book_tests.cpp
@@ -19,7 +21,7 @@ add_executable(Mandelbrotter_tests
     ReferenceOrbitTests.cpp
     RenderSettingsTests.cpp
     ViewportTests.cpp)
-target_link_libraries(Mandelbrotter_tests PRIVATE Mandelbrotter::lib GTest::gtest_main stb::stb)
+target_link_libraries(Mandelbrotter_tests PRIVATE Mandelbrotter::app Mandelbrotter::lib GTest::gtest_main stb::stb)
 # The help book's sources, for the tests that check its pages, links and images (help_book_tests.cpp).
 target_compile_definitions(Mandelbrotter_tests PRIVATE MANDELBROTTER_HELP_DIR="${PROJECT_SOURCE_DIR}/docs/help")
 Mandelbrotter_configure_target(Mandelbrotter_tests)

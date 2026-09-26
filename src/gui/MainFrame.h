@@ -13,10 +13,10 @@
 
 #include "Mandelbrotter/BigComplex.h"
 #include "Mandelbrotter/RenderSettings.h"
+#include "Mandelbrotter/app/BookmarkStore.h"
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/exporter.h"
 #include "Mandelbrotter/help_action.h"
-#include "gui/BookmarkStore.h"
 #include "gui/DemoPlayer.h"
 #include "gui/FractalCanvas.h"
 #include "gui/HelpController.h"
@@ -119,7 +119,7 @@ private:
     void reportError(const std::string& title, const std::string& message);
 
     RenderSettings                 m_settings;
-    BookmarkStore                  m_bookmarks;
+    app::BookmarkStore             m_bookmarks;
     HelpController                 m_help;
     DemoPlayer                     m_demo;
     std::unique_ptr<GuidedTour>    m_tour;

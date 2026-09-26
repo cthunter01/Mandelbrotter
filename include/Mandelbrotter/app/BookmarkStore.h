@@ -7,7 +7,7 @@
 
 #include "Mandelbrotter/bookmarks.h"
 
-namespace mandelbrotter::gui
+namespace mandelbrotter::app
 {
 
 /// A bookmark list persisted as JSON at `path` (the application uses <user data
@@ -34,4 +34,4 @@ private:
     std::vector<Bookmark> m_bookmarks;
 };
 
-}  // namespace mandelbrotter::gui
+}  // namespace mandelbrotter::app

@@ -1,9 +1,14 @@
-#include "gui/BookmarkStore.h"
+#include "Mandelbrotter/app/BookmarkStore.h"
 
+#include <cstddef>
 #include <exception>
+#include <filesystem>
+#include <string>
 #include <utility>
 
-namespace mandelbrotter::gui
+#include "Mandelbrotter/bookmarks.h"
+
+namespace mandelbrotter::app
 {
 
 BookmarkStore::BookmarkStore(std::filesystem::path path) : m_path(std::move(path)) { }
@@ -47,4 +52,4 @@ void BookmarkStore::remove(std::size_t index)
     }
 }
 
-}  // namespace mandelbrotter::gui
+}  // namespace mandelbrotter::app
