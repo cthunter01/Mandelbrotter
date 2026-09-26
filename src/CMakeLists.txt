@@ -35,6 +35,7 @@ Mandelbrotter_configure_target(Mandelbrotter_embed)
 add_library(Mandelbrotter_app STATIC
     app/BookmarkStore.cpp
     app/DemoPlayer.cpp
+    app/ExportTask.cpp
     app/format.cpp
     app/help_routing.cpp
     app/panel_model.cpp

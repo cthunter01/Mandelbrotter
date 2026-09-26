@@ -7,6 +7,7 @@ add_executable(Mandelbrotter_tests
     cli_tests.cpp
     DemoPlayerTests.cpp
     exporter_tests.cpp
+    ExportTaskTests.cpp
     flights_tests.cpp
     format_tests.cpp
     fractal_tests.cpp
