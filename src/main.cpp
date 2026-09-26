@@ -24,8 +24,11 @@ namespace
 
 int run(int argc, char** argv)
 {
-    const std::span                     rawArgs(argv, static_cast<std::size_t>(argc));
-    const std::vector<std::string_view> args(rawArgs.begin() + 1, rawArgs.end());
+    const std::span               rawArgs(argv, static_cast<std::size_t>(argc));
+    std::vector<std::string_view> args(rawArgs.begin() + 1, rawArgs.end());
+    // macOS has passed "-psn_<process serial number>" to an app bundle started from Finder; it is
+    // not ours.
+    std::erase_if(args, [](std::string_view arg) { return arg.starts_with("-psn_"); });
 
     const auto options = mandelbrotter::parseCommandLine(args);
     if (!options)

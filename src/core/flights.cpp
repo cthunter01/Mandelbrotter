@@ -81,7 +81,8 @@ Flight antennaMinibrot()
 {
     const RenderSettings start = mandelbrot("classic");
     // The period-3 island on the antenna, then the period-9 island on its own antenna.
-    const RenderSettings island = at(start, {-1.7548776662466927, 0.0}, 1e3);
+    // Zoom 60 shows the whole island; from about 250 the screen is inside its body, all black.
+    const RenderSettings island = at(start, {-1.7548776662466927, 0.0}, 60);
     return {.id    = "antenna-minibrot",
             .title = "The minibrot on the antenna",
             .description =

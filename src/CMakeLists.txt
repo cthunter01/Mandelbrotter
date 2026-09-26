@@ -88,7 +88,34 @@ if(WIN32)
     set_source_files_properties(Mandelbrotter.rc PROPERTIES
         OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/icons/mandelbrotter.ico)
 endif()
+# macOS: Mandelbrotter.app, so Finder opens it as an application (not in Terminal) and shows its icon.
+if(APPLE)
+    set_target_properties(Mandelbrotter PROPERTIES
+        MACOSX_BUNDLE                      TRUE
+        MACOSX_BUNDLE_INFO_PLIST           ${CMAKE_CURRENT_SOURCE_DIR}/Mandelbrotter.plist.in
+        MACOSX_BUNDLE_BUNDLE_NAME          Mandelbrotter
+        MACOSX_BUNDLE_GUI_IDENTIFIER       io.github.cthunter01.Mandelbrotter
+        MACOSX_BUNDLE_ICON_FILE            mandelbrotter.icns
+        MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION}
+        MACOSX_BUNDLE_BUNDLE_VERSION       ${PROJECT_VERSION})
+    target_sources(Mandelbrotter PRIVATE icons/mandelbrotter.icns)
+    set_source_files_properties(icons/mandelbrotter.icns PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+endif()
 Mandelbrotter_configure_target(Mandelbrotter)
 
 include(GNUInstallDirs)
-install(TARGETS Mandelbrotter RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS Mandelbrotter RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} BUNDLE DESTINATION .)
+# The linker signs only the executable inside the bundle; sign the installed bundle as a whole (ad hoc, no
+# identity), so its Info.plist and icon are sealed too and `codesign --verify` accepts it.
+if(APPLE)
+    install(CODE [[
+        execute_process(COMMAND codesign --force --sign - "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/Mandelbrotter.app"
+                        COMMAND_ERROR_IS_FATAL ANY)
+    ]])
+endif()
+# Linux desktops find an application's name and icon through a .desktop file named after its window class
+# (the Wayland app_id), "Mandelbrotter".
+if(UNIX AND NOT APPLE)
+    install(FILES Mandelbrotter.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
+    install(FILES icons/mandelbrotter.png DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/256x256/apps)
+endif()

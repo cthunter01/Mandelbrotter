@@ -20,6 +20,7 @@
 #include "Mandelbrotter/Viewport.h"
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/exporter.h"
+#include "Mandelbrotter/flights.h"
 #include "Mandelbrotter/fractal.h"
 #include "Mandelbrotter/geometry.h"
 #include "Mandelbrotter/image.h"
@@ -34,6 +35,9 @@ namespace
 
 using Error   = std::unexpected<std::string>;
 using Outcome = std::expected<void, std::string>;
+
+constexpr int kDefaultFlightFps = 25;
+constexpr int kMaxFlightFps     = 60;
 
 std::expected<Complex, std::string> parseComplex(std::string_view flag, std::string_view text)
 {
@@ -206,6 +210,70 @@ Outcome setScreenshots(std::string_view value, CliOptions& options)
     return {};
 }
 
+Outcome setFlight(std::string_view value, CliOptions& options)
+{
+    if (findFlight(value) == nullptr)
+    {
+        std::string ids;
+        for (const Flight& flight : builtinFlights())
+        {
+            ids += (ids.empty() ? "" : ", ") + flight.id;
+        }
+        return Error(std::format("--flight expects one of {} (got \"{}\")", ids, value));
+    }
+    options.flight = std::string(value);
+    return {};
+}
+
+Outcome setFlightFrames(std::string_view value, CliOptions& options)
+{
+    options.flightFramesDir = std::filesystem::path(value);
+    return {};
+}
+
+Outcome setFps(std::string_view value, CliOptions& options)
+{
+    const auto fps = parseNumber<int>(value);
+    if (!fps || *fps < 1 || *fps > kMaxFlightFps)
+    {
+        return Error(std::format("--fps expects an integer from 1 to {}", kMaxFlightFps));
+    }
+    options.fps = fps;
+    return {};
+}
+
+/// --flight-frames: every frame of the flight, rendered to completion, as numbered PNGs.
+int writeFlightFrames(const Flight& flight, const std::filesystem::path& dir, long long fps,
+                      const ExportOptions& exportOptions, std::ostream& out, std::ostream& err)
+{
+    const long long frames = (totalDuration(flight).count() * fps / 1000) + 1;
+    try
+    {
+        std::filesystem::create_directories(dir);
+        for (long long i = 0; i < frames; ++i)
+        {
+            const RenderSettings settings =
+                flightSettingsAt(flight, std::chrono::milliseconds{i * 1000 / fps});
+            const std::optional<RgbImage> image = renderForExport(settings, exportOptions);
+            if (!image)
+            {
+                err << "error: render was cancelled\n";
+                return 1;
+            }
+            const auto path = dir / std::format("frame-{:04}.png", i);
+            writePng(path, *image);
+            out << std::format("wrote {} ({} of {}, zoom {:.3g})\n", path.string(), i + 1, frames,
+                               settings.view.zoom);
+        }
+        return 0;
+    }
+    catch (const std::exception& e)
+    {
+        err << "error: " << e.what() << '\n';
+        return 1;
+    }
+}
+
 struct OptionSpec
 {
     std::string_view name;
@@ -229,6 +297,9 @@ constexpr std::array kOptions{
     OptionSpec{"--size", true, setSize},
     OptionSpec{"--supersample", true, setSupersample},
     OptionSpec{"--screenshots", true, setScreenshots},
+    OptionSpec{"--flight", true, setFlight},
+    OptionSpec{"--flight-frames", true, setFlightFrames},
+    OptionSpec{"--fps", true, setFps},
 };
 
 const OptionSpec* findOption(std::string_view name)
@@ -289,7 +360,20 @@ std::expected<CliOptions, std::string> parseCommandLine(std::span<const std::str
     if (options.screenshotsDir && !options.wantsGui())
     {
         return Error(
-            "--screenshots needs the window; it cannot be combined with --help or --render");
+            "--screenshots needs the window; it cannot be combined with --help, --render "
+            "or --flight-frames");
+    }
+    if (options.flight.has_value() != options.flightFramesDir.has_value())
+    {
+        return Error("--flight and --flight-frames go together");
+    }
+    if (options.fps && !options.flightFramesDir)
+    {
+        return Error("--fps only applies to --flight-frames");
+    }
+    if (options.flightFramesDir && (options.help || options.renderOutput))
+    {
+        return Error("--flight-frames cannot be combined with --help or --render");
     }
     return options;
 }
@@ -384,6 +468,18 @@ int runCli(const CliOptions& options, std::ostream& out, std::ostream& err)
     {
         out << usageText();
         return 0;
+    }
+    if (options.flightFramesDir)
+    {
+        const Flight* flight = options.flight ? findFlight(*options.flight) : nullptr;
+        if (flight == nullptr)
+        {
+            err << "error: --flight-frames needs a known --flight\n";
+            return 1;
+        }
+        return writeFlightFrames(*flight, *options.flightFramesDir,
+                                 options.fps.value_or(kDefaultFlightFps), options.exportOptions,
+                                 out, err);
     }
     if (!options.renderOutput)
     {

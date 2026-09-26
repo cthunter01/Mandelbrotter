@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)   # FetchContent SYSTEM + EXCLUDE_FROM_ALL + FIND_PACKAGE_ARGS
-project(Mandelbrotter VERSION 0.8.2 DESCRIPTION "Interactive Mandelbrot-family fractal explorer" LANGUAGES CXX)
+project(Mandelbrotter VERSION 0.8.3 DESCRIPTION "Interactive Mandelbrot-family fractal explorer" LANGUAGES CXX)
 
 if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
     message(FATAL_ERROR "In-source builds are not allowed. Use a preset: cmake --preset clang-debug")

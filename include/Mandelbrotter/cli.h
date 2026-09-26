@@ -40,11 +40,21 @@ struct CliOptions
     /// --screenshots DIR, a developer option: the window regenerates the help book's images into
     /// DIR and quits. Not in the usage text.
     std::optional<std::filesystem::path> screenshotsDir;
+    /// --flight ID --flight-frames DIR [--fps N], a developer option: renders every frame of a demo
+    /// flight, each one complete, at --size and --supersample into DIR as frame-0000.png,
+    /// frame-0001.png, ..., N frames per second of flight time (default 25). The README's
+    /// animations are made from them. Not in the usage text.
+    std::optional<std::string>           flight;
+    std::optional<std::filesystem::path> flightFramesDir;
+    std::optional<int>                   fps;
     CliOverrides                         overrides;
     ExportOptions                        exportOptions;
 
-    /// True when the program should open the window (no --help, no --render).
-    [[nodiscard]] bool wantsGui() const noexcept { return !help && !renderOutput.has_value(); }
+    /// True when the program should open the window (no --help, --render or --flight-frames).
+    [[nodiscard]] bool wantsGui() const noexcept
+    {
+        return !help && !renderOutput.has_value() && !flightFramesDir.has_value();
+    }
 };
 
 /// Parses the arguments after the program name. Does no I/O.

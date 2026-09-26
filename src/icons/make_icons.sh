@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # Regenerates the application icon with Mandelbrotter's own renderer: the whole set in the classic palette on
-# a rounded tile. Needs a release build and ImageMagick 7 (magick).
+# a rounded tile. Needs a release build, ImageMagick 7 (magick) and Python 3 with Pillow (for the .icns).
 #
 #   src/icons/make_icons.sh [path/to/Mandelbrotter]   (default: build/clang-release/bin/Mandelbrotter)
 #
 # Writes, next to this script:
-#   mandelbrotter.png   256 px, embedded as the Linux window icon (src/CMakeLists.txt)
-#   mandelbrotter.ico   16 to 256 px, the Windows executable and window icon (src/Mandelbrotter.rc)
+#   mandelbrotter.png    256 px: the Linux window icon (embedded) and the icon the .desktop file names
+#   mandelbrotter.ico    16 to 256 px: the Windows executable and window icon (src/Mandelbrotter.rc)
+#   mandelbrotter.icns   16 to 1024 px: the macOS bundle icon (src/CMakeLists.txt)
 set -euo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
@@ -33,4 +34,7 @@ for size in "${sizes[@]}"; do
     args+=(\( -clone 0 -resize "${size}x${size}" \))
 done
 magick "$work/master.png" -filter Lanczos "${args[@]}" -delete 0 -strip "$here/mandelbrotter.ico"
-echo "wrote $here/mandelbrotter.png and $here/mandelbrotter.ico"
+# ImageMagick cannot write .icns; Pillow can, with every size macOS asks for (including the @2x ones).
+python3 -c 'import sys; from PIL import Image; Image.open(sys.argv[1]).save(sys.argv[2])' \
+    "$work/master.png" "$here/mandelbrotter.icns"
+echo "wrote mandelbrotter.png, mandelbrotter.ico and mandelbrotter.icns into $here"

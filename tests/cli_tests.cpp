@@ -1,7 +1,10 @@
 #include "Mandelbrotter/cli.h"
 
+#include <cstddef>
 #include <expected>
 #include <filesystem>
+#include <format>
+#include <iterator>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -17,6 +20,7 @@
 #include "Mandelbrotter/Viewport.h"
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/exporter.h"
+#include "Mandelbrotter/flights.h"
 #include "Mandelbrotter/fractal.h"
 #include "Mandelbrotter/geometry.h"
 #include "TempDir.h"
@@ -253,6 +257,60 @@ TEST(Cli, ScreenshotsIsAHiddenDeveloperOption)
         EXPECT_NE(result.error().find("--screenshots needs the window"), std::string::npos)
             << result.error();
     }
+}
+
+TEST(Cli, FlightFramesIsAHiddenDeveloperOption)
+{
+    const auto options =
+        parse({"--flight", "palette-sweep", "--flight-frames", "frames", "--fps", "5"});
+    ASSERT_TRUE(options.has_value()) << options.error();
+    EXPECT_EQ(options->flight, "palette-sweep");
+    EXPECT_EQ(options->flightFramesDir, std::filesystem::path("frames"));
+    EXPECT_EQ(options->fps, 5);
+    EXPECT_FALSE(options->wantsGui());
+    for (const std::string_view option : {"--flight", "--fps"})
+    {
+        EXPECT_EQ(mandelbrotter::usageText().find(option), std::string::npos) << option;
+    }
+
+    const std::vector<std::pair<std::vector<std::string_view>, std::string_view>> rejected{
+        {{"--flight-frames", "frames"}, "go together"},
+        {{"--flight", "palette-sweep"}, "go together"},
+        {{"--flight", "nowhere", "--flight-frames", "frames"}, "--flight expects one of"},
+        {{"--fps", "5"}, "--fps only applies"},
+        {{"--flight", "palette-sweep", "--flight-frames", "frames", "--fps", "0"}, "--fps expects"},
+        {{"--flight", "palette-sweep", "--flight-frames", "frames", "--render", "x.png"},
+         "cannot be combined"},
+        {{"--screenshots", "shots", "--flight", "palette-sweep", "--flight-frames", "frames"},
+         "--screenshots needs the window"},
+    };
+    for (const auto& [args, message] : rejected)
+    {
+        const auto result = parse(args);
+        ASSERT_FALSE(result.has_value()) << message;
+        EXPECT_NE(result.error().find(message), std::string::npos) << result.error();
+    }
+}
+
+TEST(Cli, FlightFramesRendersEveryFrameOfTheFlight)
+{
+    const mandelbrotter::test::TempDir dir;
+    const auto options = parse({"--flight", "palette-sweep", "--flight-frames",
+                                (dir / "frames").string(), "--fps", "1", "--size", "8x6"});
+    ASSERT_TRUE(options.has_value()) << options.error();
+    std::ostringstream out;
+    std::ostringstream err;
+    ASSERT_EQ(mandelbrotter::runCli(*options, out, err), 0) << err.str();
+
+    const auto seconds =
+        mandelbrotter::totalDuration(*mandelbrotter::findFlight("palette-sweep")).count() / 1000;
+    const auto frames = static_cast<std::ptrdiff_t>(seconds) + 1;  // both ends of the flight
+    EXPECT_EQ(std::distance(std::filesystem::directory_iterator(dir / "frames"),
+                            std::filesystem::directory_iterator()),
+              frames);
+    EXPECT_TRUE(std::filesystem::exists(dir / "frames" / "frame-0000.png"));
+    EXPECT_TRUE(
+        std::filesystem::exists(dir / "frames" / std::format("frame-{:04}.png", frames - 1)));
 }
 
 }  // namespace

@@ -87,6 +87,15 @@ jobs:
       - uses: actions/checkout@v7
       - name: Configure, build, test and package
         run: cmake --workflow --preset ${{ matrix.preset }}
+      # The tests ran the build tree's bundle; check the packaged one, as users get it.
+      - name: Check the packaged macOS app
+        if: runner.os == 'macOS'
+        run: |
+          tar -xzf build/${{ matrix.preset }}/package/*.tar.gz -C "$RUNNER_TEMP"
+          app=$(echo "$RUNNER_TEMP"/Mandelbrotter-*/Mandelbrotter.app)
+          plutil -lint "$app/Contents/Info.plist"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          "$app/Contents/MacOS/Mandelbrotter" --render "$RUNNER_TEMP/smoke.png" --size 64x40
       - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.preset }}

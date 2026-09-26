@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Mandelbrotter
+GenericName=Fractal Explorer
+Comment=Explore the Mandelbrot set and its relatives, zooming as deep as 1e300
+Exec=Mandelbrotter
+Icon=mandelbrotter
+Terminal=false
+Categories=Science;Math;
+Keywords=fractal;Mandelbrot;Julia;zoom;
+StartupWMClass=Mandelbrotter
