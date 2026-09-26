@@ -1,24 +1,16 @@
 #pragma once
 
-#include <cstddef>
 #include <filesystem>
-#include <functional>
 #include <memory>
-#include <optional>
 #include <string>
-#include <string_view>
 
 #include <wx/frame.h>
 #include <wx/menu.h>
 #include <wx/timer.h>
 
-#include "Mandelbrotter/BigComplex.h"
 #include "Mandelbrotter/RenderSettings.h"
-#include "Mandelbrotter/app/BookmarkStore.h"
-#include "Mandelbrotter/app/DemoPlayer.h"
-#include "Mandelbrotter/bookmarks.h"
+#include "Mandelbrotter/app/AppController.h"
 #include "Mandelbrotter/exporter.h"
-#include "Mandelbrotter/help_action.h"
 #include "gui/FractalCanvas.h"
 #include "gui/HelpController.h"
 
@@ -30,8 +22,10 @@ class GuidedTour;
 class ScreenshotRun;
 class SidePanel;
 
-/// The main window. The public methods beyond the constructor are what the help system drives:
-/// Try-it links, the demo flights, the guided tour and the screenshot mode all act through them.
+/// The main window: the wx side of app::AppController, which holds the model and the policies.
+/// The frame builds the widgets, menus and dialogs and routes their events to app(); app() and the
+/// few window operations below are what the help system drives (Try-it links, the demos, the tour
+/// and the screenshot mode).
 class MainFrame : public wxFrame
 {
 public:
@@ -43,96 +37,51 @@ public:
     MainFrame(MainFrame&&)                 = delete;
     MainFrame& operator=(MainFrame&&)      = delete;
 
-    // ---- the model
-    /// Makes `settings` the current model everywhere (canvas, panel, status bar).
-    void                                applySettings(const RenderSettings& settings);
-    [[nodiscard]] const RenderSettings& settings() const noexcept { return m_settings; }
-    void                                setShowOrbit(bool on);
-    void                                setSidePanelShown(bool shown);
+    [[nodiscard]] app::AppController& app() noexcept { return m_app; }
 
     // ---- windows
-    [[nodiscard]] FractalCanvas&               canvas() noexcept { return *m_canvas; }
-    [[nodiscard]] SidePanel&                   panel() noexcept { return *m_panel; }
-    [[nodiscard]] HelpController&              help() noexcept { return m_help; }
-    [[nodiscard]] GuidedTour&                  tour();
-    [[nodiscard]] wxWindow*                    exportDialog() noexcept;
-    [[nodiscard]] const std::filesystem::path& bookmarksPath() const noexcept
-    {
-        return m_bookmarks.path();
-    }
+    [[nodiscard]] FractalCanvas&  canvas() noexcept { return *m_canvas; }
+    [[nodiscard]] SidePanel&      panel() noexcept { return *m_panel; }
+    [[nodiscard]] HelpController& help() noexcept { return m_help; }
+    [[nodiscard]] GuidedTour&     tour();
+    [[nodiscard]] wxWindow*       exportDialog() noexcept;
+    void                          setSidePanelShown(bool shown);
     /// The Save image as PNG dialog, modeless; a second call raises it.
     void showExportDialog();
     void closeExportDialog();
-    void showHelpPage(std::string_view page);
     /// F1: the page about whatever has the keyboard focus.
     void showContextHelp();
 
-    // ---- demos
-    void startFlight(std::string_view id);
-    void startTour();
-    /// Stops a flight and the tour (the tour restores what the user had).
-    void stopDemos();
-    /// Remembers the view for Help > Back to where I was; ignored while a demo already runs.
-    void takeSnapshot();
-    void restoreSnapshot();
-    /// A bookmark that only appears in the list (the tour's example); never written to disk.
-    void addTemporaryBookmark(std::string name);
-    void removeTemporaryBookmark();
-
     // ---- developer mode: --screenshots DIR
     void startScreenshotRun(const std::filesystem::path& dir);
-    /// Called after every render that ran to completion.
-    std::function<void()> onRenderFinished;
 
 private:
-    struct Snapshot
-    {
-        RenderSettings settings;
-        bool           showOrbit{};
-    };
-
-    void buildMenus();
-    void buildHelpMenu(wxMenu& help);
-    void wireCanvas();
-    void wirePanel();
-    void wireHelp();
-
-    void updateStatusBar();
-    void showPointer(const std::optional<BigComplex>& pointer);
-    void showRenderStatus(const app::RenderStatus& status);
-    void onCharHook(wxKeyEvent& event);
-    void onClose(wxCloseEvent& event);
-
-    void               runHelpAction(const HelpAction& action);
-    void               stopFlight();
-    [[nodiscard]] bool tourRunning() const noexcept;
-    void               showAbout();
+    [[nodiscard]] app::AppController::Shell makeShell();
+    void                                    buildMenus();
+    void                                    buildHelpMenu(wxMenu& help);
+    void                                    wirePanel();
+    void                                    wireHelp();
+    void                                    onCharHook(wxKeyEvent& event);
+    void                                    onClose(wxCloseEvent& event);
+    void                                    showAbout();
 
     void saveImage(const ExportOptions& options);
     void copyImage();
     void exportView();
     void importView();
-    void addBookmark();
-    void loadBookmark(std::size_t index);
-    void deleteBookmark(std::size_t index);
-    void saveBookmarksFile();
-    void refreshBookmarks();
+    void onAddBookmark();
     void reportError(const std::string& title, const std::string& message);
 
-    RenderSettings                 m_settings;
-    app::BookmarkStore             m_bookmarks;
-    HelpController                 m_help;
-    wxTimer                        m_demoTimer;  ///< ticks m_demo; declared first, stopped first
-    app::DemoPlayer                m_demo;
-    std::unique_ptr<GuidedTour>    m_tour;
+    HelpController              m_help;
+    wxTimer                     m_demoTimer;  ///< ticks the flights; stopped first on destruction
+    FractalCanvas*              m_canvas{nullptr};
+    SidePanel*                  m_panel{nullptr};
+    app::AppController          m_app;  ///< after the widgets its shell drives
+    std::unique_ptr<GuidedTour> m_tour;
     std::unique_ptr<ScreenshotRun> m_screenshots;
-    FractalCanvas*                 m_canvas{nullptr};
-    SidePanel*                     m_panel{nullptr};
     ExportDialog*                  m_exportDialog{nullptr};
     wxMenuItem*                    m_showPanelItem{nullptr};
     wxMenuItem*                    m_showOrbitItem{nullptr};
-    std::optional<Snapshot>        m_snapshot;
-    std::optional<Bookmark>        m_temporaryBookmark;
 };
 
 }  // namespace mandelbrotter::gui

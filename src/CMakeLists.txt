@@ -33,6 +33,7 @@ Mandelbrotter_configure_target(Mandelbrotter_embed)
 # Application layer: the window's logic without a toolkit (controllers, demo player, tour script, view-models).
 # Links only the core, never wx, so the tests cover it and a second toolkit could sit on it.
 add_library(Mandelbrotter_app STATIC
+    app/AppController.cpp
     app/BookmarkStore.cpp
     app/CanvasController.cpp
     app/DemoPlayer.cpp

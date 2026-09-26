@@ -1,4 +1,5 @@
 add_executable(Mandelbrotter_tests
+    AppControllerTests.cpp
     BigComplexTests.cpp
     BigFixedTests.cpp
     BlaTableTests.cpp

@@ -93,7 +93,7 @@ std::vector<ScreenshotRun::Shot> ScreenshotRun::buildShots()
     return {
         {.file         = "ui-main-window.png",
          .rendersFirst = true,
-         .prepare      = [&frame] { frame.applySettings(app::mandelbrotDefault()); },
+         .prepare      = [&frame] { frame.app().applySettings(app::mandelbrotDefault()); },
          .target       = whole,
          .crop         = noCrop,
          .cleanup      = nothing},
@@ -116,21 +116,21 @@ std::vector<ScreenshotRun::Shot> ScreenshotRun::buildShots()
          .rendersFirst = true,
          .prepare =
              [&frame] {
-                 frame.applySettings(app::juliaExample());
-                 frame.panel().setPreviewSeed(app::kJuliaSeed);
+                 frame.app().applySettings(app::juliaExample());
+                 frame.app().setPreviewSeed(app::kJuliaSeed);
              },
          .target  = whole,
          .crop    = sectionCrop(SidePanel::Section::FRACTAL),
          .cleanup = nothing},
         {.file         = "ui-iterations-section.png",
          .rendersFirst = true,
-         .prepare      = [&frame] { frame.applySettings(app::seahorse("classic")); },
+         .prepare      = [&frame] { frame.app().applySettings(app::seahorse("classic")); },
          .target       = whole,
          .crop         = sectionCrop(SidePanel::Section::ITERATIONS),
          .cleanup      = nothing},
         {.file         = "ui-colouring-section.png",
          .rendersFirst = false,
-         .prepare      = [&frame] { frame.applySettings(app::seahorseFire()); },
+         .prepare      = [&frame] { frame.app().applySettings(app::seahorseFire()); },
          .target       = whole,
          .crop         = sectionCrop(SidePanel::Section::COLOURING),
          .cleanup      = nothing},
@@ -138,7 +138,7 @@ std::vector<ScreenshotRun::Shot> ScreenshotRun::buildShots()
          .rendersFirst = false,
          .prepare =
              [&frame, showSection] {
-                 frame.setShowOrbit(true);
+                 frame.app().setShowOrbit(true);
                  showSection(SidePanel::Section::OVERLAY)();
              },
          .target  = whole,
@@ -154,19 +154,19 @@ std::vector<ScreenshotRun::Shot> ScreenshotRun::buildShots()
          .rendersFirst = true,
          .prepare =
              [&frame] {
-                 frame.applySettings(app::mandelbrotDefault());
-                 frame.setShowOrbit(true);
-                 frame.canvas().controller().showOrbitAt(app::kOrbitPoint);
+                 frame.app().applySettings(app::mandelbrotDefault());
+                 frame.app().setShowOrbit(true);
+                 frame.app().canvas().showOrbitAt(app::kOrbitPoint);
              },
          .target  = whole,
          .crop    = canvasCrop,
-         .cleanup = [&frame] { frame.canvas().controller().clearPinnedOrbit(); }},
+         .cleanup = [&frame] { frame.app().canvas().clearPinnedOrbit(); }},
         {.file         = "ui-canvas-seahorse.png",
          .rendersFirst = true,
          .prepare =
              [&frame] {
-                 frame.setShowOrbit(false);
-                 frame.applySettings(app::seahorse("electric"));
+                 frame.app().setShowOrbit(false);
+                 frame.app().applySettings(app::seahorse("electric"));
              },
          .target  = whole,
          .crop    = canvasCrop,
@@ -176,7 +176,7 @@ std::vector<ScreenshotRun::Shot> ScreenshotRun::buildShots()
          .prepare =
              [&frame] {
                  frame.panel().scrollToSection(SidePanel::Section::FRACTAL);
-                 frame.applySettings(app::deepSeahorse(app::kScreenshotDeepZoom));
+                 frame.app().applySettings(app::deepSeahorse(app::kScreenshotDeepZoom));
              },
          .target = whole,
          .crop   = [&frame]() -> std::optional<wxRect> {
@@ -229,12 +229,12 @@ std::vector<ScreenshotRun::Shot> ScreenshotRun::buildShots()
          .rendersFirst = true,
          .prepare =
              [&frame] {
-                 frame.startTour();
+                 frame.app().startTour();
                  frame.tour().showStep(2);  // the Families step: card beside a highlighted section
              },
          .target  = whole,
          .crop    = noCrop,
-         .cleanup = [&frame] { frame.stopDemos(); }},
+         .cleanup = [&frame] { frame.app().stopDemos(); }},
     };
 }
 
@@ -243,7 +243,7 @@ void ScreenshotRun::start()
     std::filesystem::create_directories(m_dir);
     m_shots = buildShots();
     m_frame.SetClientSize(m_frame.FromDIP(wxSize(kWindowWidth, kWindowHeight)));
-    m_frame.onRenderFinished = [this] { onRenderFinished(); };
+    m_frame.app().onRenderFinished = [this] { onRenderFinished(); };
     // Let the window map and lay itself out before the first shot.
     CallAfter([this] { runCurrent(); });
 }
@@ -262,7 +262,7 @@ void ScreenshotRun::runCurrent()
     const Shot& shot = m_shots[m_index];
     m_watchdog.StartOnce(kWatchdogMs);  // per shot
     shot.prepare();
-    m_waitingForRender = shot.rendersFirst && m_frame.canvas().controller().rendering();
+    m_waitingForRender = shot.rendersFirst && m_frame.app().canvas().rendering();
     if (!m_waitingForRender)
     {
         settle();
@@ -372,7 +372,7 @@ void ScreenshotRun::finish(int exitCode)
     m_done = true;
     m_settle.Stop();
     m_watchdog.Stop();
-    m_frame.onRenderFinished = nullptr;
+    m_frame.app().onRenderFinished = nullptr;
     if (m_dialog != nullptr)
     {
         m_dialog->Destroy();
@@ -384,7 +384,7 @@ void ScreenshotRun::finish(int exitCode)
     }
     // The scratch bookmarks the app created for this run (MandelbrotterApp::OnInit).
     std::error_code ignored;
-    std::filesystem::remove_all(m_frame.bookmarksPath().parent_path(), ignored);
+    std::filesystem::remove_all(m_frame.app().bookmarksPath().parent_path(), ignored);
     if (exitCode == 0)
     {
         std::println("Screenshots written to {}", m_dir.string());

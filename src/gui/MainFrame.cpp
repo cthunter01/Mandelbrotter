@@ -2,16 +2,13 @@
 
 #include <array>
 #include <cstddef>
-#include <cstdint>
-#include <exception>
 #include <filesystem>
-#include <format>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <utility>
-#include <variant>
 
 #include <wx/aboutdlg.h>
 #include <wx/clipbrd.h>
@@ -23,14 +20,13 @@
 #include <wx/statusbr.h>
 #include <wx/textdlg.h>
 
-#include "Mandelbrotter/ProgressiveRenderer.h"
 #include "Mandelbrotter/RenderSettings.h"
-#include "Mandelbrotter/app/format.h"
+#include "Mandelbrotter/app/AppController.h"
+#include "Mandelbrotter/app/DemoPlayer.h"
 #include "Mandelbrotter/app/help_routing.h"
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/exporter.h"
 #include "Mandelbrotter/flights.h"
-#include "Mandelbrotter/fractal.h"
 #include "Mandelbrotter/help_action.h"
 #include "gui/ExportDialog.h"
 #include "gui/GuidedTour.h"
@@ -45,21 +41,6 @@ namespace mandelbrotter::gui
 
 namespace
 {
-
-enum class StatusField : std::uint8_t
-{
-    POINTER,
-    CENTER,
-    ZOOM,
-    ITERATIONS,
-    RENDER,
-    COUNT,
-};
-
-constexpr int field(StatusField f)
-{
-    return static_cast<int>(f);
-}
 
 constexpr int kMenuSaveImage   = wxID_HIGHEST + 1;
 constexpr int kMenuCopyImage   = wxID_HIGHEST + 2;
@@ -79,41 +60,19 @@ constexpr int kMenuBackToView  = wxID_HIGHEST + 15;
 /// One item per built-in flight, in order.
 constexpr int kMenuFlightFirst = wxID_HIGHEST + 100;
 
-constexpr double kMenuZoomFactor = 2.0;
+constexpr int field(app::StatusField f)
+{
+    return static_cast<int>(f);
+}
 
 }  // namespace
 
 MainFrame::MainFrame(RenderSettings initial, std::filesystem::path bookmarksPath)
   : wxFrame(nullptr, wxID_ANY, "Mandelbrotter", wxDefaultPosition, wxDefaultSize),
-    m_settings(std::move(initial)),
-    m_bookmarks(std::move(bookmarksPath)),
     m_demoTimer(this),
-    m_demo({.applyFrame =
-                [this](const RenderSettings& frame) {
-                    m_settings = frame;
-                    m_canvas->controller().setSettings(frame);
-                    updateStatusBar();  // the panel catches up when the flight ends
-                },
-            .canvasReady = [this] { return m_canvas->controller().hasCoarsePicture(); },
-            .showStatus =
-                [this](std::string_view text) {
-                    SetStatusText(toWx(text), field(StatusField::POINTER));
-                },
-            .finished = [this] { m_panel->setSettings(m_settings); },
-            .setTimerRunning =
-                [this](bool on) {
-                    if (on)
-                    {
-                        m_demoTimer.Start(static_cast<int>(app::kDemoTick.count()));
-                    }
-                    else
-                    {
-                        m_demoTimer.Stop();
-                    }
-                },
-            .now = {}}),
-    m_canvas(new FractalCanvas(this, m_settings)),
-    m_panel(new SidePanel(this))
+    m_canvas(new FractalCanvas(this, initial)),
+    m_panel(new SidePanel(this)),
+    m_app(std::move(initial), std::move(bookmarksPath), m_canvas->controller(), makeShell())
 {
     applyAppIcon(*this);
     SetClientSize(FromDIP(wxSize(1280, 800)));
@@ -123,30 +82,80 @@ MainFrame::MainFrame(RenderSettings initial, std::filesystem::path bookmarksPath
     sizer->Add(m_panel, wxSizerFlags().Expand());
     SetSizer(sizer);
 
-    CreateStatusBar(field(StatusField::COUNT));
-    constexpr std::array<int, field(StatusField::COUNT)> kWidths{-3, -3, -1, -1, -2};
-    GetStatusBar()->SetStatusWidths(field(StatusField::COUNT), kWidths.data());
+    CreateStatusBar(app::kStatusFieldCount);
+    constexpr std::array<int, app::kStatusFieldCount> kWidths{-3, -3, -1, -1, -2};
+    GetStatusBar()->SetStatusWidths(app::kStatusFieldCount, kWidths.data());
 
     buildMenus();
-    wireCanvas();
     wirePanel();
     wireHelp();
-    Bind(wxEVT_TIMER, [this](wxTimerEvent&) { m_demo.tick(); }, m_demoTimer.GetId());
+    Bind(wxEVT_TIMER, [this](wxTimerEvent&) { m_app.tickDemo(); }, m_demoTimer.GetId());
     Bind(wxEVT_CHAR_HOOK, &MainFrame::onCharHook, this);
     Bind(wxEVT_CLOSE_WINDOW, &MainFrame::onClose, this);
 
-    if (const std::string error = m_bookmarks.load(); !error.empty())
-    {
-        reportError("Bookmarks", "Could not read " + m_bookmarks.path().string() + ":\n" + error);
-    }
-    refreshBookmarks();
-    applySettings(m_settings);
+    m_app.start();
     m_canvas->SetFocus();
 }
 
 MainFrame::~MainFrame()
 {
     m_demoTimer.Stop();
+    // The panel's controls outlive the frame's members; nothing they report may reach m_app now.
+    m_panel->onSettingsChanged = nullptr;
+    m_panel->onPickSeedToggled = nullptr;
+    m_panel->onOrbitToggled    = nullptr;
+    m_panel->onBookmarkAdd     = nullptr;
+    m_panel->onBookmarkLoad    = nullptr;
+    m_panel->onBookmarkDelete  = nullptr;
+}
+
+app::AppController::Shell MainFrame::makeShell()
+{
+    // Called before m_app exists; the hooks only run once it does.
+    return {
+        .setStatus = [this](app::StatusField f,
+                            std::string_view text) { SetStatusText(toWx(text), field(f)); },
+        .reportError =
+            [this](std::string_view title, std::string_view message) {
+                reportError(std::string(title), std::string(message));
+            },
+        .panelSettings = [this](const RenderSettings& settings) { m_panel->setSettings(settings); },
+        .panelEffectiveIterations =
+            [this](int iterations) { m_panel->setEffectiveIterations(iterations); },
+        .panelBookmarks = [this](std::span<const Bookmark> list) { m_panel->setBookmarks(list); },
+        .panelPickSeedMode = [this](bool on) { m_panel->setPickSeedMode(on); },
+        .showOrbitChanged =
+            [this](bool on) {
+                m_panel->setShowOrbit(on);
+                m_showOrbitItem->Check(on);
+            },
+        .panelPreviewSeed  = [this](std::optional<Complex> seed) { m_panel->setPreviewSeed(seed); },
+        .showExportDialog  = [this] { showExportDialog(); },
+        .closeExportDialog = [this] { closeExportDialog(); },
+        .raiseWindow       = [this] { Raise(); },
+        .showHelpPage      = [this](std::string_view page) { m_help.showPage(page); },
+        .demoTimer =
+            [this](bool on) {
+                if (on)
+                {
+                    m_demoTimer.Start(static_cast<int>(app::kDemoTick.count()));
+                }
+                else
+                {
+                    m_demoTimer.Stop();
+                }
+            },
+        .now       = {},
+        .startTour = [this] { tour().start(); },
+        .stopTour =
+            [this] {
+                if (m_tour)
+                {
+                    m_tour->stop();
+                }
+            },
+        .tourRunning = [this] { return m_tour && m_tour->running(); },
+    };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -194,30 +203,12 @@ void MainFrame::buildMenus()
         wxEVT_MENU, [this](wxCommandEvent& event) { setSidePanelShown(event.IsChecked()); },
         kMenuShowPanel);
     Bind(
-        wxEVT_MENU, [this](wxCommandEvent& event) { setShowOrbit(event.IsChecked()); },
+        wxEVT_MENU, [this](wxCommandEvent& event) { m_app.setShowOrbit(event.IsChecked()); },
         kMenuShowOrbit);
-    Bind(
-        wxEVT_MENU,
-        [this](wxCommandEvent&) {
-            stopFlight();
-            m_canvas->controller().zoomAtCenter(kMenuZoomFactor);
-        },
-        kMenuZoomIn);
-    Bind(
-        wxEVT_MENU,
-        [this](wxCommandEvent&) {
-            stopFlight();
-            m_canvas->controller().zoomAtCenter(1.0 / kMenuZoomFactor);
-        },
-        kMenuZoomOut);
-    Bind(
-        wxEVT_MENU,
-        [this](wxCommandEvent&) {
-            stopFlight();
-            m_canvas->controller().resetView();
-        },
-        kMenuResetView);
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) { addBookmark(); }, kMenuAddBookmark);
+    Bind(wxEVT_MENU, [this](wxCommandEvent&) { m_app.zoomIn(); }, kMenuZoomIn);
+    Bind(wxEVT_MENU, [this](wxCommandEvent&) { m_app.zoomOut(); }, kMenuZoomOut);
+    Bind(wxEVT_MENU, [this](wxCommandEvent&) { m_app.resetView(); }, kMenuResetView);
+    Bind(wxEVT_MENU, [this](wxCommandEvent&) { onAddBookmark(); }, kMenuAddBookmark);
 }
 
 void MainFrame::buildHelpMenu(wxMenu& help)
@@ -236,8 +227,8 @@ void MainFrame::buildHelpMenu(wxMenu& help)
         Bind(
             wxEVT_MENU,
             [this, &flight](wxCommandEvent&) {
-                takeSnapshot();
-                startFlight(flight.id);
+                m_app.takeSnapshot();
+                m_app.startFlight(flight.id);
             },
             id);
         ++id;
@@ -255,22 +246,24 @@ void MainFrame::buildHelpMenu(wxMenu& help)
     Bind(wxEVT_MENU, [this](wxCommandEvent&) { showContextHelp(); }, kMenuContextHelp);
     Bind(
         wxEVT_MENU, [this](wxCommandEvent&) { m_help.showPage("reference.html"); }, kMenuReference);
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) { stopDemos(); }, kMenuStopDemo);
+    Bind(wxEVT_MENU, [this](wxCommandEvent&) { m_app.stopDemos(); }, kMenuStopDemo);
     Bind(
         wxEVT_MENU,
         [this](wxCommandEvent&) {
-            takeSnapshot();
-            startTour();
+            m_app.takeSnapshot();
+            m_app.startTour();
         },
         kMenuTour);
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) { restoreSnapshot(); }, kMenuBackToView);
+    Bind(wxEVT_MENU, [this](wxCommandEvent&) { m_app.restoreSnapshot(); }, kMenuBackToView);
     Bind(wxEVT_MENU, [this](wxCommandEvent&) { showAbout(); }, wxID_ABOUT);
     Bind(
         wxEVT_UPDATE_UI,
-        [this](wxUpdateUIEvent& event) { event.Enable(m_demo.playing() || tourRunning()); },
+        [this](wxUpdateUIEvent& event) {
+            event.Enable(m_app.flightPlaying() || m_app.tourRunning());
+        },
         kMenuStopDemo);
     Bind(
-        wxEVT_UPDATE_UI, [this](wxUpdateUIEvent& event) { event.Enable(m_snapshot.has_value()); },
+        wxEVT_UPDATE_UI, [this](wxUpdateUIEvent& event) { event.Enable(m_app.hasSnapshot()); },
         kMenuBackToView);
 }
 
@@ -288,101 +281,44 @@ void MainFrame::showAbout()
 // ---------------------------------------------------------------------------------------------------------------
 // Wiring
 
-void MainFrame::wireCanvas()
-{
-    m_canvas->controller().onUserInput   = [this] { stopFlight(); };
-    m_canvas->controller().onViewChanged = [this](const ViewSpec& view) {
-        stopFlight();
-        m_settings.view = view;
-        m_panel->setSettings(m_settings);
-        updateStatusBar();
-    };
-    m_canvas->controller().onPointerMoved = [this](const std::optional<BigComplex>& pointer) {
-        showPointer(pointer);
-        m_panel->setPreviewSeed(pointer ? std::optional<Complex>(pointer->approx())
-                                        : std::optional<Complex>());
-    };
-    m_canvas->controller().onSeedPicked = [this](Complex seed) {
-        RenderSettings next = m_settings;
-        next.fractal.julia  = true;
-        next.fractal.seed   = seed;
-        next.view           = defaultView(next.fractal);
-        m_canvas->controller().setPickSeedMode(false);
-        m_panel->setPickSeedMode(false);
-        applySettings(next);
-    };
-    m_canvas->controller().onRenderStatus = [this](const app::RenderStatus& status) {
-        showRenderStatus(status);
-    };
-}
-
 void MainFrame::wirePanel()
 {
     m_panel->onSettingsChanged = [this](const RenderSettings& edited) {
-        stopFlight();
-        RenderSettings next = edited;
-        next.view           = m_settings.view;  // the panel never edits the view
-        if (next.fractal.family != m_settings.fractal.family ||
-            next.fractal.julia != m_settings.fractal.julia)
-        {
-            next.view = defaultView(next.fractal);
-        }
-        applySettings(next);
+        m_app.panelEdited(edited);
     };
-    m_panel->onPickSeedToggled = [this](bool enabled) {
-        m_canvas->controller().setPickSeedMode(enabled);
-    };
-    m_panel->onOrbitToggled   = [this](bool enabled) { setShowOrbit(enabled); };
-    m_panel->onBookmarkAdd    = [this] { addBookmark(); };
-    m_panel->onBookmarkLoad   = [this](std::size_t index) { loadBookmark(index); };
-    m_panel->onBookmarkDelete = [this](std::size_t index) { deleteBookmark(index); };
+    m_panel->onPickSeedToggled = [this](bool enabled) { m_app.setPickSeedMode(enabled); };
+    m_panel->onOrbitToggled    = [this](bool enabled) { m_app.setShowOrbit(enabled); };
+    m_panel->onBookmarkAdd     = [this] { onAddBookmark(); };
+    m_panel->onBookmarkLoad    = [this](std::size_t index) { m_app.loadBookmark(index); };
+    m_panel->onBookmarkDelete  = [this](std::size_t index) { m_app.deleteBookmark(index); };
 }
 
 void MainFrame::wireHelp()
 {
-    m_help.onAction = [this](const HelpAction& action) { runHelpAction(action); };
+    m_help.onAction = [this](const HelpAction& action) { m_app.runHelpAction(action); };
     m_help.onError  = [this](const std::string& message) { reportError("Help", message); };
 }
 
 void MainFrame::onCharHook(wxKeyEvent& event)
 {
-    const bool demoRunning = m_demo.playing() || tourRunning();
-    if (event.GetKeyCode() == WXK_ESCAPE && demoRunning)
+    const app::GlobalKey key =
+        event.GetKeyCode() == WXK_ESCAPE ? app::GlobalKey::ESCAPE : app::GlobalKey::OTHER;
+    if (m_app.handleGlobalKey(key))
     {
-        stopDemos();
         return;
-    }
-    if (m_demo.playing())
-    {
-        stopFlight();  // any key ends a flight; the key then does its usual job
     }
     event.Skip();
 }
 
 void MainFrame::onClose(wxCloseEvent& event)
 {
-    stopDemos();
+    m_app.stopDemos();
     closeExportDialog();
     event.Skip();
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Model
-
-void MainFrame::applySettings(const RenderSettings& settings)
-{
-    m_settings = settings;
-    m_canvas->controller().setSettings(settings);
-    m_panel->setSettings(settings);
-    updateStatusBar();
-}
-
-void MainFrame::setShowOrbit(bool on)
-{
-    m_canvas->controller().setShowOrbit(on);
-    m_panel->setShowOrbit(on);
-    m_showOrbitItem->Check(on);
-}
+// Windows
 
 void MainFrame::setSidePanelShown(bool shown)
 {
@@ -390,47 +326,6 @@ void MainFrame::setSidePanelShown(bool shown)
     GetSizer()->Show(m_panel, shown);
     Layout();
 }
-
-void MainFrame::updateStatusBar()
-{
-    SetStatusText(toWx("Centre " + app::formatCenter(m_settings.view.center, m_settings.view.zoom)),
-                  field(StatusField::CENTER));
-    const std::string zoomText =
-        app::formatZoom(m_settings.view.zoom) +
-        (usesPerturbation(m_settings.view.zoom) ? " (deep)" : "");  // perturbation rendering
-    SetStatusText(toWx("Zoom " + zoomText), field(StatusField::ZOOM));
-    SetStatusText(toWx(std::format("{} iterations", effectiveIterations(m_settings))),
-                  field(StatusField::ITERATIONS));
-    m_panel->setEffectiveIterations(effectiveIterations(m_settings));
-}
-
-void MainFrame::showPointer(const std::optional<BigComplex>& pointer)
-{
-    if (m_demo.playing())
-    {
-        return;  // the field shows the flight's progress
-    }
-    SetStatusText(pointer ? toWx(app::formatCenter(*pointer, m_settings.view.zoom)) : wxString(),
-                  field(StatusField::POINTER));
-}
-
-void MainFrame::showRenderStatus(const app::RenderStatus& status)
-{
-    if (status.rendering)
-    {
-        SetStatusText("Rendering...", field(StatusField::RENDER));
-        return;
-    }
-    SetStatusText(toWx(std::format("Rendered in {} ms", status.elapsed.count())),
-                  field(StatusField::RENDER));
-    if (onRenderFinished)
-    {
-        onRenderFinished();
-    }
-}
-
-// ---------------------------------------------------------------------------------------------------------------
-// Help and demos
 
 GuidedTour& MainFrame::tour()
 {
@@ -444,11 +339,6 @@ GuidedTour& MainFrame::tour()
 wxWindow* MainFrame::exportDialog() noexcept
 {
     return m_exportDialog;
-}
-
-void MainFrame::showHelpPage(std::string_view page)
-{
-    m_help.showPage(page);
 }
 
 void MainFrame::showContextHelp()
@@ -476,138 +366,6 @@ void MainFrame::showContextHelp()
     m_help.showPage(app::helpPageFor(context));
 }
 
-void MainFrame::runHelpAction(const HelpAction& action)
-{
-    if (const auto* view = std::get_if<ViewAction>(&action))
-    {
-        const auto next = resolveViewAction(m_settings, *view);
-        if (!next)
-        {
-            reportError("Try it", next.error());
-            return;
-        }
-        takeSnapshot();
-        stopFlight();
-        applySettings(*next);
-    }
-    else if (const auto* flight = std::get_if<FlightAction>(&action))
-    {
-        takeSnapshot();
-        startFlight(flight->id);
-    }
-    else if (std::holds_alternative<TourAction>(action))
-    {
-        takeSnapshot();
-        startTour();
-    }
-    else if (const auto* orbit = std::get_if<OrbitAction>(&action))
-    {
-        takeSnapshot();
-        setShowOrbit(orbit->on);
-    }
-    else if (std::holds_alternative<ResetAction>(action))
-    {
-        takeSnapshot();
-        stopFlight();
-        m_canvas->controller().resetView();
-    }
-    else if (std::holds_alternative<ExportDialogAction>(action))
-    {
-        showExportDialog();
-    }
-    Raise();
-}
-
-void MainFrame::startFlight(std::string_view id)
-{
-    const Flight* flight = findFlight(id);
-    if (flight == nullptr)
-    {
-        reportError("Demos", "There is no flight called \"" + std::string(id) + "\".");
-        return;
-    }
-    if (m_tour)
-    {
-        m_tour->stop();
-    }
-    m_demo.play(*flight);
-}
-
-void MainFrame::startTour()
-{
-    stopFlight();
-    tour().start();
-}
-
-void MainFrame::stopFlight()
-{
-    m_demo.stop();
-}
-
-void MainFrame::stopDemos()
-{
-    stopFlight();
-    if (m_tour)
-    {
-        m_tour->stop();
-    }
-}
-
-bool MainFrame::tourRunning() const noexcept
-{
-    return m_tour && m_tour->running();
-}
-
-void MainFrame::takeSnapshot()
-{
-    if (m_snapshot && (m_demo.playing() || tourRunning()))
-    {
-        return;  // keep the view from before the demo that is running
-    }
-    m_snapshot = Snapshot{.settings = m_settings, .showOrbit = m_canvas->controller().showOrbit()};
-}
-
-void MainFrame::restoreSnapshot()
-{
-    if (!m_snapshot)
-    {
-        return;
-    }
-    const Snapshot snapshot = *m_snapshot;
-    m_snapshot.reset();
-    stopDemos();
-    applySettings(snapshot.settings);
-    setShowOrbit(snapshot.showOrbit);
-}
-
-void MainFrame::addTemporaryBookmark(std::string name)
-{
-    removeTemporaryBookmark();
-    Bookmark bookmark{.name = std::move(name), .settings = m_settings};
-    m_temporaryBookmark = bookmark;
-    m_bookmarks.add(std::move(bookmark));
-    refreshBookmarks();
-}
-
-void MainFrame::removeTemporaryBookmark()
-{
-    if (!m_temporaryBookmark)
-    {
-        return;
-    }
-    const auto& list = m_bookmarks.bookmarks();
-    for (std::size_t i = list.size(); i-- > 0;)
-    {
-        if (list[i] == *m_temporaryBookmark)
-        {
-            m_bookmarks.remove(i);
-            break;
-        }
-    }
-    m_temporaryBookmark.reset();
-    refreshBookmarks();
-}
-
 void MainFrame::startScreenshotRun(const std::filesystem::path& dir)
 {
     m_screenshots = std::make_unique<ScreenshotRun>(*this, dir);
@@ -624,8 +382,8 @@ void MainFrame::showExportDialog()
         m_exportDialog->Raise();
         return;
     }
-    m_exportDialog         = new ExportDialog(this, m_canvas->controller().image().size());
-    m_exportDialog->onHelp = [this] { showHelpPage("exporting.html"); };
+    m_exportDialog         = new ExportDialog(this, m_app.canvas().image().size());
+    m_exportDialog->onHelp = [this] { m_help.showPage("exporting.html"); };
     m_exportDialog->Bind(
         wxEVT_BUTTON,
         [this](wxCommandEvent&) {
@@ -660,15 +418,15 @@ void MainFrame::saveImage(const ExportOptions& options)
         return;
     }
     const std::filesystem::path path(fromWx(chooser.GetPath()));
-    if (exportPngWithProgress(this, m_settings, options, path))
+    if (exportPngWithProgress(this, m_app.settings(), options, path))
     {
-        SetStatusText(toWx("Saved " + path.filename().string()), field(StatusField::RENDER));
+        m_app.imageSaved(path);
     }
 }
 
 void MainFrame::copyImage()
 {
-    const RgbImage& image = m_canvas->controller().image();
+    const RgbImage& image = m_app.canvas().image();
     if (image.size().empty())
     {
         return;
@@ -682,7 +440,7 @@ void MainFrame::copyImage()
     // The clipboard takes ownership of the data object.
     wxTheClipboard->SetData(new wxBitmapDataObject(wxBitmap(toWxImage(image))));
     wxTheClipboard->Flush();  // keep the image available after this window closes
-    SetStatusText("Image copied to clipboard", field(StatusField::RENDER));
+    m_app.imageCopied();
 }
 
 void MainFrame::exportView()
@@ -693,14 +451,7 @@ void MainFrame::exportView()
     {
         return;
     }
-    try
-    {
-        saveView(std::filesystem::path(fromWx(chooser.GetPath())), m_settings);
-    }
-    catch (const std::exception& e)
-    {
-        reportError("Export view", e.what());
-    }
+    m_app.exportView(std::filesystem::path(fromWx(chooser.GetPath())));
 }
 
 void MainFrame::importView()
@@ -712,73 +463,22 @@ void MainFrame::importView()
     {
         return;
     }
-    try
-    {
-        stopFlight();
-        applySettings(loadView(std::filesystem::path(fromWx(chooser.GetPath()))));
-    }
-    catch (const std::exception& e)
-    {
-        reportError("Import view", e.what());
-    }
+    m_app.importView(std::filesystem::path(fromWx(chooser.GetPath())));
 }
 
 // ---------------------------------------------------------------------------------------------------------------
 // Bookmarks
 
-void MainFrame::addBookmark()
+void MainFrame::onAddBookmark()
 {
-    stopDemos();  // the tour's temporary bookmark must never be saved
-    wxTextEntryDialog dialog(this, "Name for this view:", "Add bookmark",
-                             toWx(app::defaultBookmarkName(m_settings)));
+    // Ends the demos first: the suggested name is for the user's view, not the tour's.
+    const std::string suggested = m_app.beginAddBookmark();
+    wxTextEntryDialog dialog(this, "Name for this view:", "Add bookmark", toWx(suggested));
     if (dialog.ShowModal() != wxID_OK)
     {
         return;
     }
-    std::string name = fromWx(dialog.GetValue());
-    if (name.empty())
-    {
-        name = "Untitled";
-    }
-    m_bookmarks.add({.name = std::move(name), .settings = m_settings});
-    saveBookmarksFile();
-    refreshBookmarks();
-}
-
-void MainFrame::loadBookmark(std::size_t index)
-{
-    stopFlight();
-    const auto& list = m_bookmarks.bookmarks();
-    if (index < list.size())
-    {
-        applySettings(list[index].settings);
-    }
-}
-
-void MainFrame::deleteBookmark(std::size_t index)
-{
-    if (tourRunning())
-    {
-        stopDemos();  // removes the tour's example; the list has changed under the selection
-        return;
-    }
-    stopFlight();
-    m_bookmarks.remove(index);
-    saveBookmarksFile();
-    refreshBookmarks();
-}
-
-void MainFrame::saveBookmarksFile()
-{
-    if (const std::string error = m_bookmarks.save(); !error.empty())
-    {
-        reportError("Bookmarks", "Could not write " + m_bookmarks.path().string() + ":\n" + error);
-    }
-}
-
-void MainFrame::refreshBookmarks()
-{
-    m_panel->setBookmarks(m_bookmarks.bookmarks());
+    m_app.addBookmark(fromWx(dialog.GetValue()));
 }
 
 void MainFrame::reportError(const std::string& title, const std::string& message)

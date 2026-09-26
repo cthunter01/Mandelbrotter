@@ -32,7 +32,7 @@ std::vector<GuidedTour::Step> GuidedTour::buildSteps()
                   "where you are.",
          .helpPage = "getting-started.html",
          .target   = Target::CANVAS,
-         .perform  = [this] { m_frame.applySettings(app::mandelbrotDefault()); }},
+         .perform  = [this] { m_frame.app().applySettings(app::mandelbrotDefault()); }},
         {.title = "Zooming and panning",
          .text  = "We have jumped into Seahorse Valley at zoom 5000. The mouse wheel zooms at the "
                   "pointer, dragging pans, dragging with the right button (or Shift) zooms to a "
@@ -40,14 +40,14 @@ std::vector<GuidedTour::Step> GuidedTour::buildSteps()
                   "too. Try a few wheel notches now; the tour will not mind.",
          .helpPage = "navigating.html",
          .target   = Target::CANVAS,
-         .perform  = [this] { m_frame.applySettings(app::seahorse()); }},
+         .perform  = [this] { m_frame.app().applySettings(app::seahorse()); }},
         {.title    = "Fractal families",
          .text     = "The Family list switches between the Mandelbrot set, the Burning Ship (shown "
                      "now) and the Tricorn; Exponent n turns z^2 + c into z^n + c. Changing the "
                      "family resets the view to show the whole set; changing n keeps it.",
          .helpPage = "fractals.html",
          .target   = Target::FRACTAL,
-         .perform  = [this] { m_frame.applySettings(app::burningShipDefault()); }},
+         .perform  = [this] { m_frame.app().applySettings(app::burningShipDefault()); }},
         {.title = "Julia sets",
          .text  = "Tick Julia set to draw the Julia set of the constant c typed into the seed "
                   "fields; this one is c = -0.8 + 0.156i. Pick seed from canvas lets you click a "
@@ -57,8 +57,8 @@ std::vector<GuidedTour::Step> GuidedTour::buildSteps()
          .target   = Target::FRACTAL,
          .perform =
              [this] {
-                 m_frame.applySettings(app::juliaExample());
-                 m_frame.panel().setPreviewSeed(app::kJuliaSeed);
+                 m_frame.app().applySettings(app::juliaExample());
+                 m_frame.app().setPreviewSeed(app::kJuliaSeed);
              }},
         {.title = "Iterations",
          .text  = "Every point is iterated until it escapes or the limit is reached; points that "
@@ -67,7 +67,7 @@ std::vector<GuidedTour::Step> GuidedTour::buildSteps()
                   "blur the fine detail; too many just cost time.",
          .helpPage = "iterations.html",
          .target   = Target::ITERATIONS,
-         .perform  = [this] { m_frame.applySettings(app::seahorse()); }},
+         .perform  = [this] { m_frame.app().applySettings(app::seahorse()); }},
         {.title = "Colouring",
          .text  = "The palette maps how fast a point escapes onto a colour cycle. Density sets how "
                   "many iterations one cycle spans and Offset shifts the cycle. Changing any of "
@@ -75,7 +75,7 @@ std::vector<GuidedTour::Step> GuidedTour::buildSteps()
                   "to the fire palette with a denser cycle.",
          .helpPage = "colouring.html",
          .target   = Target::COLOURING,
-         .perform  = [this] { m_frame.applySettings(app::seahorseFire()); }},
+         .perform  = [this] { m_frame.app().applySettings(app::seahorseFire()); }},
         {.title    = "The orbit overlay",
          .text     = "With the overlay on, the path of the point under the mouse is drawn as it is "
                      "iterated: the red circle is where it starts and the white line is where it "
@@ -85,9 +85,9 @@ std::vector<GuidedTour::Step> GuidedTour::buildSteps()
          .target   = Target::OVERLAY,
          .perform =
              [this] {
-                 m_frame.applySettings(app::mandelbrotDefault());
-                 m_frame.setShowOrbit(true);
-                 m_frame.canvas().controller().showOrbitAt(app::kOrbitPoint);
+                 m_frame.app().applySettings(app::mandelbrotDefault());
+                 m_frame.app().setShowOrbit(true);
+                 m_frame.app().canvas().showOrbitAt(app::kOrbitPoint);
              }},
         {.title    = "Bookmarks",
          .text     = "Add... saves the current view, fractal and colours under a name; Load (or a "
@@ -98,8 +98,8 @@ std::vector<GuidedTour::Step> GuidedTour::buildSteps()
          .target   = Target::BOOKMARKS,
          .perform =
              [this] {
-                 m_frame.applySettings(app::seahorse());
-                 m_frame.addTemporaryBookmark("Tour example");
+                 m_frame.app().applySettings(app::seahorse());
+                 m_frame.app().addTemporaryBookmark("Tour example");
              }},
         {.title = "Saving a picture",
          .text  = "File > Save image as PNG renders the view again at any size you like, with "
@@ -108,7 +108,7 @@ std::vector<GuidedTour::Step> GuidedTour::buildSteps()
                   "on.",
          .helpPage = "exporting.html",
          .target   = Target::CANVAS,
-         .perform  = [this] { m_frame.showExportDialog(); }},
+         .perform  = [this] { m_frame.app().showExportDialog(); }},
         {.title = "Deep zoom",
          .text  = "This is the same spot at zoom 1e10, far beyond where ordinary double "
                   "precision could tell neighbouring pixels apart. Above 1e8 the status bar says "
@@ -116,7 +116,7 @@ std::vector<GuidedTour::Step> GuidedTour::buildSteps()
                   "pixel is computed as a small difference from it. You can go on to 1e300.",
          .helpPage = "deep-zoom.html",
          .target   = Target::CANVAS,
-         .perform  = [this] { m_frame.applySettings(app::deepSeahorse(app::kTourDeepZoom)); }},
+         .perform = [this] { m_frame.app().applySettings(app::deepSeahorse(app::kTourDeepZoom)); }},
         {.title = "That is the tour",
          .text  = "Your view, overlay and bookmarks are back as they were. Help > Contents holds "
                   "the full guide (F1 opens the page for whatever has the focus), Help > Demos "
@@ -140,8 +140,8 @@ void GuidedTour::start()
         return;
     }
     m_running           = true;
-    m_baseline          = {.settings  = m_frame.settings(),
-                           .showOrbit = m_frame.canvas().controller().showOrbit()};
+    m_baseline          = {.settings  = m_frame.app().settings(),
+                           .showOrbit = m_frame.app().canvas().showOrbit()};
     m_card              = new TourCard(&m_frame);
     m_card->onBack      = [this] { back(); };
     m_card->onNext      = [this] { next(); };
@@ -149,7 +149,7 @@ void GuidedTour::start()
     m_card->onLearnMore = [this] {
         if (m_index < m_steps.size())
         {
-            m_frame.showHelpPage(m_steps[m_index].helpPage);
+            m_frame.app().showHelpPage(m_steps[m_index].helpPage);
         }
     };
     m_frame.Bind(wxEVT_SIZE, &GuidedTour::onFrameResized, this);
@@ -209,13 +209,13 @@ void GuidedTour::showStep(std::size_t index)
 
 void GuidedTour::leaveCurrentStep()
 {
-    m_frame.closeExportDialog();
-    m_frame.canvas().controller().clearPinnedOrbit();
+    m_frame.app().closeExportDialog();
+    m_frame.app().canvas().clearPinnedOrbit();
 }
 
 void GuidedTour::highlight(Target target)
 {
-    m_frame.canvas().controller().setHighlighted(target == Target::CANVAS);
+    m_frame.app().canvas().setHighlighted(target == Target::CANVAS);
     std::optional<SidePanel::Section> section;
     switch (target)
     {
@@ -247,7 +247,7 @@ void GuidedTour::highlight(Target target)
 
 void GuidedTour::clearHighlights()
 {
-    m_frame.canvas().controller().setHighlighted(false);
+    m_frame.app().canvas().setHighlighted(false);
     m_frame.panel().setHighlightedSection(std::nullopt);
 }
 
@@ -284,9 +284,9 @@ wxRect GuidedTour::anchorFor(Target target) const
 
 void GuidedTour::restoreBaseline()
 {
-    m_frame.removeTemporaryBookmark();
-    m_frame.applySettings(m_baseline.settings);
-    m_frame.setShowOrbit(m_baseline.showOrbit);
+    m_frame.app().removeTemporaryBookmark();
+    m_frame.app().applySettings(m_baseline.settings);
+    m_frame.app().setShowOrbit(m_baseline.showOrbit);
 }
 
 void GuidedTour::onFrameResized(wxSizeEvent& event)
