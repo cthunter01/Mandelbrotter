@@ -23,13 +23,13 @@
 #include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/app/AppController.h"
 #include "Mandelbrotter/app/DemoPlayer.h"
+#include "Mandelbrotter/app/TourScript.h"
 #include "Mandelbrotter/app/help_routing.h"
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/exporter.h"
 #include "Mandelbrotter/flights.h"
 #include "Mandelbrotter/help_action.h"
 #include "gui/ExportDialog.h"
-#include "gui/GuidedTour.h"
 #include "gui/ScreenshotRun.h"
 #include "gui/SidePanel.h"
 #include "gui/app_icon.h"
@@ -72,7 +72,8 @@ MainFrame::MainFrame(RenderSettings initial, std::filesystem::path bookmarksPath
     m_demoTimer(this),
     m_canvas(new FractalCanvas(this, initial)),
     m_panel(new SidePanel(this)),
-    m_app(std::move(initial), std::move(bookmarksPath), m_canvas->controller(), makeShell())
+    m_app(std::move(initial), std::move(bookmarksPath), m_canvas->controller(), makeShell()),
+    m_tourView(*this)
 {
     applyAppIcon(*this);
     SetClientSize(FromDIP(wxSize(1280, 800)));
@@ -145,16 +146,14 @@ app::AppController::Shell MainFrame::makeShell()
                     m_demoTimer.Stop();
                 }
             },
-        .now       = {},
-        .startTour = [this] { tour().start(); },
-        .stopTour =
-            [this] {
-                if (m_tour)
-                {
-                    m_tour->stop();
-                }
-            },
-        .tourRunning = [this] { return m_tour && m_tour->running(); },
+        .now  = {},
+        .tour = {.showCard = [this](const app::TourStep& step, std::size_t index,
+                                    std::size_t count) { m_tourView.showCard(step, index, count); },
+                 .hideCard = [this] { m_tourView.hideCard(); },
+                 .highlight =
+                     [this](std::optional<app::TourTarget> target) {
+                         m_tourView.highlight(target);
+                     }},
     };
 }
 
@@ -325,15 +324,6 @@ void MainFrame::setSidePanelShown(bool shown)
     m_showPanelItem->Check(shown);
     GetSizer()->Show(m_panel, shown);
     Layout();
-}
-
-GuidedTour& MainFrame::tour()
-{
-    if (!m_tour)
-    {
-        m_tour = std::make_unique<GuidedTour>(*this);
-    }
-    return *m_tour;
 }
 
 wxWindow* MainFrame::exportDialog() noexcept

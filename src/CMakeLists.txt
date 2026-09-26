@@ -43,7 +43,8 @@ add_library(Mandelbrotter_app STATIC
     app/panel_model.cpp
     app/scenes.cpp
     app/startup.cpp
-    app/tour_layout.cpp)
+    app/tour_layout.cpp
+    app/TourScript.cpp)
 add_library(Mandelbrotter::app ALIAS Mandelbrotter_app)
 target_include_directories(Mandelbrotter_app PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(Mandelbrotter_app PUBLIC Mandelbrotter::lib)   # never wx
@@ -55,7 +56,6 @@ add_library(Mandelbrotter_gui STATIC
     gui/export_runner.cpp
     gui/ExportDialog.cpp
     gui/FractalCanvas.cpp
-    gui/GuidedTour.cpp
     gui/HelpController.cpp
     gui/JuliaPreview.cpp
     gui/MainFrame.cpp
@@ -63,6 +63,7 @@ add_library(Mandelbrotter_gui STATIC
     gui/ScreenshotRun.cpp
     gui/SidePanel.cpp
     gui/TourCard.cpp
+    gui/TourView.cpp
     gui/window_capture.cpp
     gui/wx_util.cpp)
 add_library(Mandelbrotter::gui ALIAS Mandelbrotter_gui)

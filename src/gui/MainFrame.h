@@ -13,12 +13,12 @@
 #include "Mandelbrotter/exporter.h"
 #include "gui/FractalCanvas.h"
 #include "gui/HelpController.h"
+#include "gui/TourView.h"
 
 namespace mandelbrotter::gui
 {
 
 class ExportDialog;
-class GuidedTour;
 class ScreenshotRun;
 class SidePanel;
 
@@ -43,7 +43,6 @@ public:
     [[nodiscard]] FractalCanvas&  canvas() noexcept { return *m_canvas; }
     [[nodiscard]] SidePanel&      panel() noexcept { return *m_panel; }
     [[nodiscard]] HelpController& help() noexcept { return m_help; }
-    [[nodiscard]] GuidedTour&     tour();
     [[nodiscard]] wxWindow*       exportDialog() noexcept;
     void                          setSidePanelShown(bool shown);
     /// The Save image as PNG dialog, modeless; a second call raises it.
@@ -72,12 +71,12 @@ private:
     void onAddBookmark();
     void reportError(const std::string& title, const std::string& message);
 
-    HelpController              m_help;
-    wxTimer                     m_demoTimer;  ///< ticks the flights; stopped first on destruction
-    FractalCanvas*              m_canvas{nullptr};
-    SidePanel*                  m_panel{nullptr};
-    app::AppController          m_app;  ///< after the widgets its shell drives
-    std::unique_ptr<GuidedTour> m_tour;
+    HelpController     m_help;
+    wxTimer            m_demoTimer;  ///< ticks the flights; stopped first on destruction
+    FractalCanvas*     m_canvas{nullptr};
+    SidePanel*         m_panel{nullptr};
+    app::AppController m_app;  ///< after the widgets its shell drives
+    TourView           m_tourView;
     std::unique_ptr<ScreenshotRun> m_screenshots;
     ExportDialog*                  m_exportDialog{nullptr};
     wxMenuItem*                    m_showPanelItem{nullptr};

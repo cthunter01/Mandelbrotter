@@ -345,13 +345,22 @@ TEST(AppController, AddingABookmarkSavesTheView)
 
 TEST(AppController, BeginningABookmarkEndsTheDemos)
 {
-    Harness h;
+    Harness h(app::seahorse());
     h.app.start();
     h.app.startFlight("seahorse-dive");
-    h.shell.tourRunning = true;
     EXPECT_EQ(h.app.beginAddBookmark(), app::defaultBookmarkName(h.app.settings()));
-    EXPECT_FALSE(h.app.flightPlaying());
-    EXPECT_FALSE(h.shell.tourRunning);
+    EXPECT_FALSE(h.app.flightPlaying());  // the flight stops where it is
+
+    h.app.applySettings(app::seahorse());
+    h.app.startTour();
+    h.app.tour().showStep(7);  // lists the tour's example bookmark
+    h.app.tour().showStep(9);  // and moves the view deep
+    EXPECT_EQ(h.app.bookmarks().bookmarks().size(), 1U);
+    // The tour ends first: the name is for the user's own view, and the example is gone.
+    EXPECT_EQ(h.app.beginAddBookmark(), "Mandelbrot at 5000x");
+    EXPECT_FALSE(h.app.tourRunning());
+    h.app.addBookmark("mine");
+    EXPECT_EQ(savedBookmarks(h), std::vector<Bookmark>{named("mine", app::seahorse())});
 }
 
 TEST(AppController, LoadingABookmarkAppliesItAndStopsAFlight)
@@ -389,11 +398,14 @@ TEST(AppController, DeletingDuringTheTourOnlyEndsTheTour)
     const std::vector<Bookmark> stored{named("a", app::seahorse())};
     mandelbrotter::saveBookmarks(h.bookmarksFile(), stored);
     h.app.start();
-    h.shell.tourRunning = true;
-    h.app.deleteBookmark(0);
-    EXPECT_FALSE(h.shell.tourRunning);
+    h.app.startTour();
+    h.app.tour().showStep(7);
+    ASSERT_EQ(h.shell.bookmarks.size(), 2U);
+    h.app.deleteBookmark(0);  // the selection may be stale: nothing is deleted
+    EXPECT_FALSE(h.app.tourRunning());
     EXPECT_EQ(savedBookmarks(h), stored);
     EXPECT_EQ(h.app.bookmarks().bookmarks(), stored);
+    EXPECT_EQ(h.shell.bookmarks, stored);
 }
 
 TEST(AppController, AnUnwritableBookmarksFileIsReported)
@@ -504,7 +516,7 @@ TEST(AppController, FlightsAndTheTourStopEachOther)
     h.app.startFlight("seahorse-dive");
     EXPECT_FALSE(h.app.tourRunning());
     EXPECT_TRUE(h.app.flightPlaying());
-    h.shell.tourRunning = true;
+    h.app.startTour();
     h.app.stopDemos();
     EXPECT_FALSE(h.app.flightPlaying());
     EXPECT_FALSE(h.app.tourRunning());

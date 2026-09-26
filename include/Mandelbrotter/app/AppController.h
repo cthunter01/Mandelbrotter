@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <span>
 #include <string>
@@ -15,6 +16,7 @@
 #include "Mandelbrotter/app/BookmarkStore.h"
 #include "Mandelbrotter/app/CanvasController.h"
 #include "Mandelbrotter/app/DemoPlayer.h"
+#include "Mandelbrotter/app/TourScript.h"
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/geometry.h"
 #include "Mandelbrotter/help_action.h"
@@ -78,10 +80,8 @@ public:
         std::function<void(bool)> demoTimer;
         /// The clock flights run on; steady_clock when empty.
         std::function<std::chrono::steady_clock::time_point()> now;
-        /// The guided tour (start restarts it; stop does nothing when it is not running).
-        std::function<void()> startTour;
-        std::function<void()> stopTour;
-        std::function<bool()> tourRunning;
+        /// The guided tour's card and highlight.
+        TourScript::Hooks tour;
     };
 
     /// `canvas` must outlive the controller; `bookmarksPath` is the file the bookmarks live in.
@@ -146,7 +146,9 @@ public:
     /// Stops a flight and the tour (the tour restores what the user had).
     void               stopDemos();
     [[nodiscard]] bool flightPlaying() const noexcept { return m_demo.playing(); }
-    [[nodiscard]] bool tourRunning() const;
+    [[nodiscard]] bool tourRunning() const noexcept { return m_tour && m_tour->running(); }
+    /// The guided tour, created on first use.
+    [[nodiscard]] TourScript& tour();
     /// The demo timer fired.
     void tickDemo();
     /// Remembers the view for Help > Back to where I was; ignored while a demo already runs.
@@ -183,13 +185,14 @@ private:
     void saveBookmarksFile() const;
     void refreshBookmarks() const;
 
-    RenderSettings          m_settings;
-    BookmarkStore           m_bookmarks;
-    CanvasController&       m_canvas;
-    Shell                   m_shell;
-    DemoPlayer              m_demo;  ///< after m_shell: its hooks use the shell's clock
-    std::optional<Snapshot> m_snapshot;
-    std::optional<Bookmark> m_temporaryBookmark;
+    RenderSettings              m_settings;
+    BookmarkStore               m_bookmarks;
+    CanvasController&           m_canvas;
+    Shell                       m_shell;
+    DemoPlayer                  m_demo;  ///< after m_shell: its hooks use the shell's clock
+    std::unique_ptr<TourScript> m_tour;
+    std::optional<Snapshot>     m_snapshot;
+    std::optional<Bookmark>     m_temporaryBookmark;
 };
 
 }  // namespace mandelbrotter::app

@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <format>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <span>
 #include <string>
@@ -18,6 +19,7 @@
 #include "Mandelbrotter/Viewport.h"
 #include "Mandelbrotter/app/CanvasController.h"
 #include "Mandelbrotter/app/DemoPlayer.h"
+#include "Mandelbrotter/app/TourScript.h"
 #include "Mandelbrotter/app/format.h"
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/flights.h"
@@ -396,14 +398,26 @@ void AppController::startFlight(std::string_view id)
         reportError("Demos", "There is no flight called \"" + std::string(id) + "\".");
         return;
     }
-    call(m_shell.stopTour);
+    if (m_tour)
+    {
+        m_tour->stop();
+    }
     m_demo.play(*flight);
 }
 
 void AppController::startTour()
 {
     stopFlight();
-    call(m_shell.startTour);
+    tour().start();
+}
+
+TourScript& AppController::tour()
+{
+    if (!m_tour)
+    {
+        m_tour = std::make_unique<TourScript>(*this, m_shell.tour);
+    }
+    return *m_tour;
 }
 
 void AppController::stopFlight()
@@ -414,12 +428,10 @@ void AppController::stopFlight()
 void AppController::stopDemos()
 {
     stopFlight();
-    call(m_shell.stopTour);
-}
-
-bool AppController::tourRunning() const
-{
-    return m_shell.tourRunning && m_shell.tourRunning();
+    if (m_tour)
+    {
+        m_tour->stop();
+    }
 }
 
 void AppController::tickDemo()

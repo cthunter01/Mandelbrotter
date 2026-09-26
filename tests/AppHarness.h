@@ -13,6 +13,7 @@
 #include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/app/AppController.h"
 #include "Mandelbrotter/app/CanvasController.h"
+#include "Mandelbrotter/app/TourScript.h"
 #include "Mandelbrotter/app/scenes.h"
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/geometry.h"
@@ -29,6 +30,15 @@ struct RecordingShell
     {
         std::string title;
         std::string message;
+    };
+    /// One showCard call of the tour.
+    struct Card
+    {
+        std::string     title;
+        std::size_t     index{};
+        std::size_t     count{};
+        bool            hasHelpPage{};
+        app::TourTarget anchor{};
     };
 
     [[nodiscard]] const std::string& status(app::StatusField field) const
@@ -109,39 +119,48 @@ struct RecordingShell
                     ++hookCalls;
                     demoTimer = on;
                 },
-            .now = [this] { return clock; },
-            .startTour =
-                [this] {
-                    ++hookCalls;
-                    tourRunning = true;
-                    ++tourStarts;
-                },
-            .stopTour =
-                [this] {
-                    ++hookCalls;
-                    tourRunning = false;
-                },
-            .tourRunning = [this] { return tourRunning; },
+            .now  = [this] { return clock; },
+            .tour = {.showCard =
+                         [this](const app::TourStep& step, std::size_t index, std::size_t count) {
+                             ++hookCalls;
+                             cards.push_back({.title       = step.title,
+                                              .index       = index,
+                                              .count       = count,
+                                              .hasHelpPage = !step.helpPage.empty(),
+                                              .anchor      = step.anchor});
+                             cardShown = true;
+                         },
+                     .hideCard =
+                         [this] {
+                             ++hookCalls;
+                             cardShown = false;
+                         },
+                     .highlight =
+                         [this](std::optional<app::TourTarget> target) {
+                             ++hookCalls;
+                             highlights.push_back(target);
+                         }},
         };
     }
 
-    std::array<std::string, app::kStatusFieldCount> statusFields;
+    std::chrono::steady_clock::time_point           clock;
     std::vector<Error>                              errors;
     std::vector<RenderSettings>                     panelSettings;
-    int                                             effectiveIterations{0};
     std::vector<Bookmark>                           bookmarks;
-    std::optional<bool>                             pickSeedMode;
-    std::optional<bool>                             showOrbit;
     std::vector<std::optional<Complex>>             previewSeeds;
-    bool                                            exportDialogOpen{false};
+    std::vector<std::string>                        helpPages;
+    std::vector<Card>                               cards;
+    std::vector<std::optional<app::TourTarget>>     highlights;
+    std::array<std::string, app::kStatusFieldCount> statusFields;
+    int                                             effectiveIterations{0};
     int                                             exportDialogShows{0};
     int                                             raises{0};
-    std::vector<std::string>                        helpPages;
-    bool                                            demoTimer{false};
-    std::chrono::steady_clock::time_point           clock;
-    bool                                            tourRunning{false};
-    int                                             tourStarts{0};
     int                                             hookCalls{0};
+    bool                                            exportDialogOpen{false};
+    bool                                            demoTimer{false};
+    bool                                            cardShown{false};
+    std::optional<bool>                             pickSeedMode;
+    std::optional<bool>                             showOrbit;
 };
 
 /// An application on a 40 x 30 canvas whose renders post to `queue`, with its bookmarks in a

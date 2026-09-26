@@ -19,7 +19,6 @@
 
 #include "Mandelbrotter/app/scenes.h"
 #include "gui/FractalCanvas.h"
-#include "gui/GuidedTour.h"
 #include "gui/HelpController.h"
 #include "gui/MainFrame.h"
 #include "gui/MandelbrotterApp.h"
@@ -230,7 +229,8 @@ std::vector<ScreenshotRun::Shot> ScreenshotRun::buildShots()
          .prepare =
              [&frame] {
                  frame.app().startTour();
-                 frame.tour().showStep(2);  // the Families step: card beside a highlighted section
+                 frame.app().tour().showStep(
+                     2);  // the Families step: card beside a highlighted section
              },
          .target  = whole,
          .crop    = noCrop,
