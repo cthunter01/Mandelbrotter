@@ -5,6 +5,7 @@ add_executable(Mandelbrotter_tests
     bookmarks_tests.cpp
     BookmarkStoreTests.cpp
     cli_tests.cpp
+    DemoPlayerTests.cpp
     exporter_tests.cpp
     flights_tests.cpp
     format_tests.cpp

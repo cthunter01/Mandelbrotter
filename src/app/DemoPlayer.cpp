@@ -1,4 +1,4 @@
-#include "gui/DemoPlayer.h"
+#include "Mandelbrotter/app/DemoPlayer.h"
 
 #include <chrono>
 #include <cmath>
@@ -8,19 +8,14 @@
 #include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/flights.h"
 
-namespace mandelbrotter::gui
+namespace mandelbrotter::app
 {
 
-namespace
+DemoPlayer::DemoPlayer(Hooks hooks) : m_hooks(std::move(hooks)) { }
+
+std::chrono::steady_clock::time_point DemoPlayer::now() const
 {
-
-constexpr int kTickMs = 33;
-
-}  // namespace
-
-DemoPlayer::DemoPlayer(Hooks hooks) : m_hooks(std::move(hooks)), m_timer(this)
-{
-    Bind(wxEVT_TIMER, &DemoPlayer::onTick, this);
+    return m_hooks.now ? m_hooks.now() : std::chrono::steady_clock::now();
 }
 
 void DemoPlayer::play(const Flight& flight)
@@ -31,11 +26,14 @@ void DemoPlayer::play(const Flight& flight)
     }
     stop();
     m_flight      = &flight;
-    m_start       = std::chrono::steady_clock::now();
+    m_start       = now();
     m_lastApplied = flight.keyframes.front().settings;
     m_hooks.applyFrame(m_lastApplied);
     m_hooks.showStatus(std::format("Flight: {} (Esc stops)", flight.title));
-    m_timer.Start(kTickMs);
+    if (m_hooks.setTimerRunning)
+    {
+        m_hooks.setTimerRunning(true);
+    }
 }
 
 void DemoPlayer::stop()
@@ -44,7 +42,10 @@ void DemoPlayer::stop()
     {
         return;
     }
-    m_timer.Stop();
+    if (m_hooks.setTimerRunning)
+    {
+        m_hooks.setTimerRunning(false);
+    }
     m_flight = nullptr;
     m_hooks.showStatus("");
     if (m_hooks.finished)
@@ -53,16 +54,15 @@ void DemoPlayer::stop()
     }
 }
 
-void DemoPlayer::onTick(wxTimerEvent& /*event*/)
+void DemoPlayer::tick()
 {
     if (m_flight == nullptr)
     {
         return;
     }
     const Flight& flight  = *m_flight;
-    const auto    elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::steady_clock::now() - m_start);
-    const auto total = totalDuration(flight);
+    const auto    elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now() - m_start);
+    const auto    total   = totalDuration(flight);
     if (elapsed >= total)
     {
         m_hooks.applyFrame(flight.keyframes.back().settings);
@@ -84,4 +84,4 @@ void DemoPlayer::onTick(wxTimerEvent& /*event*/)
     m_hooks.showStatus(std::format("Flight: {} {}% (Esc stops)", flight.title, percent));
 }
 
-}  // namespace mandelbrotter::gui
+}  // namespace mandelbrotter::app

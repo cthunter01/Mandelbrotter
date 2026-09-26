@@ -10,14 +10,15 @@
 
 #include <wx/frame.h>
 #include <wx/menu.h>
+#include <wx/timer.h>
 
 #include "Mandelbrotter/BigComplex.h"
 #include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/app/BookmarkStore.h"
+#include "Mandelbrotter/app/DemoPlayer.h"
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/exporter.h"
 #include "Mandelbrotter/help_action.h"
-#include "gui/DemoPlayer.h"
 #include "gui/FractalCanvas.h"
 #include "gui/HelpController.h"
 
@@ -121,7 +122,8 @@ private:
     RenderSettings                 m_settings;
     app::BookmarkStore             m_bookmarks;
     HelpController                 m_help;
-    DemoPlayer                     m_demo;
+    wxTimer                        m_demoTimer;  ///< ticks m_demo; declared first, stopped first
+    app::DemoPlayer                m_demo;
     std::unique_ptr<GuidedTour>    m_tour;
     std::unique_ptr<ScreenshotRun> m_screenshots;
     FractalCanvas*                 m_canvas{nullptr};

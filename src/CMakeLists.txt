@@ -34,6 +34,7 @@ Mandelbrotter_configure_target(Mandelbrotter_embed)
 # Links only the core, never wx, so the tests cover it and a second toolkit could sit on it.
 add_library(Mandelbrotter_app STATIC
     app/BookmarkStore.cpp
+    app/DemoPlayer.cpp
     app/format.cpp
     app/help_routing.cpp
     app/panel_model.cpp
@@ -48,7 +49,6 @@ Mandelbrotter_configure_target(Mandelbrotter_app)
 # GUI library: the wxWidgets layer. Headers live next to the sources and are included as "gui/<name>.h".
 add_library(Mandelbrotter_gui STATIC
     gui/app_icon.cpp
-    gui/DemoPlayer.cpp
     gui/export_runner.cpp
     gui/ExportDialog.cpp
     gui/FractalCanvas.cpp

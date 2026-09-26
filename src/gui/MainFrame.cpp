@@ -87,6 +87,7 @@ MainFrame::MainFrame(RenderSettings initial, std::filesystem::path bookmarksPath
   : wxFrame(nullptr, wxID_ANY, "Mandelbrotter", wxDefaultPosition, wxDefaultSize),
     m_settings(std::move(initial)),
     m_bookmarks(std::move(bookmarksPath)),
+    m_demoTimer(this),
     m_demo({.applyFrame =
                 [this](const RenderSettings& frame) {
                     m_settings = frame;
@@ -98,7 +99,19 @@ MainFrame::MainFrame(RenderSettings initial, std::filesystem::path bookmarksPath
                 [this](std::string_view text) {
                     SetStatusText(toWx(text), field(StatusField::POINTER));
                 },
-            .finished = [this] { m_panel->setSettings(m_settings); }}),
+            .finished = [this] { m_panel->setSettings(m_settings); },
+            .setTimerRunning =
+                [this](bool on) {
+                    if (on)
+                    {
+                        m_demoTimer.Start(static_cast<int>(app::kDemoTick.count()));
+                    }
+                    else
+                    {
+                        m_demoTimer.Stop();
+                    }
+                },
+            .now = {}}),
     m_canvas(new FractalCanvas(this, m_settings)),
     m_panel(new SidePanel(this))
 {
@@ -118,6 +131,7 @@ MainFrame::MainFrame(RenderSettings initial, std::filesystem::path bookmarksPath
     wireCanvas();
     wirePanel();
     wireHelp();
+    Bind(wxEVT_TIMER, [this](wxTimerEvent&) { m_demo.tick(); }, m_demoTimer.GetId());
     Bind(wxEVT_CHAR_HOOK, &MainFrame::onCharHook, this);
     Bind(wxEVT_CLOSE_WINDOW, &MainFrame::onClose, this);
 
@@ -130,7 +144,10 @@ MainFrame::MainFrame(RenderSettings initial, std::filesystem::path bookmarksPath
     m_canvas->SetFocus();
 }
 
-MainFrame::~MainFrame() = default;
+MainFrame::~MainFrame()
+{
+    m_demoTimer.Stop();
+}
 
 // ---------------------------------------------------------------------------------------------------------------
 // Menus
