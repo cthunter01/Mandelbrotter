@@ -4,14 +4,14 @@
 <h1>Fractal families</h1>
 <p>Every picture is made the same way: for each pixel a complex number is iterated until it escapes
 (its size exceeds 256) or the <a href="iterations.html">iteration limit</a> is reached. Points that
-never escape belong to the set and are painted black; the others are coloured by how fast they
+never escape belong to the set and are painted black; the others are colored by how fast they
 escaped. The <b>Family</b> list in the side panel chooses the formula, and <b>Exponent n</b>, from 2
 to 8, its power.</p>
 <table border=1 cellpadding=4>
 <tr><th>Family</th><th>Formula</th><th>Default view</th></tr>
-<tr><td>Mandelbrot</td><td>z &lt;- z^n + c</td><td>Centre -0.5, zoom 1 (n = 2); centre 0 for other n</td></tr>
-<tr><td>Burning Ship</td><td>z &lt;- (|Re z| + i |Im z|)^n + c</td><td>Centre -0.4 - 0.6i, zoom 0.75</td></tr>
-<tr><td>Tricorn</td><td>z &lt;- conj(z)^n + c</td><td>Centre -0.25, zoom 0.8</td></tr>
+<tr><td>Mandelbrot</td><td>z &lt;- z^n + c</td><td>Center -0.5, zoom 1 (n = 2); center 0 for other n</td></tr>
+<tr><td>Burning Ship</td><td>z &lt;- (|Re z| + i |Im z|)^n + c</td><td>Center -0.4 - 0.6i, zoom 0.75</td></tr>
+<tr><td>Tricorn</td><td>z &lt;- conj(z)^n + c</td><td>Center -0.25, zoom 0.8</td></tr>
 </table>
 <p>In the normal mode the pixel is the constant c and the iteration starts at z = 0; in
 <a href="julia.html">Julia mode</a> it is the other way round.</p>
@@ -24,7 +24,7 @@ the exponent keeps the view.</p>
 <tr><td>z^2 + c: the Mandelbrot set</td><td>z^3 + c: a Multibrot set with two-fold symmetry</td></tr>
 </table>
 <p>With n = 2 this is the classic Mandelbrot set. For n = 3 to 8 the sets are called Multibrot sets:
-they have n - 1 lobes around the centre and their own families of miniature copies.</p>
+they have n - 1 lobes around the center and their own families of miniature copies.</p>
 <p><a href="mandelbrotter:view --fractal mandelbrot --exponent 3">Try it: the cubic Multibrot set</a>,
 <a href="mandelbrotter:view --fractal mandelbrot --exponent 5">Try it: the fifth power</a>,
 <a href="mandelbrotter:view --fractal mandelbrot --exponent 2">Try it: back to n = 2</a></p>

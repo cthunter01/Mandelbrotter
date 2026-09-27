@@ -18,7 +18,7 @@ namespace mandelbrotter
 
 inline constexpr int kDefaultTileSize = 64;
 
-/// Above this zoom every pixel is iterated as a delta from the centre's reference orbit
+/// Above this zoom every pixel is iterated as a delta from the center's reference orbit
 /// (perturbation, see perturbation.h); below it, directly in doubles, which still have several
 /// digits of sub-pixel precision to spare there (a 4K frame at 1e8 has pixels 1e-11 wide).
 inline constexpr double kPerturbationZoom = 1e8;
@@ -55,7 +55,7 @@ struct TileResult
 struct RenderCompletion
 {
     std::uint64_t             generation{};
-    bool                      cancelled{};
+    bool                      canceled{};
     std::chrono::milliseconds elapsed{};
 };
 
@@ -102,7 +102,7 @@ private:
     std::optional<PixelRect> region = std::nullopt, const std::stop_token& stop = {},
     const ProgressCallback& progress = {});
 
-/// Splits `area` into tiles of at most tileSize x tileSize, ordered from the centre outwards.
+/// Splits `area` into tiles of at most tileSize x tileSize, ordered from the center outwards.
 [[nodiscard]] std::vector<PixelRect> tileGrid(PixelRect area, int tileSize);
 
 /// The number of worker threads a job with `requested` (0 = auto) will use.

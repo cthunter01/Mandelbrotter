@@ -40,7 +40,7 @@ RenderSettings scene()
     return settings;
 }
 
-/// Big enough that nothing finishes before the test has cancelled it.
+/// Big enough that nothing finishes before the test has canceled it.
 constexpr ExportOptions kSlow{.size = {4000, 3000}, .supersample = 4};
 
 /// Polls like the toolkit does, up to a deadline.
@@ -101,13 +101,13 @@ TEST(ExportTask, WritesThePngAndReportsFullProgress)
     EXPECT_EQ(task.outcome(), Outcome::SAVED);
 }
 
-TEST(ExportTask, CancellingStopsBeforeTheFileIsWritten)
+TEST(ExportTask, CancelingStopsBeforeTheFileIsWritten)
 {
     const TempDir dir;
     ExportTask    task(scene(), kSlow, dir / "out.png");
     task.cancel();
     ASSERT_TRUE(waitUntilFinished(task));
-    EXPECT_EQ(task.outcome(), Outcome::CANCELLED);
+    EXPECT_EQ(task.outcome(), Outcome::CANCELED);
     EXPECT_EQ(task.error(), "");
     EXPECT_LT(task.progress(), mandelbrotter::app::kExportProgressRange);
     EXPECT_FALSE(std::filesystem::exists(dir / "out.png"));
@@ -152,7 +152,7 @@ TEST(ExportTask, DestroyingARunningTaskStopsAndJoinsIt)
         const ExportTask task(scene(), kSlow, dir / "out.png");
     }
     EXPECT_FALSE(std::filesystem::exists(dir / "out.png"));
-    // The full render would take far longer; the destructor cancelled it.
+    // The full render would take far longer; the destructor canceled it.
     EXPECT_LT(std::chrono::steady_clock::now() - start, std::chrono::seconds(30));
 }
 

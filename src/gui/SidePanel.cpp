@@ -50,7 +50,7 @@ wxStaticBoxSizer* section(wxWindow* parent, wxSizer& into, const char* title)
     return box;
 }
 
-wxSizer* labelled(wxWindow* parent, const char* label, wxWindow* control)
+wxSizer* labeled(wxWindow* parent, const char* label, wxWindow* control)
 {
     auto* row = new wxBoxSizer(wxHORIZONTAL);
     row->Add(new wxStaticText(parent, wxID_ANY, label),
@@ -101,7 +101,7 @@ void SidePanel::buildFractalSection(wxSizer& sizer)
             emitChange();
         }
     });
-    box->Add(labelled(owner, "Family", m_family),
+    box->Add(labeled(owner, "Family", m_family),
              wxSizerFlags().Expand().Border(wxALL, FromDIP(kBorderDip / 2)));
 
     m_exponent = new wxSpinCtrl(owner, wxID_ANY, "", wxDefaultPosition, wxDefaultSize,
@@ -110,7 +110,7 @@ void SidePanel::buildFractalSection(wxSizer& sizer)
         m_settings.fractal.exponent = clampExponent(event.GetPosition());
         emitChange();
     });
-    box->Add(labelled(owner, "Exponent n", m_exponent),
+    box->Add(labeled(owner, "Exponent n", m_exponent),
              wxSizerFlags().Expand().Border(wxALL, FromDIP(kBorderDip / 2)));
 
     m_julia = new wxCheckBox(owner, wxID_ANY, "Julia set (z0 = pixel, c = seed)");
@@ -172,7 +172,7 @@ void SidePanel::buildIterationSection(wxSizer& sizer)
         m_settings.maxIterations = event.GetPosition();
         emitChange();
     });
-    box->Add(labelled(owner, "Maximum", m_iterations),
+    box->Add(labeled(owner, "Maximum", m_iterations),
              wxSizerFlags().Expand().Border(wxALL, FromDIP(kBorderDip / 2)));
 
     m_autoIterations = new wxCheckBox(owner, wxID_ANY, "Auto: grow with zoom");
@@ -188,9 +188,9 @@ void SidePanel::buildIterationSection(wxSizer& sizer)
 
 void SidePanel::buildColoringSection(wxSizer& sizer)
 {
-    wxStaticBoxSizer* box                    = section(this, sizer, "Colouring");
-    wxWindow*         owner                  = box->GetStaticBox();
-    m_sections.at(index(Section::COLOURING)) = box->GetStaticBox();
+    wxStaticBoxSizer* box                   = section(this, sizer, "Coloring");
+    wxWindow*         owner                 = box->GetStaticBox();
+    m_sections.at(index(Section::COLORING)) = box->GetStaticBox();
 
     m_palette = new wxChoice(owner, wxID_ANY);
     for (const auto name : paletteNames())
@@ -206,7 +206,7 @@ void SidePanel::buildColoringSection(wxSizer& sizer)
             emitChange();
         }
     });
-    box->Add(labelled(owner, "Palette", m_palette),
+    box->Add(labeled(owner, "Palette", m_palette),
              wxSizerFlags().Expand().Border(wxALL, FromDIP(kBorderDip / 2)));
 
     m_density = new wxSpinCtrlDouble(owner, wxID_ANY, "", wxDefaultPosition, wxDefaultSize,
@@ -217,7 +217,7 @@ void SidePanel::buildColoringSection(wxSizer& sizer)
         m_settings.coloring.density = event.GetValue();
         emitChange();
     });
-    box->Add(labelled(owner, "Density", m_density),
+    box->Add(labeled(owner, "Density", m_density),
              wxSizerFlags().Expand().Border(wxALL, FromDIP(kBorderDip / 2)));
 
     m_offset = new wxSlider(owner, wxID_ANY, 0, 0, app::kOffsetSliderSteps);
@@ -226,7 +226,7 @@ void SidePanel::buildColoringSection(wxSizer& sizer)
         m_settings.coloring.offset = app::sliderToOffset(event.GetInt());
         emitChange();
     });
-    box->Add(labelled(owner, "Offset", m_offset),
+    box->Add(labeled(owner, "Offset", m_offset),
              wxSizerFlags().Expand().Border(wxALL, FromDIP(kBorderDip / 2)));
 }
 

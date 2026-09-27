@@ -110,7 +110,7 @@ TEST(HelpAction, RejectsMalformedLinks)
     }
 }
 
-TEST(HelpAction, ViewActionKeepsTheCurrentViewForColourChanges)
+TEST(HelpAction, ViewActionKeepsTheCurrentViewForColorChanges)
 {
     const RenderSettings current = seahorse();
     const auto           next    = resolveViewAction(current, {.args = {"--palette", "fire"}});
@@ -150,7 +150,7 @@ TEST(HelpAction, ViewActionStartsFromTheDefaultViewWhenTheFractalChanges)
     EXPECT_EQ(same->view, current.view);
 }
 
-TEST(HelpAction, ViewActionKeepsAGivenCentreAndZoom)
+TEST(HelpAction, ViewActionKeepsAGivenCenterAndZoom)
 {
     const auto next = resolveViewAction(
         seahorse(), {.args = {"--fractal", "burning-ship", "--center", "-1.75,-0.03", "--zoom",

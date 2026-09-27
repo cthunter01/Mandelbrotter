@@ -87,14 +87,14 @@ std::vector<TourStep> TourScript::buildSteps()
                  app.applySettings(seahorse());
                  app.setShowOrbit(false);
              }},
-        {.title = "Colouring",
-         .text  = "The palette maps how fast a point escapes onto a colour cycle. Density sets how "
+        {.title = "Coloring",
+         .text  = "The palette maps how fast a point escapes onto a color cycle. Density sets how "
                   "many iterations one cycle spans and Offset shifts the cycle. Changing any of "
-                  "them recolours the picture at once, without recomputing it; we just switched "
+                  "them recolors the picture at once, without recomputing it; we just switched "
                   "to the fire palette with a denser cycle.",
-         .helpPage  = "colouring.html",
-         .anchor    = TourTarget::COLOURING,
-         .highlight = TourTarget::COLOURING,
+         .helpPage  = "coloring.html",
+         .anchor    = TourTarget::COLORING,
+         .highlight = TourTarget::COLORING,
          .perform =
              [](AppController& app) {
                  app.applySettings(seahorseFire());
@@ -115,7 +115,7 @@ std::vector<TourStep> TourScript::buildSteps()
                  app.canvas().showOrbitAt(kOrbitPoint);
              }},
         {.title     = "Bookmarks",
-         .text      = "Add... saves the current view, fractal and colours under a name; Load (or a "
+         .text      = "Add... saves the current view, fractal and colors under a name; Load (or a "
                       "double-click) returns to it and Delete removes it. Bookmarks are kept in a "
                       "small JSON file in your user data folder. The entry \"Tour example\" was "
                       "added for this step and will disappear when the tour ends.",
@@ -144,7 +144,7 @@ std::vector<TourStep> TourScript::buildSteps()
         {.title = "Deep zoom",
          .text  = "This is the same spot at zoom 1e10, far beyond where ordinary double "
                   "precision could tell neighbouring pixels apart. Above 1e8 the status bar says "
-                  "\"(deep)\": the centre is kept with as many digits as the zoom needs and every "
+                  "\"(deep)\": the center is kept with as many digits as the zoom needs and every "
                   "pixel is computed as a small difference from it. You can go on to 1e300.",
          .helpPage  = "deep-zoom.html",
          .anchor    = TourTarget::CANVAS,

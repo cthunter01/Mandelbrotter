@@ -22,13 +22,13 @@ using mandelbrotter::FractalFamily;
 using mandelbrotter::RenderSettings;
 namespace app = mandelbrotter::app;
 
-/// The precision a centre at `zoom` carries: fractionBitsFor rounded up to whole limbs.
+/// The precision a center at `zoom` carries: fractionBitsFor rounded up to whole limbs.
 int bitsAt(double zoom)
 {
     return mandelbrotter::BigFixed(mandelbrotter::fractionBitsFor(zoom)).fractionBits();
 }
 
-TEST(Scenes, ViewAtCentresWithThePrecisionOfTheClampedZoom)
+TEST(Scenes, ViewAtCentersWithThePrecisionOfTheClampedZoom)
 {
     const RenderSettings settings = app::viewAt(RenderSettings{}, {0.25, -0.5}, 1e6);
     EXPECT_DOUBLE_EQ(settings.view.zoom, 1e6);

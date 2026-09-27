@@ -23,14 +23,14 @@ bool exportPngWithProgress(wxWindow* parent, const RenderSettings& settings,
         "Saving image",
         toWx(std::format("Rendering {}x{}...", options.size.width, options.size.height)), kRange,
         parent, wxPD_APP_MODAL | wxPD_CAN_ABORT | wxPD_AUTO_HIDE);
-    bool cancelled = false;
+    bool canceled = false;
     while (!task.waitFor(app::kExportPollInterval))
     {
-        if (!cancelled && !dialog.Update(std::min(task.progress(), kRange - 1)))
+        if (!canceled && !dialog.Update(std::min(task.progress(), kRange - 1)))
         {
-            cancelled = true;
+            canceled = true;
             task.cancel();
-            dialog.Update(kRange - 1, "Cancelling...");
+            dialog.Update(kRange - 1, "Canceling...");
         }
     }
     dialog.Update(kRange);
@@ -40,7 +40,7 @@ bool exportPngWithProgress(wxWindow* parent, const RenderSettings& settings,
         case app::ExportTask::Outcome::SAVED:
             return true;
         case app::ExportTask::Outcome::FAILED:
-            if (!cancelled)
+            if (!canceled)
             {
                 wxMessageBox(
                     toWx(std::format("Could not save {}:\n{}", path.string(), task.error())),
@@ -48,7 +48,7 @@ bool exportPngWithProgress(wxWindow* parent, const RenderSettings& settings,
             }
             return false;
         case app::ExportTask::Outcome::RUNNING:
-        case app::ExportTask::Outcome::CANCELLED:
+        case app::ExportTask::Outcome::CANCELED:
             break;
     }
     return false;

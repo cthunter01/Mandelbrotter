@@ -31,8 +31,8 @@ public:
     {
         RUNNING,
         SAVED,
-        CANCELLED,  ///< stopped before the file was written
-        FAILED,     ///< see error()
+        CANCELED,  ///< stopped before the file was written
+        FAILED,    ///< see error()
     };
 
     ExportTask(RenderSettings settings, ExportOptions options, std::filesystem::path path);
@@ -46,7 +46,7 @@ public:
     [[nodiscard]] int progress() const noexcept;
     /// Waits up to `timeout` for the task to finish; true once it has.
     [[nodiscard]] bool waitFor(std::chrono::milliseconds timeout);
-    /// Asks the worker to stop. The outcome is CANCELLED unless the file was already written.
+    /// Asks the worker to stop. The outcome is CANCELED unless the file was already written.
     void cancel();
 
     [[nodiscard]] Outcome outcome() const;

@@ -21,8 +21,8 @@ std::string_view panelPageFor(PanelSection section, bool juliaControl) noexcept
             return juliaControl ? "julia.html" : "fractals.html";
         case PanelSection::ITERATIONS:
             return "iterations.html";
-        case PanelSection::COLOURING:
-            return "colouring.html";
+        case PanelSection::COLORING:
+            return "coloring.html";
         case PanelSection::OVERLAY:
             return "orbit.html";
         case PanelSection::BOOKMARKS:

@@ -20,7 +20,7 @@ enum class TourTarget : std::uint8_t
     CANVAS,
     FRACTAL,
     ITERATIONS,
-    COLOURING,
+    COLORING,
     OVERLAY,
     BOOKMARKS,
 };

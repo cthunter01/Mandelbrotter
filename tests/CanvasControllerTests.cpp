@@ -199,13 +199,13 @@ TEST(CanvasController, TilesOfAnEarlierRenderAreDropped)
     ASSERT_TRUE(canvas.finishRender());
     canvas.queue.drainAll();
     EXPECT_EQ(canvas.controller.image(), expectedImage(second, kSize));
-    // One finished render: the cancelled one's completion is ignored.
+    // One finished render: the canceled one's completion is ignored.
     EXPECT_EQ(
         std::ranges::count_if(canvas.statuses, [](const RenderStatus& s) { return !s.rendering; }),
         1);
 }
 
-TEST(CanvasController, AColouringChangeRecoloursWithoutRendering)
+TEST(CanvasController, AColoringChangeRecolorsWithoutRendering)
 {
     Canvas canvas;
     ASSERT_TRUE(canvas.renderInitial());
@@ -517,7 +517,7 @@ TEST(CanvasController, TheOrbitIsCappedAt512Points)
     settings.maxIterations  = 5000;
     Canvas canvas(settings);
     canvas.controller.setShowOrbit(true);
-    canvas.controller.pointerMoved({20, 15});  // the centre, -0.5: inside the set
+    canvas.controller.pointerMoved({20, 15});  // the center, -0.5: inside the set
     EXPECT_EQ(canvas.controller.orbit().size(), 512U);
 }
 
@@ -618,7 +618,7 @@ TEST(CanvasController, ArrowKeysPanByATenth)
     EXPECT_EQ(canvas.userInputs, 0);  // keys are not mouse input
 }
 
-TEST(CanvasController, ZoomKeysZoomAtTheCentre)
+TEST(CanvasController, ZoomKeysZoomAtTheCenter)
 {
     Canvas         canvas;
     const Viewport start = canvas.viewport();

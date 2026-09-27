@@ -14,7 +14,7 @@
   <LI><OBJECT type="text/sitemap"><param name="Name" value="Fractal families"><param name="Local" value="fractals.html"></OBJECT>
   <LI><OBJECT type="text/sitemap"><param name="Name" value="Julia sets"><param name="Local" value="julia.html"></OBJECT>
   <LI><OBJECT type="text/sitemap"><param name="Name" value="Iterations"><param name="Local" value="iterations.html"></OBJECT>
-  <LI><OBJECT type="text/sitemap"><param name="Name" value="Colouring"><param name="Local" value="colouring.html"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Name" value="Coloring"><param name="Local" value="coloring.html"></OBJECT>
   <LI><OBJECT type="text/sitemap"><param name="Name" value="The orbit overlay"><param name="Local" value="orbit.html"></OBJECT>
   <LI><OBJECT type="text/sitemap"><param name="Name" value="Deep zoom"><param name="Local" value="deep-zoom.html"></OBJECT>
   <LI><OBJECT type="text/sitemap"><param name="Name" value="Saving images"><param name="Local" value="exporting.html"></OBJECT>

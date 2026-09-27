@@ -28,7 +28,7 @@ struct ColorStop
     Rgb    color{};
 };
 
-/// A cyclic colour gradient: sample(t) wraps t into [0, 1) and interpolates linearly between the
+/// A cyclic color gradient: sample(t) wraps t into [0, 1) and interpolates linearly between the
 /// stops, and from the last stop back to the first at t = 1.
 class Palette
 {
@@ -49,7 +49,7 @@ private:
     std::vector<Rgb>       m_lut;
 };
 
-/// How iteration counts become colours.
+/// How iteration counts become colors.
 struct ColoringSettings
 {
     std::string palette{"classic"};

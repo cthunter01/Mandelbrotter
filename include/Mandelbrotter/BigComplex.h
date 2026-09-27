@@ -10,7 +10,7 @@
 namespace mandelbrotter
 {
 
-/// A complex number over BigFixed: the centre of a deep view and the reference orbit computed from
+/// A complex number over BigFixed: the center of a deep view and the reference orbit computed from
 /// it. Both parts are kept at the same precision.
 struct BigComplex
 {

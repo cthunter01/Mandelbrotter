@@ -32,7 +32,7 @@ namespace
 
 using nlohmann::json;
 
-/// Version 2 writes the view centre as decimal strings (version 1 wrote numbers, which the reader
+/// Version 2 writes the view center as decimal strings (version 1 wrote numbers, which the reader
 /// still accepts).
 constexpr int kSchemaVersion = 2;
 
@@ -41,7 +41,7 @@ json complexToJson(Complex c)
     return {{"re", c.re}, {"im", c.im}};
 }
 
-/// With as many decimals as the centre's precision at this zoom holds, so that reading the file
+/// With as many decimals as the center's precision at this zoom holds, so that reading the file
 /// back gives the identical value.
 json centerToJson(const BigComplex& center, double zoom)
 {
@@ -119,7 +119,7 @@ Complex complexFromJson(const json& object, const char* key)
     return {finite(get<double>(c, "re", 0.0), key), finite(get<double>(c, "im", 0.0), key)};
 }
 
-/// One coordinate of the centre: a decimal string, or a number from a version-1 file. Missing
+/// One coordinate of the center: a decimal string, or a number from a version-1 file. Missing
 /// means zero.
 BigFixed centerPartFromJson(const json& center, const char* key, int fractionBits)
 {

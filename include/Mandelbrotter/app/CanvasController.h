@@ -62,7 +62,7 @@ struct RenderStatus
 
 /// The fractal view's logic: renders progressively on worker threads and handles all navigation.
 ///
-/// The controller owns the authoritative copy of the view (centre and zoom) while the user
+/// The controller owns the authoritative copy of the view (center and zoom) while the user
 /// navigates and reports changes through onViewChanged; everything else is pushed in with
 /// setSettings(). Every point and size crossing this API is in LOGICAL window pixels; the
 /// controller converts to device pixels with the scale it was given (device = logical * scale).
@@ -98,7 +98,7 @@ public:
     void resizeSettled();
 
     // ---- the model
-    /// Re-renders if the geometry changed, otherwise just recolours.
+    /// Re-renders if the geometry changed, otherwise just recolors.
     void                                setSettings(const RenderSettings& settings);
     [[nodiscard]] const RenderSettings& settings() const noexcept { return m_settings; }
     /// In pick mode a left click reports the complex number under the cursor via onSeedPicked

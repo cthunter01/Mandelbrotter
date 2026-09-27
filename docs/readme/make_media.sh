@@ -20,7 +20,7 @@ trap 'rm -rf "$work"' EXIT
 magick "$work/banner.png" -strip -quality 88 "$here/banner.jpg"
 
 # Each flight is sampled at about 75 frames (frames per second of flight time below), played back at 12 fps
-# with the last frame held for 2 s. 400x225, 128 colours and a light ordered dither keep a GIF near 3 MB:
+# with the last frame held for 2 s. 400x225, 128 colors and a light ordered dither keep a GIF near 3 MB:
 # deep-zoom frames differ everywhere, so GIF's frame-to-frame compression cannot help.
 flights=(seahorse-dive:2 antenna-minibrot:3 elephant-valley:3 feigenbaum:4 julia-sweep:2 palette-sweep:6)
 for entry in "${flights[@]}"; do

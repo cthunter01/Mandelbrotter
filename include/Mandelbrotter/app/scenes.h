@@ -19,7 +19,7 @@ inline constexpr Complex kOrbitPoint{0.285, 0.01};
 inline constexpr double kTourDeepZoom       = 1e10;
 inline constexpr double kScreenshotDeepZoom = 1e12;
 
-/// `base` centred on `center` at `zoom` (clamped), with the precision that zoom calls for.
+/// `base` centered on `center` at `zoom` (clamped), with the precision that zoom calls for.
 [[nodiscard]] RenderSettings viewAt(RenderSettings base, Complex center, double zoom);
 /// Default settings showing the whole Mandelbrot set.
 [[nodiscard]] RenderSettings mandelbrotDefault();

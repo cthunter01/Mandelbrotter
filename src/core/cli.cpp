@@ -257,7 +257,7 @@ int writeFlightFrames(const Flight& flight, const std::filesystem::path& dir, lo
             const std::optional<RgbImage> image = renderForExport(settings, exportOptions);
             if (!image)
             {
-                err << "error: render was cancelled\n";
+                err << "error: render was canceled\n";
                 return 1;
             }
             const auto path = dir / std::format("frame-{:04}.png", i);
@@ -404,7 +404,7 @@ RenderSettings applyOverrides(RenderSettings base, const CliOverrides& overrides
     }
     if (overrides.center)
     {
-        // The zoom is final now, so the centre can take the precision it calls for.
+        // The zoom is final now, so the center can take the precision it calls for.
         if (const auto center = parseCenter(*overrides.center, fractionBitsFor(base.view.zoom)))
         {
             base.view.center = *center;
@@ -450,7 +450,7 @@ Without --render, opens the interactive window (with any view options applied).
       --fractal NAME      mandelbrot (default), burning-ship or tricorn
       --exponent N        z^N + c, N from {} to {} (default 2)
       --julia RE,IM       draw the Julia set for the constant c = RE + IM i
-      --center RE,IM      centre of the view
+      --center RE,IM      center of the view
       --zoom Z            magnification (1 shows the whole set; up to {:g})
       --iterations N      fixed iteration limit (default: automatic, grows with zoom)
       --palette NAME      one of: {}
@@ -497,7 +497,7 @@ int runCli(const CliOptions& options, std::ostream& out, std::ostream& err)
         const std::optional<RgbImage> image = renderForExport(*settings, options.exportOptions);
         if (!image)
         {
-            err << "error: render was cancelled\n";
+            err << "error: render was canceled\n";
             return 1;
         }
         writePng(*options.renderOutput, *image);

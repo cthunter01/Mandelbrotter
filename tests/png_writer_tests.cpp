@@ -69,7 +69,7 @@ TEST(PngWriter, EncodedBytesStartWithThePngSignatureAndIhdr)
     EXPECT_EQ(bytes[19], 5);
     EXPECT_EQ(bytes[23], 3);
     EXPECT_EQ(bytes[24], 8);  // bit depth
-    EXPECT_EQ(bytes[25], 2);  // colour type: RGB
+    EXPECT_EQ(bytes[25], 2);  // color type: RGB
 }
 
 TEST(PngWriter, RoundTripsPixelsExactly)

@@ -44,7 +44,7 @@ void ExportTask::run(const std::stop_token& stop)
             });
         if (!image)
         {
-            finish(Outcome::CANCELLED, {});
+            finish(Outcome::CANCELED, {});
             return;
         }
         writePng(m_path, *image);

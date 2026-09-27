@@ -74,7 +74,7 @@ TEST(Flights, TargetStaysOnScreenAndConvergesLinearly)
     const Complex        c1{-0.7436, 0.1318};
     const RenderSettings from = at(c0, 1.0);
     const RenderSettings to   = at(c1, 1e6);
-    // The target's offset from the centre in screen units (complex offset times zoom) shrinks
+    // The target's offset from the center in screen units (complex offset times zoom) shrinks
     // linearly from its initial value to zero.
     const Complex initialOffset = (c1 - c0) * from.view.zoom;
     for (const double u : {0.25, 0.5, 0.75})
@@ -86,7 +86,7 @@ TEST(Flights, TargetStaysOnScreenAndConvergesLinearly)
     }
 }
 
-TEST(Flights, CentreMovesLinearlyWhenTheZoomIsConstant)
+TEST(Flights, CenterMovesLinearlyWhenTheZoomIsConstant)
 {
     const RenderSettings from = at({0.0, 0.0}, 2.0);
     const RenderSettings to   = at({1.0, -2.0}, 2.0);

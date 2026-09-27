@@ -41,7 +41,7 @@ void expectMatchesDoubleOrbit(const FractalSpec& spec, Complex center, int maxIt
 
 TEST(ReferenceOrbit, MatchesTheDoubleOrbitForEveryFamily)
 {
-    // Points with attracting behaviour, where rounding differences do not blow up.
+    // Points with attracting behavior, where rounding differences do not blow up.
     expectMatchesDoubleOrbit(FractalSpec{}, {-0.5, 0.5}, 200, "mandelbrot");
     expectMatchesDoubleOrbit(FractalSpec{.exponent = 3}, {0.1, 0.1}, 200, "cubic");
     expectMatchesDoubleOrbit(FractalSpec{.exponent = 5}, {0.1, 0.1}, 200, "quintic");
@@ -62,7 +62,7 @@ TEST(ReferenceOrbit, StopsAtTheFirstEscapedPoint)
     // 0 -> 1 -> 2 -> 5 -> 26 -> 677: six points, the last one past the bailout radius.
     const ReferenceOrbit ref(FractalSpec{}, BigComplex::fromComplex({1.0, 0.0}, kBits), 1000);
     EXPECT_TRUE(ref.escaped());
-    EXPECT_FALSE(ref.cancelled());
+    EXPECT_FALSE(ref.canceled());
     ASSERT_EQ(ref.length(), 6);
     EXPECT_DOUBLE_EQ(ref.points()[5].re, 677.0);
     EXPECT_GT(ref.points().back().normSquared(), mandelbrotter::kBailoutRadiusSquared);
@@ -101,7 +101,7 @@ TEST(ReferenceOrbit, CancellationKeepsWhatItHas)
     source.request_stop();
     const ReferenceOrbit ref(FractalSpec{}, BigComplex::fromComplex({-0.5, 0.5}, kBits), 1000,
                              source.get_token());
-    EXPECT_TRUE(ref.cancelled());
+    EXPECT_TRUE(ref.canceled());
     EXPECT_FALSE(ref.escaped());
     EXPECT_EQ(ref.length(), 1);
 }

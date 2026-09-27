@@ -20,7 +20,7 @@ enum class PanelSection : std::uint8_t
 {
     FRACTAL,
     ITERATIONS,
-    COLOURING,
+    COLORING,
     OVERLAY,
     BOOKMARKS,
 };

@@ -34,12 +34,12 @@
 - **Four fractal families**: Mandelbrot and Multibrot (`z^n + c`, n = 2 to 8), Burning Ship and Tricorn, plus the
   Julia set of any of them, with a live preview that follows the mouse.
 - **Deep zoom to 10<sup>300</sup>**, far past the 10<sup>13</sup> where ordinary double-precision explorers turn
-  blocky. The view centre is a big number whose precision follows the zoom; deep pixels are iterated as tiny
+  blocky. The view center is a big number whose precision follows the zoom; deep pixels are iterated as tiny
   offsets from one precise reference orbit (perturbation), and bilinear approximation skips the long stretches
   where nothing interesting happens.
 - **Fast and responsive**: every core renders; a coarse picture appears at once and sharpens in passes; any
   movement cancels the render in flight. The iteration limit grows with the zoom on its own (up to 1,000,000).
-- **Colour**: smooth escape-time colouring, six palettes, density and offset controls, and recolouring that never
+- **Color**: smooth escape-time coloring, six palettes, density and offset controls, and recoloring that never
   recomputes.
 - **Keep what you find**: bookmarks, view files that reload bit for bit, PNG export at any resolution with
   anti-aliasing, copy to clipboard, and a headless `--render` mode for scripts.
@@ -75,13 +75,13 @@ Each release also carries a `SHA256SUMS` file. To build it yourself, see [Buildi
 
 <p align="center"><img src="docs/help/images/ui-main-window.png" width="720" alt="The main window"></p>
 
-The picture fills most of the window. The panel on the right holds the fractal, iteration, colouring, overlay and
-bookmark settings, and the status bar shows the centre, the zoom, the iteration limit and how long the picture
+The picture fills most of the window. The panel on the right holds the fractal, iteration, coloring, overlay and
+bookmark settings, and the status bar shows the center, the zoom, the iteration limit and how long the picture
 took.
 
 | To | Mouse | Keyboard |
 | --- | --- | --- |
-| Zoom in or out at a point | wheel | `+` / `-`, or Page Up / Page Down (at the centre) |
+| Zoom in or out at a point | wheel | `+` / `-`, or Page Up / Page Down (at the center) |
 | Move around | drag | arrow keys |
 | Zoom into a rectangle | right-drag, or Shift-drag | |
 | Zoom out | right-click | |
@@ -109,10 +109,10 @@ point, and the window switches to that Julia set; the constant can also be typed
 | <img src="docs/help/images/julia-a.png" width="400" alt="Julia set for c = -0.8 + 0.156i"><br>c = −0.8 + 0.156i | <img src="docs/help/images/julia-b.png" width="400" alt="Julia set for c = -0.4 + 0.6i"><br>c = −0.4 + 0.6i |
 | <img src="docs/help/images/julia-c.png" width="400" alt="Julia set for c = 0.285 + 0.01i"><br>c = 0.285 + 0.01i | <img src="docs/help/images/julia-d.png" width="400" alt="Julia set for c = -0.7269 + 0.1889i"><br>c = −0.7269 + 0.1889i |
 
-### 4. Colour it
+### 4. Color it
 
-Six palettes, plus density (how fast the colours cycle) and offset (where the cycle starts). Changing any of them
-recolours the picture instantly, without computing it again.
+Six palettes, plus density (how fast the colors cycle) and offset (where the cycle starts). Changing any of them
+recolors the picture instantly, without computing it again.
 
 | | | |
 | :---: | :---: | :---: |
@@ -141,10 +141,10 @@ the mouse: points inside the set settle into a loop, points outside fly off.
 
 ### 7. Keep what you find
 
-- **Bookmarks** (Bookmarks > Add bookmark, Ctrl+D) remember a view with its fractal and colours.
+- **Bookmarks** (Bookmarks > Add bookmark, Ctrl+D) remember a view with its fractal and colors.
 - **File > Save image as PNG** (Ctrl+S) exports at any size up to 16384 × 16384, with up to 4 × 4 anti-aliasing.
 - **File > Copy image** (Ctrl+C) puts the picture on the clipboard.
-- **File > Export view** writes a small JSON file, with the centre spelled out in as many digits as the zoom needs,
+- **File > Export view** writes a small JSON file, with the center spelled out in as many digits as the zoom needs,
   so a view reloads bit for bit; `Mandelbrotter --view my-view.json` opens it.
 
 Bookmarks live in `~/.local/share/Mandelbrotter/bookmarks.json` on Linux,
@@ -168,7 +168,7 @@ completion (the window itself shows a coarse first pass while it moves):
 | :---: | :---: |
 | <img src="docs/readme/demo-seahorse-dive.gif" width="400" alt="Dive into Seahorse Valley"><br>**Dive into Seahorse Valley**<br>From the whole set down to a minibrot at zoom 10<sup>13</sup> | <img src="docs/readme/demo-antenna-minibrot.gif" width="400" alt="The minibrot on the antenna"><br>**The minibrot on the antenna**<br>Along the real axis to the little copy of the set at −1.75, then to the copy on its own antenna |
 | <img src="docs/readme/demo-elephant-valley.gif" width="400" alt="Elephant Valley spirals"><br>**Elephant Valley spirals**<br>Into the spirals on the right-hand side of the set, to zoom 10<sup>7</sup> | <img src="docs/readme/demo-feigenbaum.gif" width="400" alt="The Feigenbaum cascade"><br>**The Feigenbaum cascade**<br>Down the real axis to where the period doubling repeats at every scale |
-| <img src="docs/readme/demo-julia-sweep.gif" width="400" alt="A walk around the Julia sets"><br>**A walk around the Julia sets**<br>The Julia set morphs as its constant circles \|c\| = 0.7885 | <img src="docs/readme/demo-palette-sweep.gif" width="400" alt="Palette sweep"><br>**Palette sweep**<br>The same view while the palette cycles once through its colours |
+| <img src="docs/readme/demo-julia-sweep.gif" width="400" alt="A walk around the Julia sets"><br>**A walk around the Julia sets**<br>The Julia set morphs as its constant circles \|c\| = 0.7885 | <img src="docs/readme/demo-palette-sweep.gif" width="400" alt="Palette sweep"><br>**Palette sweep**<br>The same view while the palette cycles once through its colors |
 
 ## Command line
 
@@ -181,7 +181,7 @@ usage: Mandelbrotter [options]
       --fractal NAME      mandelbrot (default), burning-ship or tricorn
       --exponent N        z^N + c, N from 2 to 8 (default 2)
       --julia RE,IM       draw the Julia set for the constant c = RE + IM i
-      --center RE,IM      centre of the view
+      --center RE,IM      center of the view
       --zoom Z            magnification (1 shows the whole set; up to 1e+300)
       --iterations N      fixed iteration limit (default: automatic, grows with zoom)
       --palette NAME      one of: classic, grayscale, fire, ocean, rainbow, electric
@@ -200,7 +200,7 @@ Mandelbrotter --render seahorse.png --center -0.7436,0.1318 --zoom 5000 --iterat
 # The Burning Ship's little ship
 Mandelbrotter --render ship.png --fractal burning-ship --center -1.75,-0.03 --zoom 40 --palette fire
 
-# The banner at the top of this page: a centre of any length keeps every digit
+# The banner at the top of this page: a center of any length keeps every digit
 Mandelbrotter --render banner.png --size 1600x480 --supersample 4 --zoom 4e5 \
               --center -0.743643887037158704752191506114774,0.131825904205311970493132056385139
 ```

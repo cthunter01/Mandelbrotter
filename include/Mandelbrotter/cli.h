@@ -61,7 +61,7 @@ struct CliOptions
 [[nodiscard]] std::expected<CliOptions, std::string> parseCommandLine(
     std::span<const std::string_view> args);
 
-/// Applies the overrides on top of `base`. A family override without a view file or centre/zoom
+/// Applies the overrides on top of `base`. A family override without a view file or center/zoom
 /// starts from that family's default view.
 [[nodiscard]] RenderSettings applyOverrides(RenderSettings base, const CliOverrides& overrides,
                                             bool baseIsDefault);

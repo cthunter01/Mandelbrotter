@@ -47,7 +47,7 @@ struct Flight
 [[nodiscard]] double ease(Easing easing, double u) noexcept;
 
 /// The settings a fraction `u` (already eased, clamped to [0, 1]) of the way from `from` to `to`:
-/// the zoom moves exponentially, z(u) = z0 (z1/z0)^u; the centre follows
+/// the zoom moves exponentially, z(u) = z0 (z1/z0)^u; the center follows
 /// c(u) = c1 + (c0 - c1) (1 - u) z0 / z(u), so the target's offset on screen shrinks linearly to
 /// zero (it never leaves the picture and the leg ends exactly on c1; plain linear motion when the
 /// zoom does not change); palette offset and density, the Julia seed and the iteration limit move

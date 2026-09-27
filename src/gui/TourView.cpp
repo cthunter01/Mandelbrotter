@@ -25,8 +25,8 @@ std::optional<SidePanel::Section> sectionFor(app::TourTarget target)
             return SidePanel::Section::FRACTAL;
         case app::TourTarget::ITERATIONS:
             return SidePanel::Section::ITERATIONS;
-        case app::TourTarget::COLOURING:
-            return SidePanel::Section::COLOURING;
+        case app::TourTarget::COLORING:
+            return SidePanel::Section::COLORING;
         case app::TourTarget::OVERLAY:
             return SidePanel::Section::OVERLAY;
         case app::TourTarget::BOOKMARKS:

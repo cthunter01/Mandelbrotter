@@ -96,7 +96,7 @@ runtime; macOS and Windows are self-contained), so raise `VERSION` in `project()
   snake_case names (`kernel.h`, `geometry.h`), with tests named `*_tests.cpp`
 - Code lives in `namespace mandelbrotter` (app layer: `mandelbrotter::app`; GUI: `mandelbrotter::gui`); project
   includes use quotes: `#include "Mandelbrotter/kernel.h"`, `#include "Mandelbrotter/app/AppController.h"`
-- Application behaviour goes into `src/app` with a test, not into a wx class: a view translates its events into
+- Application behavior goes into `src/app` with a test, not into a wx class: a view translates its events into
   controller calls and implements the controller's hooks (`std::function` structs, not interfaces). The numbers
   the help book documents (drag threshold, zoom steps, timers, preview size) are `inline constexpr` in the app
   headers. `src/app` gets the root `.clang-tidy` unrelaxed
@@ -108,12 +108,12 @@ runtime; macOS and Windows are self-contained), so raise `VERSION` in `project()
   (`<filesystem>`, `<thread>`, `<chrono>`) over POSIX or Win32 APIs; when an OS API is unavoidable, keep it in one
   source file behind an `#ifdef _WIN32` / `__APPLE__` / `__linux__` split, with a branch for each platform
 - Deep zoom: `ViewSpec::center` is a `BigComplex` whose precision follows the zoom (`fractionBitsFor`);
-  kernels never see absolute big positions, only double offsets from the centre (`Viewport::offsetFromCenter`).
-  Above `kPerturbationZoom` (1e8) the renderer iterates every pixel as a delta from the centre's
+  kernels never see absolute big positions, only double offsets from the center (`Viewport::offsetFromCenter`).
+  Above `kPerturbationZoom` (1e8) the renderer iterates every pixel as a delta from the center's
   `ReferenceOrbit` (`iteratePerturbed`, with rebasing) and jumps stretches where the delta is tiny through the
   orbit's `BlaTable` (bilinear approximation; `kBlaEpsilon` trades speed for the last digits); below it the
   direct double kernel runs. Bookmarks and
-  view files store centres as decimal strings (schema version 2); `BigFixed::fromDecimal` rounds to nearest
+  view files store centers as decimal strings (schema version 2); `BigFixed::fromDecimal` rounds to nearest
   and `toDecimal` prints enough digits that a saved view reloads bit-for-bit
 - Renderer callbacks run on worker threads: `CanvasController` hands them to its `post` hook, which the toolkit
   runs on its own thread (wx: `CallAfter`); never touch wx objects or controller state from a worker

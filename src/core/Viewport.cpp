@@ -111,7 +111,7 @@ Viewport Viewport::zoomedAt(PixelPoint anchor, double factor) const
 {
     const double newZoom   = clampZoom(m_view.zoom * factor);
     const double effective = newZoom / m_view.zoom;
-    // The anchor stays under the same pixel: the centre moves toward it by the share of the
+    // The anchor stays under the same pixel: the center moves toward it by the share of the
     // distance the zoom takes away.
     const Complex offset = offsetFromCenter(anchor.x + 0.5, anchor.y + 0.5);
     return {{shiftedCenter(offset * (1.0 - 1.0 / effective), newZoom), newZoom}, m_size};

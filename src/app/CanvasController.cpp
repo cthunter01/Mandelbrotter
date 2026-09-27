@@ -308,7 +308,7 @@ void CanvasController::applyTile(const TileResult& tile)
 
 void CanvasController::finishRender(const RenderCompletion& completion)
 {
-    if (completion.generation != m_generation || completion.cancelled)
+    if (completion.generation != m_generation || completion.canceled)
     {
         return;
     }

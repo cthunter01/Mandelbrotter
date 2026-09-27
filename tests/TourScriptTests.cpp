@@ -33,7 +33,7 @@ bool listsTourExample(const std::vector<Bookmark>& list)
     return std::ranges::any_of(list, [](const Bookmark& b) { return b.name == "Tour example"; });
 }
 
-/// The user's state before the tour: fire-coloured Seahorse Valley with the overlay on and one
+/// The user's state before the tour: fire-colored Seahorse Valley with the overlay on and one
 /// bookmark.
 struct Started
 {
@@ -113,7 +113,7 @@ TEST(TourScript, EachStepPerformsItsAction)
     EXPECT_EQ(h.shell.highlights.back(), TourTarget::ITERATIONS);
     step(5);
     EXPECT_EQ(h.app.settings(), app::seahorseFire());
-    EXPECT_EQ(h.shell.highlights.back(), TourTarget::COLOURING);
+    EXPECT_EQ(h.shell.highlights.back(), TourTarget::COLORING);
     EXPECT_FALSE(h.app.showOrbit());
 
     step(6);

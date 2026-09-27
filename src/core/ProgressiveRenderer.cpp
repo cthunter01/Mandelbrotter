@@ -38,7 +38,7 @@ struct Scene
     FractalSpec                   fractal;
     Viewport                      viewport;
     int                           maxIterations;
-    std::optional<ReferenceOrbit> reference;  ///< the centre's orbit, in perturbation mode
+    std::optional<ReferenceOrbit> reference;  ///< the center's orbit, in perturbation mode
     std::optional<BlaTable>       bla;        ///< its jump table, unless the orbit was cut short
 
     /// Computes the reference orbit and its BLA table when the zoom calls for them; `stop` cuts
@@ -51,12 +51,12 @@ struct Scene
         const double zoom = viewport.view().zoom;
         if (usesPerturbation(zoom))
         {
-            // A centre that came in as doubles has fewer bits than its zoom needs; extending is
+            // A center that came in as doubles has fewer bits than its zoom needs; extending is
             // exact.
             const BigComplex& center = viewport.view().center;
             const int         bits   = std::max(center.fractionBits(), fractionBitsFor(zoom));
             reference.emplace(fractal, center.withFractionBits(bits), maxIterations, stop);
-            if (!reference->cancelled())
+            if (!reference->canceled())
             {
                 // Every pixel's delta-c lies within the half diagonal of the view.
                 const Complex corner = viewport.offsetFromCenter(0.0, 0.0);
@@ -115,7 +115,7 @@ struct TileState
 };
 
 /// Computes one pass over a tile. Samples lie on the tile-local grid (lx % step == 0, ly % step ==
-/// 0); those already computed by the previous (coarser) pass are reused. Returns false if cancelled
+/// 0); those already computed by the previous (coarser) pass are reused. Returns false if canceled
 /// part-way.
 bool renderPass(const Scene& scene, TileState& tile, int step, int previousStep,
                 const std::stop_token& stop)
@@ -160,7 +160,7 @@ TileResult toResult(const TileState& tile, std::uint64_t generation, int pass)
             .interior   = tile.interior};
 }
 
-/// Runs `work(tileIndex)` over all tiles on `threads` workers until done or cancelled.
+/// Runs `work(tileIndex)` over all tiles on `threads` workers until done or canceled.
 template <typename Work>
 void forEachTile(std::size_t tileCount, unsigned threads, const std::stop_token& stop,
                  const Work& work)
@@ -210,11 +210,11 @@ void coordinate(const std::stop_token& stop, const RenderJob& job, std::uint64_t
         tiles.emplace_back(rect);
     }
 
-    bool cancelled    = stop.stop_requested();  // the reference orbit may have been cut short
+    bool canceled     = stop.stop_requested();  // the reference orbit may have been cut short
     int  previousStep = 0;
     for (const int step : sanitizedPasses(job.passes))
     {
-        if (cancelled)
+        if (canceled)
         {
             break;
         }
@@ -226,7 +226,7 @@ void coordinate(const std::stop_token& stop, const RenderJob& job, std::uint64_t
         });
         if (stop.stop_requested())
         {
-            cancelled = true;
+            canceled = true;
             break;
         }
         previousStep = step;
@@ -236,7 +236,7 @@ void coordinate(const std::stop_token& stop, const RenderJob& job, std::uint64_t
     {
         const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now() - startTime);
-        onDone({.generation = generation, .cancelled = cancelled, .elapsed = elapsed});
+        onDone({.generation = generation, .canceled = canceled, .elapsed = elapsed});
     }
 }
 

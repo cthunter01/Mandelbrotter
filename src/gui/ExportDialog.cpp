@@ -48,7 +48,7 @@ ExportDialog::ExportDialog(wxWindow* parent, PixelSize initialSize)
     sizer->Add(grid, wxSizerFlags(1).Expand().Border(wxALL, FromDIP(12)));
     sizer->Add(new wxStaticText(
                    this, wxID_ANY,
-                   "The view keeps its centre and zoom; the shorter side shows the same extent."),
+                   "The view keeps its center and zoom; the shorter side shows the same extent."),
                wxSizerFlags().Border(wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(12)));
     sizer->Add(CreateStdDialogButtonSizer(wxOK | wxCANCEL),
                wxSizerFlags().Expand().Border(wxALL, FromDIP(8)));

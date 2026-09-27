@@ -21,7 +21,7 @@ class ReferenceOrbit
 {
 public:
     /// Iterates `center` under `spec` for at most `maxIter` steps. Looks at `stop` every few
-    /// hundred steps and keeps what it has when stopping is requested (cancelled()).
+    /// hundred steps and keeps what it has when stopping is requested (canceled()).
     ReferenceOrbit(const FractalSpec& spec, const BigComplex& center, int maxIter,
                    const std::stop_token& stop = {});
 
@@ -29,13 +29,13 @@ public:
     [[nodiscard]] std::span<const Complex> points() const noexcept { return m_points; }
     [[nodiscard]] int  length() const noexcept { return static_cast<int>(m_points.size()); }
     [[nodiscard]] bool escaped() const noexcept { return m_escaped; }
-    [[nodiscard]] bool cancelled() const noexcept { return m_cancelled; }
+    [[nodiscard]] bool canceled() const noexcept { return m_canceled; }
 
 private:
     FractalSpec          m_spec;
     std::vector<Complex> m_points;
     bool                 m_escaped{false};
-    bool                 m_cancelled{false};
+    bool                 m_canceled{false};
 };
 
 }  // namespace mandelbrotter

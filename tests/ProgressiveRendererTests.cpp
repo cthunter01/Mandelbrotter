@@ -185,7 +185,7 @@ TEST(Renderer, SyncRenderReportsProgressAndHonoursStop)
                      .has_value());
 }
 
-TEST(Renderer, TileGridCoversAreaOnceCentreFirst)
+TEST(Renderer, TileGridCoversAreaOnceCenterFirst)
 {
     const std::vector<PixelRect> tiles = mandelbrotter::tileGrid({0, 0, 70, 50}, 32);
     ASSERT_EQ(tiles.size(), 6U);
@@ -205,7 +205,7 @@ TEST(Renderer, TileGridCoversAreaOnceCentreFirst)
         }
     }
     EXPECT_TRUE(std::ranges::all_of(covered, [](int n) { return n == 1; }));
-    // The first tile is the one nearest the centre (35, 25): the tile at (32, 0) or (32, 32) are
+    // The first tile is the one nearest the center (35, 25): the tile at (32, 0) or (32, 32) are
     // equidistant candidates, and stable sorting keeps grid order, so (32, 0) comes first.
     EXPECT_EQ(tiles.front(), (PixelRect{32, 0, 32, 32}));
     EXPECT_TRUE(mandelbrotter::tileGrid({0, 0, 0, 10}, 32).empty());
@@ -216,7 +216,7 @@ TEST(Renderer, ProgressiveFinalResultEqualsSyncRender)
     ProgressiveRenderer renderer;
     const Collected     result =
         runJob(renderer, RenderJob{.settings = smallScene(), .size = kSize, .threads = 3});
-    EXPECT_FALSE(result.completion.cancelled);
+    EXPECT_FALSE(result.completion.canceled);
     EXPECT_EQ(result.completions, 1);
     EXPECT_EQ(result.completion.generation, renderer.generation());
     const auto expected = mandelbrotter::renderSync(smallScene(), kSize, 1);
@@ -291,7 +291,7 @@ TEST(Renderer, PerturbationStartsAboveTheThresholdZoom)
     EXPECT_TRUE(mandelbrotter::usesPerturbation(mandelbrotter::kMaxZoom));
 }
 
-TEST(Renderer, DeepRenderIteratesEveryPixelAsADeltaFromTheCentre)
+TEST(Renderer, DeepRenderIteratesEveryPixelAsADeltaFromTheCenter)
 {
     const RenderSettings settings = deepScene();
     ASSERT_TRUE(mandelbrotter::usesPerturbation(settings.view.zoom));
@@ -336,7 +336,7 @@ TEST(Renderer, CancelInterruptsTheReferenceOrbit)
     renderer.cancel();
     EXPECT_LT(std::chrono::steady_clock::now() - before, std::chrono::seconds(5));
     ASSERT_EQ(finished.wait_for(std::chrono::seconds(0)), std::future_status::ready);
-    EXPECT_TRUE(finished.get().cancelled);
+    EXPECT_TRUE(finished.get().canceled);
 }
 
 TEST(Renderer, CancelStopsAJobPromptlyAndReportsIt)
@@ -357,7 +357,7 @@ TEST(Renderer, CancelStopsAJobPromptlyAndReportsIt)
     EXPECT_LT(std::chrono::steady_clock::now() - before, std::chrono::seconds(10));
     ASSERT_EQ(finished.wait_for(std::chrono::seconds(0)), std::future_status::ready);
     const RenderCompletion completion = finished.get();
-    EXPECT_TRUE(completion.cancelled);
+    EXPECT_TRUE(completion.canceled);
     EXPECT_EQ(completion.generation, generation);
     EXPECT_FALSE(renderer.busy());
 }
@@ -379,11 +379,11 @@ TEST(Renderer, StartingAgainCancelsThePreviousJob)
     const Collected second =
         runJob(renderer, RenderJob{.settings = smallScene(), .size = kSize, .threads = 2});
     EXPECT_NE(first, second.completion.generation);
-    EXPECT_FALSE(second.completion.cancelled);
+    EXPECT_FALSE(second.completion.canceled);
     const std::scoped_lock lock(mutex);
     ASSERT_EQ(completions.size(), 1U);
     EXPECT_EQ(completions.front().generation, first);
-    EXPECT_TRUE(completions.front().cancelled);
+    EXPECT_TRUE(completions.front().canceled);
 }
 
 TEST(Renderer, DestructorCancelsARunningJob)
@@ -399,7 +399,7 @@ TEST(Renderer, DestructorCancelsARunningJob)
                        [done](const RenderCompletion& c) { done->set_value(c); });
     }
     ASSERT_EQ(finished.wait_for(std::chrono::seconds(0)), std::future_status::ready);
-    EXPECT_TRUE(finished.get().cancelled);
+    EXPECT_TRUE(finished.get().canceled);
 }
 
 TEST(Renderer, OddPassListsAreSanitised)

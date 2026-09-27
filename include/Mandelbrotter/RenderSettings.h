@@ -37,7 +37,7 @@ struct RenderSettings
 [[nodiscard]] int effectiveIterations(const RenderSettings& settings) noexcept;
 
 /// True when going from `from` to `to` needs the iteration data recomputed (rather than just
-/// recoloured).
+/// recolored).
 [[nodiscard]] bool needsRerender(const RenderSettings& from, const RenderSettings& to) noexcept;
 
 }  // namespace mandelbrotter

@@ -135,7 +135,7 @@ void writeHelpImages(const std::filesystem::path&                 dir,
         const std::optional<RgbImage> rendered = renderForExport(image.settings, options);
         if (!rendered)
         {
-            throw std::runtime_error("help images: render of " + image.file + " was cancelled");
+            throw std::runtime_error("help images: render of " + image.file + " was canceled");
         }
         writePng(dir / image.file, *rendered);
     }

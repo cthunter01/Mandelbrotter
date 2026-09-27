@@ -11,8 +11,8 @@
 namespace mandelbrotter
 {
 
-/// Per-pixel iteration results, kept separately from the colours so a palette change is just a
-/// recolour.
+/// Per-pixel iteration results, kept separately from the colors so a palette change is just a
+/// recolor.
 struct IterationBuffer
 {
     int                width{};
@@ -63,7 +63,7 @@ struct RgbImage
 
 [[nodiscard]] PixelRect intersect(PixelRect a, PixelRect b) noexcept;
 
-/// Colour the pixels of `rect` (clipped to the buffer) into `out`, which must have the buffer's
+/// Color the pixels of `rect` (clipped to the buffer) into `out`, which must have the buffer's
 /// size.
 void colorize(const IterationBuffer& buffer, PixelRect rect, const Palette& palette,
               const ColoringSettings& settings, RgbImage& out);

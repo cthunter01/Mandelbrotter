@@ -72,7 +72,7 @@ ReferenceOrbit::ReferenceOrbit(const FractalSpec& spec, const BigComplex& center
         }
         if (k % kStopCheckInterval == 0 && stop.stop_requested())
         {
-            m_cancelled = true;
+            m_canceled = true;
             return;
         }
         z = power(transform(spec.family, z), n) + c;

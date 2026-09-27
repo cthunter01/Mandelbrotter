@@ -8,7 +8,7 @@ Written 2026-09-26 from a survey of the code at commit `d941c5b` (version 0.8.3)
 
 - The rendering engine (`Mandelbrotter_lib`, ~5100 lines) is already independent of wxWidgets and the build
   enforces it. Nothing there changes.
-- The application behaviour is not: the model, navigation state machine, render bookkeeping, demo playback,
+- The application behavior is not: the model, navigation state machine, render bookkeeping, demo playback,
   guided tour, and the bookmark and snapshot policies all live inside wx subclasses in `src/gui/` (~3800 lines
   of `.cpp`), with no tests, because the test binary links only the core.
 - This plan introduces a new static library **`Mandelbrotter_app`** (`src/app/`, `include/Mandelbrotter/app/`,
@@ -18,7 +18,7 @@ Written 2026-09-26 from a survey of the code at commit `d941c5b` (version 0.8.3)
   toolkit could sit on the layer); a new library rather than folding the logic into the core; work on branch
   `app-layer`, one commit per green step; nothing pushed until asked; no version bump; the `Release` workflow is
   never run from this branch.
-- Behaviour stays identical, including every documented constant and text, except for two guided-tour bugs
+- Behavior stays identical, including every documented constant and text, except for two guided-tour bugs
   that the extraction makes testable (section 7).
 
 ## 2. Current state
@@ -49,7 +49,7 @@ application code lives in wx subclasses:
 | File (lines) | Application logic hiding there | Genuinely wx |
 |---|---|---|
 | `MainFrame` (785) | Owns the `RenderSettings` model, `BookmarkStore`, `DemoPlayer`, snapshot ("Back to where I was"), the tour's temporary bookmark; policies: family/Julia change resets the view, seed pick switches to Julia with a default view, demos and the tour stop each other, `addBookmark` stops demos so the temporary bookmark is never saved, `deleteBookmark` during the tour only stops the tour, help-action dispatch, status-bar texts, context-help routing, Esc/any-key handling | Menus, file/text/message/about dialogs, clipboard, sizer show/hide, status bar widget |
-| `FractalCanvas` (615) | Render bookkeeping (stale-generation tiles dropped, first-pass tile counting for `hasCoarsePicture`, per-tile colouring, shifted old picture kept after a pan, recolour vs re-render), the input state machine (3 px drag threshold, 1.25x per wheel notch, 2x key zoom, 10 % key pan, rubber band, right-click zoom out), orbit computation (exact `ReferenceOrbit` above the perturbation zoom, `orbit()` below, deep-Julia z0 rule), overlay geometry | Painting, `wxBitmap`, `wxTimer` resize debounce, mouse capture, cursors, key codes |
+| `FractalCanvas` (615) | Render bookkeeping (stale-generation tiles dropped, first-pass tile counting for `hasCoarsePicture`, per-tile coloring, shifted old picture kept after a pan, recolor vs re-render), the input state machine (3 px drag threshold, 1.25x per wheel notch, 2x key zoom, 10 % key pan, rubber band, right-click zoom out), orbit computation (exact `ReferenceOrbit` above the perturbation zoom, `orbit()` below, deep-Julia z0 rule), overlay geometry | Painting, `wxBitmap`, `wxTimer` resize debounce, mouse capture, cursors, key codes |
 | `DemoPlayer` (87) | Whole class is neutral: wall-clock sampling of a flight, frame dropping while the canvas is busy, status text | `wxEvtHandler` base, `wxTimer` |
 | `GuidedTour` (366) | The 11 steps (title, text, help page, target, action), the state machine (start/stop/next/back/showStep), baseline restore | Card creation, anchor rectangles, section highlight/scroll, frame-resize re-placement |
 | `TourCard` (135) | `placeNear` geometry, "Step N of M", Back/Finish/Learn-more enable rules | Everything else |
@@ -144,7 +144,7 @@ Mandelbrotter_configure_target(Mandelbrotter_app)
 | New header (`include/Mandelbrotter/app/`) | Contents | Extracted from |
 |---|---|---|
 | `format.h` | `formatCenter`, `formatZoom` (verbatim), `formatSeedComponent` (`"{:.10g}"`), `defaultBookmarkName(settings)` = `displayName(family) + " at " + formatZoom(zoom)`; unused `formatComplex` deleted | `wx_util.cpp:35-61`, `SidePanel.cpp:48-51`, `MainFrame.cpp:727-729` |
-| `scenes.h` | `kSeahorseValley`, `kJuliaSeed`, `kOrbitPoint`, `kTourDeepZoom = 1e10`, `kScreenshotDeepZoom = 1e12`; `viewAt(base, center, zoom)` (`clampZoom` + `fractionBitsFor`), `mandelbrotDefault()`, `burningShipDefault()`, `juliaExample()`, `seahorse(palette = "electric")`, `seahorseFire()` (density 32, offset 0.25), `deepSeahorse(zoom)` (last keyframe of `seahorse-dive`, re-centred at `zoom`), `screenshotBookmarks()` (the three scratch bookmarks) | the triplicated code in `GuidedTour.cpp`, `ScreenshotRun.cpp`, `MandelbrotterApp.cpp` |
+| `scenes.h` | `kSeahorseValley`, `kJuliaSeed`, `kOrbitPoint`, `kTourDeepZoom = 1e10`, `kScreenshotDeepZoom = 1e12`; `viewAt(base, center, zoom)` (`clampZoom` + `fractionBitsFor`), `mandelbrotDefault()`, `burningShipDefault()`, `juliaExample()`, `seahorse(palette = "electric")`, `seahorseFire()` (density 32, offset 0.25), `deepSeahorse(zoom)` (last keyframe of `seahorse-dive`, re-centered at `zoom`), `screenshotBookmarks()` (the three scratch bookmarks) | the triplicated code in `GuidedTour.cpp`, `ScreenshotRun.cpp`, `MandelbrotterApp.cpp` |
 | `startup.h` | `StartupOptions{settings, screenshotsDir}`, `kScratchDirName = "Mandelbrotter-screenshots"`, `scratchBookmarksPath(tempDir)` (creates and seeds), `bookmarksPathFor(options, userDataDir, tempDir)` | `MandelbrotterApp.cpp:28-68`; wx keeps the `wxStandardPaths` lookup and the static setter/getter |
 | `help_routing.h` | `HelpContext{Area{NONE, CANVAS, PANEL, EXPORT_DIALOG}, optional<PanelSection>, juliaControl}`, `helpPageFor(HelpContext)`; `HelpLinkKind{ACTION, EXTERNAL, PAGE}`, `classifyHelpLink(url)` | `MainFrame.cpp:82-98, 453-470`; `HelpController.cpp:119-141` |
 | `panel_model.h` | `PanelSection` enum (SidePanel keeps `using Section = app::PanelSection;`), `kOffsetSliderSteps = 1000`, `kPreviewIterations = 128`, `kPreviewThrottle = 50ms`; pure functions `offsetToSlider` / `sliderToOffset`, `parseSeed(re, im)` (`parseNumber<double>(trimSpaces())`, nullopt if either fails), `previewSeedFor(spec, hovered)` (Julia mode -> the fixed seed), `familyIndex` / `paletteIndex`, `effectiveLimitText`, `previewSettings(spec, seed, coloring)` | `SidePanel.cpp:306-433`, `JuliaPreview.cpp:99-105` |
@@ -349,7 +349,7 @@ private:
 ```
 
 Policies move verbatim from `MainFrame.cpp`: the canvas and panel wiring (L300-355), the status texts
-"Centre ...", "Zoom ... (deep)" above the perturbation zoom, "{} iterations", "Rendering...", "Rendered in {} ms",
+"Center ...", "Zoom ... (deep)" above the perturbation zoom, "{} iterations", "Rendering...", "Rendered in {} ms",
 "Saved {}", "Image copied to clipboard" (L389-427), the pointer field suppressed while a flight plays, the snapshot
 rules (L555-573), the temporary bookmark's equality search (L575-600), `runHelpAction` dispatch followed by
 `raiseWindow` (L479-521), `addBookmark` stopping demos first (L724).
@@ -367,7 +367,7 @@ What remains in `MainFrame` after the cut: the constructor (status bar, menus, `
 ### 3.7 `TourScript`
 
 ```cpp
-enum class TourTarget : std::uint8_t { CANVAS, FRACTAL, ITERATIONS, COLOURING, OVERLAY, BOOKMARKS };
+enum class TourTarget : std::uint8_t { CANVAS, FRACTAL, ITERATIONS, COLORING, OVERLAY, BOOKMARKS };
 
 struct TourStep
 {
@@ -410,7 +410,7 @@ inline constexpr auto kExportPollInterval  = std::chrono::milliseconds(50);
 class ExportTask
 {
 public:
-    enum class Outcome : std::uint8_t { RUNNING, SAVED, CANCELLED, FAILED };
+    enum class Outcome : std::uint8_t { RUNNING, SAVED, CANCELED, FAILED };
     ExportTask(RenderSettings, ExportOptions, std::filesystem::path);  // starts the jthread
     ~ExportTask();                                                      // request_stop + join
     int  progress() const;                    // 0..kExportProgressRange
@@ -422,7 +422,7 @@ public:
 ```
 
 `export_runner.cpp` becomes: create the task, run the `wxProgressDialog` loop
-(`while (!task.waitFor(kExportPollInterval)) { if (!dialog.Update(...)) { task.cancel(); dialog.Update(range - 1, "Cancelling..."); } }`),
+(`while (!task.waitFor(kExportPollInterval)) { if (!dialog.Update(...)) { task.cancel(); dialog.Update(range - 1, "Canceling..."); } }`),
 message box on `FAILED`.
 
 ### 3.9 Threading and deterministic tests
@@ -463,7 +463,7 @@ Each step leaves `cmake --workflow --preset dev` green and becomes one commit on
   `defaultBookmarkName` -> "Mandelbrot at 5000x".
 - **`BookmarkStoreTests`**: missing file -> empty list, no error; save/load round trip in a `TempDir`; garbage
   file -> error string; `remove` out of range is a no-op.
-- **`scenes_tests`**: `seahorse()` zoom, centre and palette; `deepSeahorse(z)` centre carries
+- **`scenes_tests`**: `seahorse()` zoom, center and palette; `deepSeahorse(z)` center carries
   `fractionBitsFor(z)` bits; `juliaExample()` is Julia with the seed and default view; `screenshotBookmarks()`
   three names in order; `viewAt` clamps the zoom.
 - **`startup_tests`**: `scratchBookmarksPath(tmp)` creates `tmp/Mandelbrotter-screenshots/bookmarks.json` whose
@@ -472,7 +472,7 @@ Each step leaves `cmake --workflow --preset dev` green and becomes one commit on
 - **`panel_model_tests`**: slider round trips (0, 0.25 -> 250, 1.999 -> 999, negative offsets); `parseSeed`
   trims and fails when either field is bad; `previewSeedFor` in and out of Julia mode; `familyIndex` /
   `paletteIndex` for every entry and an unknown name; `effectiveLimitText`; `previewSettings` has 128 iterations,
-  auto off, `defaultView`, the colouring copied.
+  auto off, `defaultView`, the coloring copied.
 - **`help_routing_tests`**: a table of (area, section, Julia control) -> page, including NONE -> index,
   CANVAS -> navigating, FRACTAL + Julia -> julia, EXPORT_DIALOG -> exporting; `classifyHelpLink` for
   "mandelbrotter:tour", "https://...", "http://...", "page.html".
@@ -484,18 +484,18 @@ Each step leaves `cmake --workflow --preset dev` green and becomes one commit on
   applied, the status is cleared, `finished` fires and the timer stops; `stop` while idle is a no-op; an empty
   flight is ignored; `play` while playing restarts.
 - **`ExportTaskTests`**: SAVED writes a decodable PNG and progress reaches the range; early `cancel` ->
-  CANCELLED and no file; an unwritable path -> FAILED with a message; destroying a running task joins.
+  CANCELED and no file; an unwritable path -> FAILED with a message; destroying a running task joins.
 - **`CanvasControllerTests`** (PostQueue): a wheel notch keeps the complex number under the cursor fixed
   (`Viewport::pixelCenter` before and after) and fires `onUserInput`; a 3 px press/release is a click and 4 px is
   a pan; a right click without a drag zooms out 2x at the pointer; shift-drag and right-drag give `zoomedToRect`
   of the inclusive rectangle; after a pan the image equals the `blitShifted` placeholder and `hasCoarsePicture()`
   is false until the first pass drains, then true; `rubberBand()` is normalised; stale-generation tiles are
   dropped (start A, start B, drain -> buffer equals a `renderSync` of B); the coarse flag flips after all
-  first-pass tiles; a palette-only `setSettings` recolours without a new generation; `imageVersion` changes;
+  first-pass tiles; a palette-only `setSettings` recolors without a new generation; `imageVersion` changes;
   the shallow orbit equals `orbit()` mapped through `toPixel` / `toLocal` and clamped to +-10000; the deep orbit
   uses `ReferenceOrbit` and a deep Julia orbit starts at the pointer; `pointerLeft` clears the orbit unless
   pinned; `showOrbitAt` reports through `onPointerMoved`; the key table (arrows pan 10 %, ZOOM_IN/OUT 2x at the
-  centre, HOME resets, ESCAPE cancels a drag and releases capture, ESCAPE is always handled); `captureLost`
+  center, HOME resets, ESCAPE cancels a drag and releases capture, ESCAPE is always handled); `captureLost`
   resets the drag and pan offset; pick mode reports `onSeedPicked`, starts no drag and requests the BULLSEYE
   then CROSS cursor; `setSize` followed by `resizeSettled` re-renders only when the size changed; destroying the
   controller with posts pending and then draining does not crash (asan); `onRenderStatus` goes rendering ->
@@ -545,7 +545,7 @@ Each step leaves `cmake --workflow --preset dev` green and becomes one commit on
    Any CI failure is reported with a proposed fix before it is implemented. `release.yml` is manual-dispatch only
    and is not run; `VERSION` stays 0.8.3 until a release is decided.
 
-## 7. Behaviour changes
+## 7. Behavior changes
 
 Deliberate and flagged; everything else, including every constant and every text, must be identical.
 
@@ -557,7 +557,7 @@ Deliberate and flagged; everything else, including every constant and every text
 4. The wx class `GuidedTour` is renamed `TourView` (its content becomes card, anchor and highlight plumbing; the
    file-equals-class convention).
 
-Kept as they are, being documented behaviour: the tour's temporary bookmark stays until the tour ends (the
+Kept as they are, being documented behavior: the tour's temporary bookmark stays until the tour ends (the
 step-7 card says so); Finish restores the baseline twice (idempotent, and the second restore covers a user zoom
 during the last step).
 
@@ -590,7 +590,7 @@ during the last step).
   (`load`, `refreshBookmarks`, `applySettings`) moves to `start()`, called once the widgets exist.
 - `Shell::panelBookmarks(span)` must be consumed synchronously by the toolkit (the store may change afterwards).
   `ProgressiveRenderer::start` cancels synchronously; the stale-tiles test relies on `finishRender` ignoring a
-  cancelled completion, as today.
+  canceled completion, as today.
 - `ScreenshotRun::finish` deletes `bookmarksPath().parent_path()`; that is only safe because screenshot mode
   always receives the scratch path. The invariant now lives in `startup.h` (`kScratchDirName`); do not pass a
   user path into screenshot mode.

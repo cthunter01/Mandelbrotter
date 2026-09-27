@@ -172,7 +172,7 @@ void AppController::reportError(std::string_view title, std::string_view message
 void AppController::updateStatusBar()
 {
     const ViewSpec& view = m_settings.view;
-    setStatus(StatusField::CENTER, "Centre " + formatCenter(view.center, view.zoom));
+    setStatus(StatusField::CENTER, "Center " + formatCenter(view.center, view.zoom));
     const std::string zoomText =
         formatZoom(view.zoom) + (usesPerturbation(view.zoom) ? " (deep)" : "");  // perturbation
     setStatus(StatusField::ZOOM, "Zoom " + zoomText);

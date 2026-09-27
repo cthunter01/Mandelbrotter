@@ -91,7 +91,7 @@ TEST(AppController, StartLoadsTheBookmarksAndShowsTheSettings)
     ASSERT_FALSE(h.shell.panelSettings.empty());
     EXPECT_EQ(h.shell.panelSettings.back(), app::seahorse());
     EXPECT_EQ(h.canvas.settings(), app::seahorse());
-    EXPECT_EQ(h.shell.status(StatusField::CENTER), "Centre -0.7436000000 + 0.1318000000i");
+    EXPECT_EQ(h.shell.status(StatusField::CENTER), "Center -0.7436000000 + 0.1318000000i");
     EXPECT_EQ(h.shell.status(StatusField::ZOOM), "Zoom 5000x");
     const int iterations = mandelbrotter::effectiveIterations(app::seahorse());
     EXPECT_EQ(h.shell.status(StatusField::ITERATIONS), std::to_string(iterations) + " iterations");
@@ -138,7 +138,7 @@ TEST(AppController, TheStatusBarMarksDeepZooms)
     h.app.applySettings(settings);
     EXPECT_EQ(h.shell.status(StatusField::ZOOM), "Zoom 2e+10x (deep)");
     EXPECT_EQ(h.shell.status(StatusField::CENTER),
-              "Centre -0.7500000000000000... + 0.1000000000000000...i");
+              "Center -0.7500000000000000... + 0.1000000000000000...i");
 }
 
 TEST(AppController, TheOrbitSwitchReachesTheCanvasAndTheShell)
@@ -218,7 +218,7 @@ TEST(AppController, NavigatingUpdatesThePanelAndTheStatusBar)
     EXPECT_DOUBLE_EQ(h.app.settings().view.zoom, 2.0);
     EXPECT_EQ(h.shell.status(StatusField::ZOOM), "Zoom 2x");
     EXPECT_EQ(h.shell.status(StatusField::CENTER),
-              "Centre " + app::formatCenter(h.canvas.settings().view.center, 2.0));
+              "Center " + app::formatCenter(h.canvas.settings().view.center, 2.0));
     ASSERT_EQ(h.shell.panelSettings.size(), pushes + 1);
     EXPECT_EQ(h.shell.panelSettings.back(), h.app.settings());
 }

@@ -6,9 +6,9 @@
 <p>Ordinary double-precision numbers stop telling neighbouring pixels apart at a zoom of roughly
 1e13. Mandelbrotter goes to 1e300 by changing how it computes:</p>
 <ul>
-<li>The <b>centre</b> of the view is kept as a big number with as many binary digits as the zoom needs
+<li>The <b>center</b> of the view is kept as a big number with as many binary digits as the zoom needs
 (plus some to spare), so it never loses its place however deep you go.</li>
-<li>Above a zoom of <b>1e8</b> the status bar adds <b>"(deep)"</b>: the centre's own orbit is computed
+<li>Above a zoom of <b>1e8</b> the status bar adds <b>"(deep)"</b>: the center's own orbit is computed
 once at full precision (the reference orbit), and every pixel is then iterated as a small difference
 from it, which fits into ordinary doubles again. This is called perturbation; when a pixel's difference
 drifts away from the reference it is re-based, which keeps the picture free of the glitches that

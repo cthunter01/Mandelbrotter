@@ -38,7 +38,7 @@ TEST(HelpRouting, FocusPicksThePage)
         {focus(Area::PANEL, PanelSection::FRACTAL), "fractals.html"},
         {focus(Area::PANEL, PanelSection::FRACTAL, true), "julia.html"},
         {focus(Area::PANEL, PanelSection::ITERATIONS), "iterations.html"},
-        {focus(Area::PANEL, PanelSection::COLOURING), "colouring.html"},
+        {focus(Area::PANEL, PanelSection::COLORING), "coloring.html"},
         {focus(Area::PANEL, PanelSection::OVERLAY), "orbit.html"},
         {focus(Area::PANEL, PanelSection::BOOKMARKS), "bookmarks.html"},
     };
@@ -50,8 +50,8 @@ TEST(HelpRouting, FocusPicksThePage)
 
 TEST(HelpRouting, TheJuliaFlagOnlyMattersInTheFractalBox)
 {
-    EXPECT_EQ(mandelbrotter::app::helpPageFor(focus(Area::PANEL, PanelSection::COLOURING, true)),
-              "colouring.html");
+    EXPECT_EQ(mandelbrotter::app::helpPageFor(focus(Area::PANEL, PanelSection::COLORING, true)),
+              "coloring.html");
     EXPECT_EQ(mandelbrotter::app::helpPageFor(focus(Area::CANVAS, std::nullopt, true)),
               "navigating.html");
 }

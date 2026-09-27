@@ -53,7 +53,7 @@ RenderSettings at(RenderSettings settings, std::string_view re, std::string_view
     const auto center  = BigComplex::fromDecimal(re, im, fractionBitsFor(settings.view.zoom));
     if (!center)
     {
-        throw std::logic_error("flights: malformed centre");
+        throw std::logic_error("flights: malformed center");
     }
     settings.view.center = *center;
     return settings;
@@ -149,7 +149,7 @@ Flight paletteSweep()
     end.coloring.offset           = 1.0;
     return {.id          = "palette-sweep",
             .title       = "Palette sweep",
-            .description = "The same view while the palette cycles once through its colours.",
+            .description = "The same view while the palette cycles once through its colors.",
             .keyframes   = {leg(settings, milliseconds{0}), leg(end, seconds{12}, Easing::LINEAR)}};
 }
 
@@ -218,7 +218,7 @@ RenderSettings interpolateSettings(const RenderSettings& from, const RenderSetti
     const double zoom     = zoomFrom * std::pow(zoomTo / zoomFrom, u);
     out.view.zoom         = zoom;
 
-    // The target keeps shrinking towards the middle of the screen: its offset from the centre,
+    // The target keeps shrinking towards the middle of the screen: its offset from the center,
     // measured in screen widths, is (1 - u) times what it was at the start.
     const int        bits   = fractionBitsFor(std::max(zoomFrom, zoomTo));
     const BigComplex from0  = from.view.center.withFractionBits(bits);

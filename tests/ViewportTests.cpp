@@ -154,7 +154,7 @@ TEST(Viewport, BigPositionsKeepEveryDigit)
     const int         bits = mandelbrotter::fractionBitsFor(mandelbrotter::kMaxZoom);
     const BigComplex  center{*BigFixed::fromDecimal(re, bits), *BigFixed::fromDecimal(im, bits)};
     const Viewport    vp{{center, mandelbrotter::kMaxZoom}, kSize};
-    // The middle of the viewport is the centre itself, digits intact...
+    // The middle of the viewport is the center itself, digits intact...
     const BigComplex middle = vp.toBig(400.0, 300.0);
     EXPECT_EQ(middle, center);
     EXPECT_EQ(middle.re.toDecimal(34), re);
