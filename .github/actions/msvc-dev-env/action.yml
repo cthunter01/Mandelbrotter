@@ -1,0 +1,26 @@
+# The environment of a Developer PowerShell for VS for the rest of the job: the newest Visual Studio's x64
+# C++ compiler (cl, link, INCLUDE, LIB, PATH, ...), which the msvc presets need. In place of ilammy/msvc-dev-cmd,
+# whose Node.js 20 runtime GitHub deprecated: vcvarsall.bat runs once, and every variable it adds or changes is
+# written to GITHUB_ENV. Windows runners only; the repository must be checked out first (a local action).
+name: MSVC developer environment
+description: Sets up the Visual Studio x64 C++ build environment for the steps that follow.
+runs:
+  using: composite
+  steps:
+    - name: Set up the MSVC developer environment
+      shell: pwsh
+      run: |
+        $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+        $vs = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+        if (-not $vs) { throw 'No Visual Studio installation with the x64 C++ tools was found' }
+        $vcvars = Join-Path $vs 'VC\Auxiliary\Build\vcvarsall.bat'
+        $before = @{}
+        Get-ChildItem env: | ForEach-Object { $before[$_.Name] = $_.Value }
+        $after = cmd /c "`"$vcvars`" x64 >nul && set"
+        if ($LASTEXITCODE -ne 0) { throw "$vcvars x64 failed with exit code $LASTEXITCODE" }
+        foreach ($line in $after) {
+          if ($line -match '^([^=]+)=(.*)$' -and $before[$Matches[1]] -cne $Matches[2]) {
+            "$($Matches[1])=$($Matches[2])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          }
+        }
+        Write-Output "MSVC environment from $vs"

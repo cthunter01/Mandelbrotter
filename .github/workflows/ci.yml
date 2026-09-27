@@ -28,7 +28,7 @@ jobs:
         run: pacman -Syu --noconfirm --needed cmake ninja clang git ccache pkgconf gtk3 libpng zlib
       - uses: actions/checkout@v7
       - name: Restore compiler cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ github.workspace }}/.ccache
           key: ccache-${{ matrix.preset }}-${{ github.run_id }}
@@ -53,7 +53,7 @@ jobs:
         run: brew install ninja ccache
       - uses: actions/checkout@v7
       - name: Restore compiler cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ github.workspace }}/.ccache
           key: ccache-macos-${{ matrix.preset }}-${{ github.run_id }}
@@ -63,7 +63,8 @@ jobs:
       - name: Compiler cache statistics
         run: ccache -sv
 
-  # MSVC from the runner's Visual Studio; msvc-dev-cmd sets up the Developer PowerShell environment.
+  # MSVC from the runner's Visual Studio; the local msvc-dev-env action sets up the Developer PowerShell
+  # environment (release.yml uses it too, so every CI run checks it).
   windows:
     name: windows / ci-msvc
     runs-on: windows-latest
@@ -71,9 +72,9 @@ jobs:
       - name: Install ccache
         run: choco install ccache --no-progress
       - uses: actions/checkout@v7
-      - uses: ilammy/msvc-dev-cmd@v1
+      - uses: ./.github/actions/msvc-dev-env
       - name: Restore compiler cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ github.workspace }}/.ccache
           key: ccache-windows-ci-msvc-${{ github.run_id }}

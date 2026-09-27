@@ -82,9 +82,9 @@ jobs:
       - name: Install Ninja
         if: runner.os == 'macOS'
         run: brew install ninja
-      - uses: ilammy/msvc-dev-cmd@v1
-        if: runner.os == 'Windows'
       - uses: actions/checkout@v7
+      - uses: ./.github/actions/msvc-dev-env   # a local action: after the checkout
+        if: runner.os == 'Windows'
       - name: Configure, build, test and package
         run: cmake --workflow --preset ${{ matrix.preset }}
       # The tests ran the build tree's bundle; check the packaged one, as users get it.
