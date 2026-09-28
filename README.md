@@ -147,7 +147,7 @@ the mouse: points inside the set settle into a loop, points outside fly off.
 - **File > Export view** writes a small JSON file, with the center spelled out in as many digits as the zoom needs,
   so a view reloads bit for bit; `Mandelbrotter --view my-view.json` opens it.
 
-Bookmarks live in `~/.local/share/Mandelbrotter/bookmarks.json` on Linux,
+Bookmarks live in `~/.Mandelbrotter/bookmarks.json` on Linux,
 `~/Library/Application Support/Mandelbrotter/bookmarks.json` on macOS and `%APPDATA%\Mandelbrotter\bookmarks.json`
 on Windows.
 
@@ -252,6 +252,26 @@ cmake --build --preset clang-release       # build (`clang-release` is a build p
 ./build/clang-release/bin/Mandelbrotter
 ```
 
+### The Qt front end
+
+The window also exists in Qt 6 Widgets, with every function of the wxWidgets one (the look follows Qt; the side
+panel is a dock you can move or close). It is chosen per build with `MANDELBROTTER_GUI=qt` (`wx` is the default,
+and `none` builds the command line only, without fetching wxWidgets: preset `headless`). Qt is not built from
+source: install Qt 6.8 or later.
+
+- **Linux**: Arch `pacman -S qt6-base`; Debian 13 or Ubuntu 25.04 and later `apt install qt6-base-dev`.
+- **macOS**: `brew install qtbase` (or `qt`), then `export CMAKE_PREFIX_PATH=$(brew --prefix qtbase)`.
+- **Windows**: the Qt online installer or `aqtinstall` (`python -m aqt install-qt windows desktop 6.8.3
+  win64_msvc2022_64`); set `CMAKE_PREFIX_PATH` to the kit (`C:\Qt\6.8.3\msvc2022_64`) and put its `bin` on `PATH`,
+  which the tests and the program need to find Qt's DLLs.
+
+```sh
+cmake --workflow --preset dev-qt           # configure + build + test (Clang, Debug); Windows: dev-msvc-qt
+./build/clang-debug-qt/bin/Mandelbrotter   # clang-release-qt for interactive speed
+```
+
+The Qt build keeps its bookmarks in the same file as the wx build. Releases are built with wxWidgets only.
+
 ## For developers
 
 ### Presets
@@ -272,12 +292,18 @@ Every preset builds into `build/<preset>/`. A preset only exists on the platform
 | `coverage` | Linux, macOS | Clang Debug with source-based coverage; report in `build/coverage/coverage/` |
 | `ci-gcc`, `ci-clang`, `ci-msvc` | Linux / Linux, macOS / Windows | Release, warnings as errors (what CI runs) |
 | `dist-linux`, `dist-macos`, `dist-windows` | Linux, macOS, Windows | The release archives (see [Releases](#releases)) |
+| `headless` (workflow) | Linux, macOS | Clang Debug without any GUI (the command line only; wxWidgets is not fetched) |
+| `dev-qt`, `dev-msvc-qt` (workflows) | Linux, macOS / Windows | The Qt front end, Debug: configure, build, test |
+| `clang-debug-qt`, `clang-release-qt`, `gcc-debug-qt`, `msvc-debug-qt`, `msvc-release-qt` | as their wx twins | The Qt front end per compiler and build type |
+| `ci-gcc-qt`, `ci-clang-qt`, `ci-msvc-qt`, `asan-qt`, `tidy-qt` | as their wx twins | The Qt front end in CI (`asan-qt` and `tidy-qt` skip the slow screenshot test) |
 
 Configure, build and test can also be run separately: `cmake --preset clang-debug`,
 `cmake --build --preset clang-debug`, `ctest --preset clang-debug`. The `dist-*` workflow presets also package.
 
-CI (GitHub Actions) runs `ci-gcc`, `ci-clang`, `asan` and `tidy` on Arch Linux, `ci-clang` on macOS, `ci-msvc` on
-Windows, and a clang-format check.
+CI (GitHub Actions) runs `ci-gcc`, `ci-clang`, `asan`, `tidy` and `headless` on Arch Linux, `ci-clang` on macOS,
+`ci-msvc` on Windows, and a clang-format check (`ci.yml`). The Qt front end has a workflow of its own
+(`ci-qt.yml`: `ci-gcc-qt`, `tidy-qt` and `asan-qt` on Arch Linux, `ci-clang-qt` on macOS with Homebrew's Qt,
+`ci-msvc-qt` on Windows with Qt 6.8), so it never holds up a release.
 
 ### Releases
 
@@ -318,16 +344,20 @@ Build one locally with `cmake --workflow --preset dist-linux` (or `dist-macos`, 
   unit-tested; a second GUI toolkit could sit on it.
 - `src/gui/`: the wxWidgets layer (`Mandelbrotter_gui`), a thin view over the application layer: main frame,
   canvas, side panel, dialogs, the help window, the tour's card and the screenshot mode.
-- `src/main.cpp`: the executable; dispatches between the CLI and the GUI. Beside it, what each platform needs
+- `src/qt/`: the Qt 6 Widgets layer (`Mandelbrotter_qt`), the same thin view in Qt, built instead of `src/gui/`
+  with `MANDELBROTTER_GUI=qt`.
+- `src/main.cpp`: the executable, free of any toolkit; it runs the command line or hands over to the GUI build's
+  `runGui()` (`main_wx.cpp`, `qt/run_qt.cpp`, or `main_headless.cpp` without a GUI). Beside it, what each platform needs
   around the executable: `Mandelbrotter.rc` (Windows resources), `Mandelbrotter.plist.in` (the macOS bundle's
   Info.plist) and `Mandelbrotter.desktop` (the Linux menu entry).
 - `src/icons/`: the application icon, rendered by Mandelbrotter itself.
 - `src/tools/`: build-time tools (`Mandelbrotter_embed` turns the help book and the icon into C++ sources).
-- `docs/help/`: the help book: hand-written pages in wxHTML, the contents tree and index, and the images. It is
-  zipped and embedded into the executable at build time.
+- `docs/help/`: the help book: hand-written pages in wxHTML, the contents tree and index, and the images
+  (`images-qt/` holds the Qt build's screenshots). It is embedded into the executable at build time.
 - `docs/readme/`: this page's banner and animations.
 - `tests/`: GoogleTest suites for the core and the application layer (driven through recording stand-ins for
-  the toolkit), plus a headless integration test that runs the real executable.
+  the toolkit), plus a headless integration test that runs the real executable; `tests/qt/` tests the Qt
+  widgets on Qt's offscreen platform.
 - `cmake/`: dependency and build configuration.
 
 Doxygen documentation: `cmake --build --preset clang-debug --target docs` (needs Doxygen).
@@ -346,7 +376,15 @@ build on Linux:
 
   The run renders the example pictures, opens the window, walks it through the documented states, saves each as a
   PNG and quits. Run it twice when the pictures themselves changed, so the screenshot of the help window shows the
-  new ones. It never touches your own bookmarks. The pages under `docs/help/` are plain HTML (the subset wxHTML
+  new ones. It never touches your own bookmarks. The Qt build has its own screenshots, taken offscreen (no desktop
+  needed):
+
+  ```sh
+  cmake --build --preset clang-release-qt
+  QT_QPA_PLATFORM=offscreen:configfile=tests/qt/offscreen.json \
+      ./build/clang-release-qt/bin/Mandelbrotter --screenshots docs/help/images-qt
+  ```
+ The pages under `docs/help/` are plain HTML (the subset wxHTML
   renders; see `docs/help/README.md`) and are checked by the tests: every link, image and "Try it" action must
   resolve.
 - **This page's banner and demo animations**: `docs/readme/make_media.sh` (needs ImageMagick 7 and ffmpeg). The
