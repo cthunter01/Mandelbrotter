@@ -263,7 +263,7 @@ bool AppController::runCommand(Command command, std::size_t flight)
         case Command::SHOW_PANEL:
         case Command::SHOW_ORBIT:
         case Command::ADD_BOOKMARK:
-        case Command::HELP_CONTENTS:
+        case Command::CONTENTS:
         case Command::CONTEXT_HELP:
         case Command::REFERENCE:
         case Command::ABOUT:

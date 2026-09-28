@@ -204,8 +204,8 @@ TEST(Commands, RolesAndEnableRules)
             case Command::ABOUT:
                 EXPECT_EQ(entry.role, MenuRole::ABOUT);
                 break;
-            case Command::HELP_CONTENTS:
-                EXPECT_EQ(entry.role, MenuRole::HELP_CONTENTS);
+            case Command::CONTENTS:
+                EXPECT_EQ(entry.role, MenuRole::CONTENTS);
                 break;
             case Command::STOP_DEMO:
                 EXPECT_EQ(entry.enable, EnableRule::WHILE_DEMO);
@@ -221,7 +221,7 @@ TEST(Commands, RolesAndEnableRules)
     }
     EXPECT_EQ(roles[MenuRole::QUIT], 1);
     EXPECT_EQ(roles[MenuRole::ABOUT], 1);
-    EXPECT_EQ(roles[MenuRole::HELP_CONTENTS], 1);
+    EXPECT_EQ(roles[MenuRole::CONTENTS], 1);
 }
 
 TEST(Commands, ThePanelStartsShownAndTheOrbitHidden)

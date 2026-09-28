@@ -384,7 +384,7 @@ TEST(AppController, TheToolkitsCommandsAreLeftToIt)
     for (const Command command :
          {Command::SAVE_IMAGE, Command::COPY_IMAGE, Command::EXPORT_VIEW, Command::IMPORT_VIEW,
           Command::QUIT, Command::SHOW_PANEL, Command::SHOW_ORBIT, Command::ADD_BOOKMARK,
-          Command::HELP_CONTENTS, Command::CONTEXT_HELP, Command::REFERENCE, Command::ABOUT})
+          Command::CONTENTS, Command::CONTEXT_HELP, Command::REFERENCE, Command::ABOUT})
     {
         EXPECT_FALSE(h.app.runCommand(command)) << static_cast<int>(command);
     }

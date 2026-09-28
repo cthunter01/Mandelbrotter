@@ -97,7 +97,7 @@ TEST(MainWindow, EveryMenuEntryIsAnAction)
             case app::MenuRole::ABOUT:
                 EXPECT_EQ(action->menuRole(), QAction::AboutRole);
                 break;
-            case app::MenuRole::HELP_CONTENTS:
+            case app::MenuRole::CONTENTS:
             case app::MenuRole::NONE:
                 EXPECT_EQ(action->menuRole(), QAction::NoRole);
                 break;

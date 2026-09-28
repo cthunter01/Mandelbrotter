@@ -52,7 +52,7 @@ QAction::MenuRole menuRole(app::MenuRole role)
             return QAction::QuitRole;
         case app::MenuRole::ABOUT:
             return QAction::AboutRole;
-        case app::MenuRole::HELP_CONTENTS:
+        case app::MenuRole::CONTENTS:
         case app::MenuRole::NONE:
             break;
     }
@@ -270,7 +270,7 @@ void MainWindow::runCommand(app::Command command, std::size_t flight, bool check
         case app::Command::EXPORT_VIEW:
         case app::Command::IMPORT_VIEW:
         case app::Command::ADD_BOOKMARK:
-        case app::Command::HELP_CONTENTS:
+        case app::Command::CONTENTS:
         case app::Command::CONTEXT_HELP:
         case app::Command::REFERENCE:
         case app::Command::ZOOM_IN:

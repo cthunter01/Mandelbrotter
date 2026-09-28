@@ -9,7 +9,8 @@ namespace mandelbrotter::app
 {
 
 /// What a menu item does. AppController::runCommand runs the ones that need no toolkit; the
-/// toolkit runs the others (dialogs, the clipboard, the window and its panel).
+/// toolkit runs the others (dialogs, the clipboard, the window and its panel). The names avoid the
+/// Windows headers' macros (winuser.h defines HELP_CONTENTS, for instance).
 enum class Command : std::uint8_t
 {
     SAVE_IMAGE,
@@ -23,7 +24,7 @@ enum class Command : std::uint8_t
     ZOOM_OUT,
     RESET_VIEW,
     ADD_BOOKMARK,
-    HELP_CONTENTS,
+    CONTENTS,
     CONTEXT_HELP,
     REFERENCE,
     FLIGHT,  ///< one per built-in flight, see MenuEntry::flight
@@ -39,7 +40,7 @@ enum class MenuRole : std::uint8_t
     NONE,
     QUIT,
     ABOUT,
-    HELP_CONTENTS,
+    CONTENTS,
 };
 
 /// When an item is enabled; everything but ALWAYS asks AppController::commandEnabled.

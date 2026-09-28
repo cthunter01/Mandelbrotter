@@ -196,7 +196,7 @@ void MainFrame::appendMenuEntries(wxMenu& menu, const std::vector<app::MenuEntry
             case app::MenuRole::ABOUT:
                 id = wxID_ABOUT;
                 break;
-            case app::MenuRole::HELP_CONTENTS:
+            case app::MenuRole::CONTENTS:
                 id = wxID_HELP_CONTENTS;
                 break;
             case app::MenuRole::NONE:
@@ -270,7 +270,7 @@ void MainFrame::runCommand(app::Command command, std::size_t flight, bool checke
         case app::Command::ADD_BOOKMARK:
             onAddBookmark();
             break;
-        case app::Command::HELP_CONTENTS:
+        case app::Command::CONTENTS:
             m_help.showContents();
             break;
         case app::Command::CONTEXT_HELP:
