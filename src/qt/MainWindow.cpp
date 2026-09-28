@@ -36,6 +36,7 @@
 #include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/app/AppController.h"
 #include "Mandelbrotter/app/DemoPlayer.h"
+#include "Mandelbrotter/app/TourScript.h"
 #include "Mandelbrotter/app/commands.h"
 #include "Mandelbrotter/app/help_routing.h"
 #include "Mandelbrotter/app/ui_text.h"
@@ -89,7 +90,8 @@ MainWindow::MainWindow(RenderSettings initial, std::filesystem::path bookmarksPa
     // Titled before its toggle action is taken: the action copies the title.
     m_dock(new QDockWidget(u"Settings"_s, this)),
     m_panel(new SidePanel(m_dock)),
-    m_app(std::move(initial), std::move(bookmarksPath), m_canvas->controller(), makeShell())
+    m_app(std::move(initial), std::move(bookmarksPath), m_canvas->controller(), makeShell()),
+    m_tourView(*this)
 {
     setWindowTitle(toQt(app::kWindowTitle));
     setCentralWidget(m_canvas);
@@ -178,7 +180,13 @@ app::AppController::Shell MainWindow::makeShell()
                 }
             },
         .now  = {},
-        .tour = {},
+        .tour = {.showCard = [this](const app::TourStep& step, std::size_t index,
+                                    std::size_t count) { m_tourView.showCard(step, index, count); },
+                 .hideCard = [this] { m_tourView.hideCard(); },
+                 .highlight =
+                     [this](std::optional<app::TourTarget> target) {
+                         m_tourView.highlight(target);
+                     }},
     };
 }
 

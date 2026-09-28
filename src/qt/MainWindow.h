@@ -28,6 +28,7 @@
 #include "Mandelbrotter/app/help_routing.h"
 #include "Mandelbrotter/exporter.h"
 #include "qt/ExportDialog.h"
+#include "qt/TourView.h"
 
 namespace mandelbrotter::qt
 {
@@ -89,8 +90,9 @@ public:
     /// True when `event` is the shortcut of one of the menu items.
     [[nodiscard]] bool isMenuShortcut(const QKeyEvent& event) const;
     /// The Save image as PNG dialog, modeless; a second call raises it.
-    void showExportDialog();
-    void closeExportDialog();
+    void                    showExportDialog();
+    void                    closeExportDialog();
+    [[nodiscard]] TourView& tourView() noexcept { return m_tourView; }
     /// The help window, created on first use.
     [[nodiscard]] HelpWindow& help();
     [[nodiscard]] bool        helpShown() const noexcept;
@@ -147,6 +149,7 @@ private:
     QString                                          m_pointerText;  ///< under a status tip
     bool                                             m_showingTip{false};
     app::AppController                               m_app;  ///< after the widgets its shell drives
+    TourView                                         m_tourView;
     std::unique_ptr<HelpWindow>                      m_help;  ///< a top-level window of its own
 };
 

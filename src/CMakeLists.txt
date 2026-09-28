@@ -152,7 +152,9 @@ if(MANDELBROTTER_GUI STREQUAL "qt")
         qt/platform.cpp
         qt/qt_util.cpp
         qt/run_qt.cpp
-        qt/SidePanel.cpp)
+        qt/SidePanel.cpp
+        qt/TourCard.cpp
+        qt/TourView.cpp)
     add_library(Mandelbrotter::qt ALIAS Mandelbrotter_qt)
     target_include_directories(Mandelbrotter_qt PUBLIC ${PROJECT_SOURCE_DIR}/src)
     target_link_libraries(Mandelbrotter_qt PUBLIC
