@@ -14,6 +14,8 @@ macOS (Apple Clang) and Windows (MSVC).
   `build/clang-debug/bin/Mandelbrotter --render out.png --size 640x400`
 - Before finishing a change, also run: `cmake --workflow --preset tidy` (clang-tidy, warnings are errors) and
   `cmake --workflow --preset asan` (AddressSanitizer + UBSan); `cmake --workflow --preset tsan` for renderer changes
+- The Qt front end (`MANDELBROTTER_GUI=qt`, needs Qt 6.8+ installed): `cmake --workflow --preset dev-qt`, and
+  `tidy-qt` and `asan-qt` before finishing a change to it; `headless` builds without any GUI (no wxWidgets)
 - On Windows the presets are `msvc-debug` (workflow `dev-msvc`), `msvc-release` and `ci-msvc`, and cmake must run
   in a Developer PowerShell for VS. `tidy`, `asan`, `tsan` and `coverage` exist on Linux and macOS only
 - Formatting is automatic: a Claude Code hook (`.claude/hooks/format-cpp.sh`) runs clang-format on every C/C++
@@ -69,9 +71,10 @@ runtime; macOS and Windows are self-contained), so raise `VERSION` in `project()
   CSS) and `images/` (committed; `ui-*.png` are screenshots, the rest rendered examples from `helpImageSpecs()`).
   Zipped and embedded at build time; `tests/help_book_tests.cpp` checks every link, image and action link.
   Authoring notes in `docs/help/README.md`
-- `src/main.cpp`: the executable. `wxIMPLEMENT_APP_NO_MAIN` must stay in this file (in a static library the
-  linker drops the app initializer); `main()` parses the command line, runs the CLI, or hands the resolved
-  settings to the GUI and calls `wxEntry` with no arguments. Beside it, each platform's wrapping:
+- `src/main.cpp`: the executable's `main()`, free of any toolkit: `app::prepareStartup()` runs the command line,
+  `runGui()` (`src/gui_entry.h`) opens the window. The wx build defines it in `src/main_wx.cpp`, where
+  `wxIMPLEMENT_APP_NO_MAIN` must stay (in a static library the linker drops the app initializer), the Qt build in
+  `src/qt/run_qt.cpp`, a build without a GUI in `src/main_headless.cpp`. Beside it, each platform's wrapping:
   `Mandelbrotter.rc` (Windows: the icon, and wxWidgets' resources, from which wxMSW loads stock cursors such as
   `wxCURSOR_BULLSEYE`), `Mandelbrotter.plist.in` (macOS: the executable is `Mandelbrotter.app`, signed ad hoc when
   installed) and `Mandelbrotter.desktop` (Linux: installed with the icon, named after the window class)
@@ -130,3 +133,13 @@ runtime; macOS and Windows are self-contained), so raise `VERSION` in `project()
   `wxString::Format`/`wxLogXXX` varargs (use `std::format` + `toWx`). Sizes, borders and pen widths in pixels go
   through `FromDIP()`: the Windows executable is per-monitor DPI aware, so wxMSW does not scale raw pixel values
   (GTK and macOS scale them already)
+- Qt rules (`src/qt/`, namespace `mandelbrotter::qt`, headers beside sources included as `"qt/x.h"`, a class in
+  `src/qt/MyClass.h`/`.cpp`): Qt Widgets, no QML; no `Q_OBJECT`, no signals or slots of our own, no moc, uic or
+  rcc automation (`AUTOMOC`/`AUTOUIC`/`AUTORCC` off on our targets); `connect()` only with lambdas or Qt's
+  member-function pointers and always with a context object; callbacks between our classes are `std::function`
+  members. Text crosses the boundary only through `toQt()`/`fromQt()` from `qt/qt_util.h` (UTF-8); literals come
+  from `app/ui_text.h` or `commands.h`, or `u"..."_s` when Qt-only. Programmatic updates of controls run under
+  `QSignalBlocker` (Qt, unlike wx, signals them). A widget closed from inside its own signal is `deleteLater()`ed
+  and our pointer to it nulled at once. Sizes are logical pixels (Qt scales them). The targets compile with
+  `QT_NO_KEYWORDS`, `QT_NO_CAST_FROM_ASCII`/`TO_ASCII` and deprecations capped at 6.8; include Qt headers as
+  `<QWidget>`. The only `#ifdef` platform split of the layer is `src/qt/platform.cpp`

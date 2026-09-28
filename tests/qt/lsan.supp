@@ -1,0 +1,7 @@
+# LeakSanitizer suppressions for the Qt view tests (the asan-qt preset). Qt and the system libraries it loads
+# keep caches for the life of the process; none of these may ever match our own libraries.
+leak:libfontconfig
+leak:libQt6Gui
+leak:libQt6Core
+leak:libQt6Widgets
+leak:libdbus

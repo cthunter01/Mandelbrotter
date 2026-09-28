@@ -1,0 +1,7 @@
+# The Qt view tests: the test relaxations plus the Qt layer's (parent-owned widgets, forwarding headers, QEvent
+# casts).
+InheritParentConfig: true
+Checks: >
+  -cppcoreguidelines-owning-memory,
+  -misc-include-cleaner,
+  -cppcoreguidelines-pro-type-static-cast-downcast

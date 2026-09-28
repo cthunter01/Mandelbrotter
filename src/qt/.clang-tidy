@@ -1,0 +1,8 @@
+# The Qt layer: parent-owned widgets are created with `new`, Qt's <QWidget>-style headers forward to the real
+# ones, and event handlers cast QEvent* to the event's class, so three checks from the project config do not
+# fit here.
+InheritParentConfig: true
+Checks: >
+  -cppcoreguidelines-owning-memory,
+  -misc-include-cleaner,
+  -cppcoreguidelines-pro-type-static-cast-downcast

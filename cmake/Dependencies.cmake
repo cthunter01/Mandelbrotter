@@ -54,6 +54,17 @@ add_library(stb_impl STATIC EXCLUDE_FROM_ALL ${stb_BINARY_DIR}/stb_impl.cpp)
 add_library(stb::stb ALIAS stb_impl)
 target_include_directories(stb_impl SYSTEM PUBLIC ${stb_SOURCE_DIR})
 
+# Qt 6 Widgets (MANDELBROTTER_GUI=qt): a shared, installed Qt (distribution packages, Homebrew, or aqtinstall on
+# Windows), found with find_package; Qt is LGPL and not built from source here. CMAKE_PREFIX_PATH points at it
+# where it is not on the default search path.
+if(MANDELBROTTER_GUI STREQUAL "qt")
+    set(qt_components Widgets PrintSupport)
+    if(MANDELBROTTER_BUILD_TESTS)
+        list(APPEND qt_components Test)
+    endif()
+    find_package(Qt6 6.8 REQUIRED COMPONENTS ${qt_components})
+endif()
+
 if(MANDELBROTTER_GUI STREQUAL "wx")
     # wxWidgets 3.2 (MANDELBROTTER_GUI=wx), built in-tree as static libraries on the platform's native toolkit,
     # which wx picks itself: GTK3 on Linux (GTK stays a system shared library), Cocoa on macOS, Win32 on Windows.

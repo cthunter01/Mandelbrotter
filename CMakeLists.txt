@@ -30,9 +30,6 @@ set_property(CACHE MANDELBROTTER_GUI PROPERTY STRINGS wx qt none)
 if(NOT MANDELBROTTER_GUI MATCHES "^(wx|qt|none)$")
     message(FATAL_ERROR "MANDELBROTTER_GUI must be wx, qt or none, not '${MANDELBROTTER_GUI}'")
 endif()
-if(MANDELBROTTER_GUI STREQUAL "qt")
-    message(FATAL_ERROR "MANDELBROTTER_GUI=qt: the Qt front end is not there yet")
-endif()
 
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM AND NOT CMAKE_CXX_COMPILER_LAUNCHER)   # a launcher the user chose wins

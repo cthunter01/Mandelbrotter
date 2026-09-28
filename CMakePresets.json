@@ -46,6 +46,11 @@
       "cacheVariables": { "MANDELBROTTER_GUI": "none" }
     },
     {
+      "name": "gui-qt",
+      "hidden": true,
+      "cacheVariables": { "MANDELBROTTER_GUI": "qt" }
+    },
+    {
       "name": "clang-debug",
       "displayName": "Clang Debug",
       "inherits": "clang",
@@ -126,6 +131,56 @@
       "inherits": ["msvc-release", "werror"]
     },
     {
+      "name": "clang-debug-qt",
+      "displayName": "Clang Debug, Qt GUI",
+      "inherits": ["clang-debug", "gui-qt"]
+    },
+    {
+      "name": "clang-release-qt",
+      "displayName": "Clang Release, Qt GUI",
+      "inherits": ["clang-release", "gui-qt"]
+    },
+    {
+      "name": "gcc-debug-qt",
+      "displayName": "GCC Debug, Qt GUI",
+      "inherits": ["gcc-debug", "gui-qt"]
+    },
+    {
+      "name": "msvc-debug-qt",
+      "displayName": "MSVC Debug, Qt GUI",
+      "inherits": ["msvc-debug", "gui-qt"]
+    },
+    {
+      "name": "msvc-release-qt",
+      "displayName": "MSVC Release, Qt GUI",
+      "inherits": ["msvc-release", "gui-qt"]
+    },
+    {
+      "name": "ci-gcc-qt",
+      "displayName": "GCC Release, Qt GUI, warnings as errors",
+      "inherits": ["ci-gcc", "gui-qt"]
+    },
+    {
+      "name": "ci-clang-qt",
+      "displayName": "Clang Release, Qt GUI, warnings as errors",
+      "inherits": ["ci-clang", "gui-qt"]
+    },
+    {
+      "name": "ci-msvc-qt",
+      "displayName": "MSVC Release, Qt GUI, warnings as errors",
+      "inherits": ["ci-msvc", "gui-qt"]
+    },
+    {
+      "name": "asan-qt",
+      "displayName": "Clang Debug, Qt GUI, AddressSanitizer + UndefinedBehaviorSanitizer",
+      "inherits": ["asan", "gui-qt"]
+    },
+    {
+      "name": "tidy-qt",
+      "displayName": "Clang Debug, Qt GUI, clang-tidy while compiling, warnings as errors",
+      "inherits": ["tidy", "gui-qt"]
+    },
+    {
       "name": "dist",
       "hidden": true,
       "description": "Release archives: dependencies are built from source and linked in, never taken from the build machine",
@@ -174,6 +229,16 @@
     { "name": "coverage", "configurePreset": "coverage", "targets": ["coverage"] },
     { "name": "tidy", "configurePreset": "tidy" },
     { "name": "headless", "configurePreset": "headless" },
+    { "name": "clang-debug-qt", "configurePreset": "clang-debug-qt" },
+    { "name": "clang-release-qt", "configurePreset": "clang-release-qt" },
+    { "name": "gcc-debug-qt", "configurePreset": "gcc-debug-qt" },
+    { "name": "msvc-debug-qt", "configurePreset": "msvc-debug-qt" },
+    { "name": "msvc-release-qt", "configurePreset": "msvc-release-qt" },
+    { "name": "ci-gcc-qt", "configurePreset": "ci-gcc-qt" },
+    { "name": "ci-clang-qt", "configurePreset": "ci-clang-qt" },
+    { "name": "ci-msvc-qt", "configurePreset": "ci-msvc-qt" },
+    { "name": "asan-qt", "configurePreset": "asan-qt" },
+    { "name": "tidy-qt", "configurePreset": "tidy-qt" },
     { "name": "ci-gcc", "configurePreset": "ci-gcc" },
     { "name": "ci-clang", "configurePreset": "ci-clang" },
     { "name": "ci-msvc", "configurePreset": "ci-msvc" },
@@ -211,6 +276,29 @@
     },
     { "name": "tidy", "inherits": "test-base", "configurePreset": "tidy" },
     { "name": "headless", "inherits": "test-base", "configurePreset": "headless" },
+    { "name": "clang-debug-qt", "inherits": "test-base", "configurePreset": "clang-debug-qt" },
+    { "name": "clang-release-qt", "inherits": "test-base", "configurePreset": "clang-release-qt" },
+    { "name": "gcc-debug-qt", "inherits": "test-base", "configurePreset": "gcc-debug-qt" },
+    { "name": "msvc-debug-qt", "inherits": "test-base", "configurePreset": "msvc-debug-qt" },
+    { "name": "msvc-release-qt", "inherits": "test-base", "configurePreset": "msvc-release-qt" },
+    { "name": "ci-gcc-qt", "inherits": "test-base", "configurePreset": "ci-gcc-qt" },
+    { "name": "ci-clang-qt", "inherits": "test-base", "configurePreset": "ci-clang-qt" },
+    { "name": "ci-msvc-qt", "inherits": "test-base", "configurePreset": "ci-msvc-qt" },
+    {
+      "name": "asan-qt",
+      "inherits": "asan",
+      "configurePreset": "asan-qt",
+      "environment": {
+        "LSAN_OPTIONS": "suppressions=${sourceDir}/tests/qt/lsan.supp:print_suppressions=0"
+      },
+      "filter": { "exclude": { "label": "slow" } }
+    },
+    {
+      "name": "tidy-qt",
+      "inherits": "test-base",
+      "configurePreset": "tidy-qt",
+      "filter": { "exclude": { "label": "slow" } }
+    },
     { "name": "ci-gcc", "inherits": "test-base", "configurePreset": "ci-gcc" },
     { "name": "ci-clang", "inherits": "test-base", "configurePreset": "ci-clang" },
     { "name": "ci-msvc", "inherits": "test-base", "configurePreset": "ci-msvc" },
@@ -317,6 +405,64 @@
         { "type": "configure", "name": "headless" },
         { "type": "build", "name": "headless" },
         { "type": "test", "name": "headless" }
+      ]
+    },
+    {
+      "name": "dev-qt",
+      "displayName": "Configure, build and test Clang Debug with the Qt GUI",
+      "steps": [
+        { "type": "configure", "name": "clang-debug-qt" },
+        { "type": "build", "name": "clang-debug-qt" },
+        { "type": "test", "name": "clang-debug-qt" }
+      ]
+    },
+    {
+      "name": "dev-msvc-qt",
+      "displayName": "Configure, build and test MSVC Debug with the Qt GUI",
+      "steps": [
+        { "type": "configure", "name": "msvc-debug-qt" },
+        { "type": "build", "name": "msvc-debug-qt" },
+        { "type": "test", "name": "msvc-debug-qt" }
+      ]
+    },
+    {
+      "name": "ci-gcc-qt",
+      "steps": [
+        { "type": "configure", "name": "ci-gcc-qt" },
+        { "type": "build", "name": "ci-gcc-qt" },
+        { "type": "test", "name": "ci-gcc-qt" }
+      ]
+    },
+    {
+      "name": "ci-clang-qt",
+      "steps": [
+        { "type": "configure", "name": "ci-clang-qt" },
+        { "type": "build", "name": "ci-clang-qt" },
+        { "type": "test", "name": "ci-clang-qt" }
+      ]
+    },
+    {
+      "name": "ci-msvc-qt",
+      "steps": [
+        { "type": "configure", "name": "ci-msvc-qt" },
+        { "type": "build", "name": "ci-msvc-qt" },
+        { "type": "test", "name": "ci-msvc-qt" }
+      ]
+    },
+    {
+      "name": "asan-qt",
+      "steps": [
+        { "type": "configure", "name": "asan-qt" },
+        { "type": "build", "name": "asan-qt" },
+        { "type": "test", "name": "asan-qt" }
+      ]
+    },
+    {
+      "name": "tidy-qt",
+      "steps": [
+        { "type": "configure", "name": "tidy-qt" },
+        { "type": "build", "name": "tidy-qt" },
+        { "type": "test", "name": "tidy-qt" }
       ]
     },
     {

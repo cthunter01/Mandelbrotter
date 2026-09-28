@@ -1,0 +1,99 @@
+# Builds and tests the Qt front end (MANDELBROTTER_GUI=qt) on Linux, macOS and Windows. A workflow of its own,
+# not part of ci.yml: the Release workflow calls ci.yml, and the Qt build does not ship yet, so a Qt problem must
+# not hold up a wx release. Qt comes from each platform's packages (Arch, Homebrew) or from aqtinstall
+# (Windows, pinned to the minimum supported Qt, 6.8), so CI sees both ends of the supported range. The view tests
+# run on Qt's offscreen platform and need no display.
+name: CI (Qt)
+
+on:
+  push:
+  pull_request:
+
+env:
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
+  CCACHE_MAXSIZE: 2G
+  CCACHE_COMPILERCHECK: content   # runner images and pacman -Syu update compilers; hash the binary, not its mtime
+
+jobs:
+  linux:
+    name: linux / ${{ matrix.preset }}
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    strategy:
+      fail-fast: false
+      matrix:
+        preset: [ci-gcc-qt, tidy-qt, asan-qt]
+    steps:
+      - name: Install toolchain and Qt
+        # ttf-dejavu: the offscreen platform renders text through fontconfig and needs a font.
+        run: pacman -Syu --noconfirm --needed cmake ninja clang git ccache qt6-base ttf-dejavu
+      - uses: actions/checkout@v7
+      - name: Restore compiler cache
+        uses: actions/cache@v6
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ccache-${{ matrix.preset }}-${{ github.run_id }}
+          restore-keys: ccache-${{ matrix.preset }}-
+      - name: Configure, build and test
+        run: cmake --workflow --preset ${{ matrix.preset }}
+      - name: Compiler cache statistics
+        run: ccache -sv
+
+  macos:
+    name: macos / ci-clang-qt
+    runs-on: macos-latest
+    steps:
+      - name: Install Ninja, ccache and Qt
+        # The modular qtbase formula where Homebrew has it, else the whole of Qt.
+        run: |
+          brew install ninja ccache
+          if brew install qtbase; then qt_formula=qtbase; else brew install qt; qt_formula=qt; fi
+          echo "CMAKE_PREFIX_PATH=$(brew --prefix "$qt_formula")" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v7
+      - name: Restore compiler cache
+        uses: actions/cache@v6
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ccache-macos-ci-clang-qt-${{ github.run_id }}
+          restore-keys: ccache-macos-ci-clang-qt-
+      - name: Configure, build and test
+        run: cmake --workflow --preset ci-clang-qt
+      - name: Compiler cache statistics
+        run: ccache -sv
+
+  windows:
+    name: windows / ci-msvc-qt
+    runs-on: windows-latest
+    env:
+      QT_VERSION: "6.8.3"   # the minimum supported Qt (6.8 LTS)
+    steps:
+      - name: Install ccache
+        run: choco install ccache --no-progress
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/msvc-dev-env
+      - name: Restore Qt
+        id: qt-cache
+        uses: actions/cache@v6
+        with:
+          path: C:\Qt
+          key: qt-${{ env.QT_VERSION }}-win64_msvc2022_64
+      - name: Install Qt (aqtinstall)
+        if: steps.qt-cache.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install aqtinstall
+          python -m aqt install-qt windows desktop $env:QT_VERSION win64_msvc2022_64 --outputdir C:\Qt
+      - name: Point CMake and the tests at Qt
+        # The DLLs must be on PATH for test discovery and for cli.render_png too, though --render opens no window.
+        run: |
+          "CMAKE_PREFIX_PATH=C:\Qt\$env:QT_VERSION\msvc2022_64" >> $env:GITHUB_ENV
+          "C:\Qt\$env:QT_VERSION\msvc2022_64\bin" >> $env:GITHUB_PATH
+      - name: Restore compiler cache
+        uses: actions/cache@v6
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ccache-windows-ci-msvc-qt-${{ github.run_id }}
+          restore-keys: ccache-windows-ci-msvc-qt-
+      - name: Configure, build and test
+        run: cmake --workflow --preset ci-msvc-qt
+      - name: Compiler cache statistics
+        run: ccache -sv
