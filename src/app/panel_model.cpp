@@ -38,6 +38,20 @@ std::optional<Complex> parseSeed(std::string_view re, std::string_view im)
     return Complex{*real, *imaginary};
 }
 
+SeedEdit commitSeedFields(std::string_view re, std::string_view im, Complex current)
+{
+    const std::optional<Complex> seed = parseSeed(re, im);
+    if (!seed)
+    {
+        return {.kind = SeedEdit::Kind::RESTORE, .seed = current};
+    }
+    if (*seed == current)
+    {
+        return {.kind = SeedEdit::Kind::UNCHANGED, .seed = current};
+    }
+    return {.kind = SeedEdit::Kind::APPLY, .seed = *seed};
+}
+
 std::optional<Complex> previewSeedFor(const FractalSpec&     spec,
                                       std::optional<Complex> hovered) noexcept
 {

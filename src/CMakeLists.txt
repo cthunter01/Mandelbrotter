@@ -45,7 +45,8 @@ add_library(Mandelbrotter_app STATIC
     app/scenes.cpp
     app/startup.cpp
     app/tour_layout.cpp
-    app/TourScript.cpp)
+    app/TourScript.cpp
+    app/ui_text.cpp)
 add_library(Mandelbrotter::app ALIAS Mandelbrotter_app)
 target_include_directories(Mandelbrotter_app PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(Mandelbrotter_app PUBLIC Mandelbrotter::lib)   # never wx

@@ -3,10 +3,12 @@
 #include <string>
 #include <string_view>
 
+#include <wx/colour.h>
 #include <wx/gdicmn.h>
 #include <wx/image.h>
 #include <wx/string.h>
 
+#include "Mandelbrotter/app/ui_text.h"
 #include "Mandelbrotter/geometry.h"
 #include "Mandelbrotter/image.h"
 
@@ -26,5 +28,7 @@ namespace mandelbrotter::gui
 [[nodiscard]] wxRect     toWx(PixelRect rect);
 [[nodiscard]] PixelRect  fromWx(const wxRect& rect);
 [[nodiscard]] PixelSize  fromWx(wxSize size);
+
+[[nodiscard]] wxColour toWx(app::Rgba color);
 
 }  // namespace mandelbrotter::gui

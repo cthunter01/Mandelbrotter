@@ -41,6 +41,22 @@ inline constexpr auto kPreviewThrottle   = std::chrono::milliseconds(50);
 /// either is not a finite number.
 [[nodiscard]] std::optional<Complex> parseSeed(std::string_view re, std::string_view im);
 
+/// What committing the two seed fields (Enter, or the focus leaving one) does.
+struct SeedEdit
+{
+    enum class Kind : std::uint8_t
+    {
+        APPLY,      ///< a new valid seed: use it
+        UNCHANGED,  ///< the fields hold the current seed
+        RESTORE,    ///< a field does not parse: show the current seed again
+    };
+    Kind    kind{Kind::UNCHANGED};
+    Complex seed;  ///< APPLY: the new seed; RESTORE: the value to show again
+};
+/// The seed fields were committed: apply a new valid seed, ignore an unchanged one, restore the
+/// last valid value (`current`) when either field is not a number.
+[[nodiscard]] SeedEdit commitSeedFields(std::string_view re, std::string_view im, Complex current);
+
 /// The seed the Julia preview shows: the hovered point, or the current seed in Julia mode.
 [[nodiscard]] std::optional<Complex> previewSeedFor(const FractalSpec&     spec,
                                                     std::optional<Complex> hovered) noexcept;

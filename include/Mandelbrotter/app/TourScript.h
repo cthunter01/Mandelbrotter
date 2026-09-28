@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "Mandelbrotter/RenderSettings.h"
+#include "Mandelbrotter/app/panel_model.h"
 
 namespace mandelbrotter::app
 {
@@ -24,6 +25,9 @@ enum class TourTarget : std::uint8_t
     OVERLAY,
     BOOKMARKS,
 };
+
+/// The side panel section a tour target is; nullopt for the canvas.
+[[nodiscard]] std::optional<PanelSection> panelSectionFor(TourTarget target) noexcept;
 
 struct TourStep
 {

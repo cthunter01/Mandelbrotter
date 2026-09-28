@@ -11,6 +11,7 @@
 #include <wx/pen.h>
 #include <wx/settings.h>
 
+#include "Mandelbrotter/app/ui_text.h"
 #include "Mandelbrotter/geometry.h"
 #include "gui/wx_util.h"
 
@@ -43,7 +44,7 @@ FractalCanvas::FractalCanvas(wxWindow* parent, RenderSettings initial)
     m_resizeTimer(this)
 {
     SetBackgroundStyle(wxBG_STYLE_PAINT);
-    SetMinSize(FromDIP(wxSize(200, 150)));
+    SetMinSize(FromDIP(wxSize(app::kCanvasMinSize.width, app::kCanvasMinSize.height)));
     SetCursor(wxCursor(wxCURSOR_CROSS));
     updateSize();
 
@@ -105,9 +106,9 @@ void FractalCanvas::drawOverlays(wxDC& dc)
     {
         const wxRect rect = toWx(*band);
         dc.SetBrush(*wxTRANSPARENT_BRUSH);
-        dc.SetPen(wxPen(*wxBLACK, FromDIP(1), wxPENSTYLE_SOLID));
+        dc.SetPen(wxPen(*wxBLACK, FromDIP(app::kRubberBandWidth), wxPENSTYLE_SOLID));
         dc.DrawRectangle(rect);
-        dc.SetPen(wxPen(*wxWHITE, FromDIP(1), wxPENSTYLE_SHORT_DASH));
+        dc.SetPen(wxPen(*wxWHITE, FromDIP(app::kRubberBandWidth), wxPENSTYLE_SHORT_DASH));
         dc.DrawRectangle(rect);
     }
     const std::span<const PixelPoint> orbit = m_controller.orbit();
@@ -119,15 +120,16 @@ void FractalCanvas::drawOverlays(wxDC& dc)
         {
             points.push_back(toWx(point));
         }
-        dc.SetPen(wxPen(wxColour(255, 255, 255, 200), FromDIP(1), wxPENSTYLE_SOLID));
+        dc.SetPen(wxPen(toWx(app::kOrbitColor), FromDIP(app::kOrbitWidth), wxPENSTYLE_SOLID));
         dc.DrawLines(static_cast<int>(points.size()), points.data());
-        dc.SetPen(wxPen(wxColour(255, 80, 80), FromDIP(2), wxPENSTYLE_SOLID));
+        dc.SetPen(
+            wxPen(toWx(app::kOrbitStartColor), FromDIP(app::kOrbitStartWidth), wxPENSTYLE_SOLID));
         dc.SetBrush(*wxTRANSPARENT_BRUSH);
-        dc.DrawCircle(points.front(), FromDIP(4));
+        dc.DrawCircle(points.front(), FromDIP(app::kOrbitStartRadius));
     }
     if (m_controller.highlighted())
     {
-        const int width = FromDIP(3);
+        const int width = FromDIP(app::kHighlightRingWidth);
         dc.SetBrush(*wxTRANSPARENT_BRUSH);
         dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT), width));
         dc.DrawRectangle(wxRect(GetClientSize()).Deflate(width / 2));

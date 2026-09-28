@@ -12,6 +12,7 @@
 #include <wx/utils.h>
 
 #include "Mandelbrotter/app/help_routing.h"
+#include "Mandelbrotter/app/ui_text.h"
 #include "Mandelbrotter/help_action.h"
 #include "gui/app_icon.h"
 #include "gui/help_book.h"
@@ -52,7 +53,7 @@ std::string_view helpBookZip()
 
 HelpController::HelpController() : wxHtmlHelpController(kHelpStyle, nullptr)
 {
-    SetTitleFormat("Mandelbrotter Help: %s");
+    SetTitleFormat(toWx(std::string(app::kHelpTitlePrefix) + "%s"));
 }
 
 bool HelpController::ensureLoaded()
@@ -71,7 +72,7 @@ bool HelpController::ensureLoaded()
         m_loadFailed = true;
         if (onError)
         {
-            onError("The help book built into this program could not be read.");
+            onError(std::string(app::kHelpBookUnreadable));
         }
     }
     return m_loaded;

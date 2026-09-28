@@ -1,25 +1,21 @@
 #include "gui/ExportDialog.h"
 
 #include <algorithm>
-#include <array>
+#include <cstddef>
 
 #include <wx/choice.h>
 #include <wx/sizer.h>
 #include <wx/spinctrl.h>
 #include <wx/stattext.h>
 
+#include "Mandelbrotter/app/ui_text.h"
+#include "gui/wx_util.h"
+
 namespace mandelbrotter::gui
 {
 
-namespace
-{
-
-constexpr std::array kSupersampleChoices{1, 2, 4};
-
-}  // namespace
-
 ExportDialog::ExportDialog(wxWindow* parent, PixelSize initialSize)
-  : wxDialog(parent, wxID_ANY, "Save image as PNG", wxDefaultPosition, wxDefaultSize,
+  : wxDialog(parent, wxID_ANY, toWx(app::kExportDialogTitle), wxDefaultPosition, wxDefaultSize,
              wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
     auto* grid = new wxFlexGridSizer(2, FromDIP(wxSize(8, 6)));
@@ -32,23 +28,25 @@ ExportDialog::ExportDialog(wxWindow* parent, PixelSize initialSize)
         new wxSpinCtrl(this, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1,
                        kMaxExportDimension, std::clamp(initialSize.height, 1, kMaxExportDimension));
     m_supersample = new wxChoice(this, wxID_ANY);
-    m_supersample->Append("1x (none)");
-    m_supersample->Append("2x2 samples per pixel");
-    m_supersample->Append("4x4 samples per pixel");
+    for (const app::SupersampleChoice& choice : app::kSupersampleChoices)
+    {
+        m_supersample->Append(toWx(choice.label));
+    }
     m_supersample->SetSelection(0);
 
-    grid->Add(new wxStaticText(this, wxID_ANY, "Width (px)"), wxSizerFlags().CenterVertical());
+    grid->Add(new wxStaticText(this, wxID_ANY, toWx(app::kWidthLabel)),
+              wxSizerFlags().CenterVertical());
     grid->Add(m_width, wxSizerFlags().Expand());
-    grid->Add(new wxStaticText(this, wxID_ANY, "Height (px)"), wxSizerFlags().CenterVertical());
+    grid->Add(new wxStaticText(this, wxID_ANY, toWx(app::kHeightLabel)),
+              wxSizerFlags().CenterVertical());
     grid->Add(m_height, wxSizerFlags().Expand());
-    grid->Add(new wxStaticText(this, wxID_ANY, "Anti-aliasing"), wxSizerFlags().CenterVertical());
+    grid->Add(new wxStaticText(this, wxID_ANY, toWx(app::kAntiAliasingLabel)),
+              wxSizerFlags().CenterVertical());
     grid->Add(m_supersample, wxSizerFlags().Expand());
 
     auto* sizer = new wxBoxSizer(wxVERTICAL);
     sizer->Add(grid, wxSizerFlags(1).Expand().Border(wxALL, FromDIP(12)));
-    sizer->Add(new wxStaticText(
-                   this, wxID_ANY,
-                   "The view keeps its center and zoom; the shorter side shows the same extent."),
+    sizer->Add(new wxStaticText(this, wxID_ANY, toWx(app::kExportNote)),
                wxSizerFlags().Border(wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(12)));
     sizer->Add(CreateStdDialogButtonSizer(wxOK | wxCANCEL),
                wxSizerFlags().Expand().Border(wxALL, FromDIP(8)));
@@ -70,9 +68,9 @@ void ExportDialog::onCharHook(wxKeyEvent& event)  // NOLINT(readability-make-mem
 ExportOptions ExportDialog::options() const
 {
     const int choice = std::clamp(m_supersample->GetSelection(), 0,
-                                  static_cast<int>(kSupersampleChoices.size()) - 1);
+                                  static_cast<int>(app::kSupersampleChoices.size()) - 1);
     return {.size        = {m_width->GetValue(), m_height->GetValue()},
-            .supersample = kSupersampleChoices.at(static_cast<std::size_t>(choice))};
+            .supersample = app::kSupersampleChoices.at(static_cast<std::size_t>(choice)).factor};
 }
 
 }  // namespace mandelbrotter::gui

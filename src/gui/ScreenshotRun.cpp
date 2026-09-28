@@ -18,6 +18,7 @@
 #include <wx/textdlg.h>
 
 #include "Mandelbrotter/app/scenes.h"
+#include "Mandelbrotter/app/ui_text.h"
 #include "gui/FractalCanvas.h"
 #include "gui/HelpController.h"
 #include "gui/MainFrame.h"
@@ -198,8 +199,8 @@ std::vector<ScreenshotRun::Shot> ScreenshotRun::buildShots()
          .rendersFirst = false,
          .prepare =
              [this] {
-                 m_dialog = new wxTextEntryDialog(&m_frame, "Name for this view:", "Add bookmark",
-                                                  "Mandelbrot at 1x");
+                 m_dialog = new wxTextEntryDialog(&m_frame, toWx(app::kAddBookmarkPrompt),
+                                                  toWx(app::kAddBookmarkTitle), "Mandelbrot at 1x");
                  m_dialog->Show();
              },
          .target = [this]() -> wxWindow* { return m_dialog; },

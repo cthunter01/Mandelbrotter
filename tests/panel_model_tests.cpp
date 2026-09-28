@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <optional>
+#include <utility>
 
 #include <gtest/gtest.h>
 
@@ -53,6 +54,31 @@ TEST(PanelModel, SeedFieldsFailWhenEitherIsBad)
     EXPECT_EQ(app::parseSeed("0.5x", "0"), std::nullopt);
     EXPECT_EQ(app::parseSeed("0", "inf"), std::nullopt);
     EXPECT_EQ(app::parseSeed("0\t", "0"), std::nullopt);  // only spaces are trimmed
+}
+
+TEST(PanelModel, CommittingTheSeedFields)
+{
+    const Complex current{-0.8, 0.156};
+    using Kind = app::SeedEdit::Kind;
+
+    const app::SeedEdit changed = app::commitSeedFields("0.25", "-0.5", current);
+    EXPECT_EQ(changed.kind, Kind::APPLY);
+    EXPECT_EQ(changed.seed, (Complex{0.25, -0.5}));
+
+    const app::SeedEdit spaced = app::commitSeedFields("  0.25 ", " -0.5", current);
+    EXPECT_EQ(spaced.kind, Kind::APPLY);
+    EXPECT_EQ(spaced.seed, (Complex{0.25, -0.5}));
+
+    EXPECT_EQ(app::commitSeedFields("-0.8", "0.156", current).kind, Kind::UNCHANGED);
+    EXPECT_EQ(app::commitSeedFields(" -0.8", "0.156 ", current).kind, Kind::UNCHANGED);
+
+    for (const auto& [re, im] : {std::pair{"abc", "0.1"}, std::pair{"0.1", ""}, std::pair{"", ""},
+                                 std::pair{"0.1", "1e999"}})
+    {
+        const app::SeedEdit bad = app::commitSeedFields(re, im, current);
+        EXPECT_EQ(bad.kind, Kind::RESTORE) << re << " " << im;
+        EXPECT_EQ(bad.seed, current);
+    }
 }
 
 TEST(PanelModel, PreviewFollowsTheMouseOutsideJuliaMode)

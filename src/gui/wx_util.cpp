@@ -55,4 +55,9 @@ PixelSize fromWx(wxSize size)
     return {size.x, size.y};
 }
 
+wxColour toWx(app::Rgba color)
+{
+    return {color.red, color.green, color.blue, color.alpha};
+}
+
 }  // namespace mandelbrotter::gui

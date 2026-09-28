@@ -31,6 +31,7 @@ add_executable(Mandelbrotter_tests
     startup_tests.cpp
     tour_layout_tests.cpp
     TourScriptTests.cpp
+    ui_text_tests.cpp
     ViewportTests.cpp)
 target_link_libraries(Mandelbrotter_tests PRIVATE Mandelbrotter::app Mandelbrotter::lib GTest::gtest_main stb::stb)
 # The help book's sources, for the tests that check its pages, links and images (help_book_tests.cpp).

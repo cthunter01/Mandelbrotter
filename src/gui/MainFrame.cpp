@@ -1,8 +1,10 @@
 #include "gui/MainFrame.h"
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <filesystem>
+#include <format>
 #include <memory>
 #include <optional>
 #include <span>
@@ -27,6 +29,7 @@
 #include "Mandelbrotter/app/TourScript.h"
 #include "Mandelbrotter/app/commands.h"
 #include "Mandelbrotter/app/help_routing.h"
+#include "Mandelbrotter/app/ui_text.h"
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/exporter.h"
 #include "Mandelbrotter/help_action.h"
@@ -48,10 +51,16 @@ constexpr int field(app::StatusField f)
     return static_cast<int>(f);
 }
 
+/// A file dialog's filter in wx's "description (pattern)|pattern" form.
+wxString filterText(const app::FileFilter& filter)
+{
+    return toWx(std::format("{} ({})|{}", filter.description, filter.pattern, filter.pattern));
+}
+
 }  // namespace
 
 MainFrame::MainFrame(RenderSettings initial, std::filesystem::path bookmarksPath)
-  : wxFrame(nullptr, wxID_ANY, "Mandelbrotter", wxDefaultPosition, wxDefaultSize),
+  : wxFrame(nullptr, wxID_ANY, toWx(app::kWindowTitle), wxDefaultPosition, wxDefaultSize),
     m_demoTimer(this),
     m_canvas(new FractalCanvas(this, initial)),
     m_panel(new SidePanel(this)),
@@ -59,7 +68,7 @@ MainFrame::MainFrame(RenderSettings initial, std::filesystem::path bookmarksPath
     m_tourView(*this)
 {
     applyAppIcon(*this);
-    SetClientSize(FromDIP(wxSize(1280, 800)));
+    SetClientSize(FromDIP(wxSize(app::kWindowSize.width, app::kWindowSize.height)));
 
     auto* sizer = new wxBoxSizer(wxHORIZONTAL);
     sizer->Add(m_canvas, wxSizerFlags(1).Expand());
@@ -67,8 +76,10 @@ MainFrame::MainFrame(RenderSettings initial, std::filesystem::path bookmarksPath
     SetSizer(sizer);
 
     CreateStatusBar(app::kStatusFieldCount);
-    constexpr std::array<int, app::kStatusFieldCount> kWidths{-3, -3, -1, -1, -2};
-    GetStatusBar()->SetStatusWidths(app::kStatusFieldCount, kWidths.data());
+    std::array<int, app::kStatusFieldCount> widths{};
+    std::ranges::transform(app::kStatusStretch, widths.begin(),
+                           [](int stretch) { return -stretch; });  // negative: proportional
+    GetStatusBar()->SetStatusWidths(app::kStatusFieldCount, widths.data());
 
     buildMenus();
     wirePanel();
@@ -285,11 +296,9 @@ void MainFrame::runCommand(app::Command command, std::size_t flight, bool checke
 void MainFrame::showAbout()
 {
     wxAboutDialogInfo info;
-    info.SetName("Mandelbrotter");
+    info.SetName(toWx(app::kAboutName));
     info.SetVersion(MANDELBROTTER_VERSION);
-    info.SetDescription(
-        "Interactive Mandelbrot-family fractal explorer.\n\n"
-        "The user guide is under Help > Contents; F1 explains the focused control.");
+    info.SetDescription(toWx(app::kAboutDescription));
     wxAboutBox(info, this);
 }
 
@@ -311,7 +320,9 @@ void MainFrame::wirePanel()
 void MainFrame::wireHelp()
 {
     m_help.onAction = [this](const HelpAction& action) { m_app.runHelpAction(action); };
-    m_help.onError  = [this](const std::string& message) { reportError("Help", message); };
+    m_help.onError  = [this](const std::string& message) {
+        reportError(std::string(app::kHelpErrorTitle), message);
+    };
 }
 
 void MainFrame::onCharHook(wxKeyEvent& event)
@@ -417,8 +428,8 @@ void MainFrame::closeExportDialog()
 
 void MainFrame::saveImage(const ExportOptions& options)
 {
-    wxFileDialog chooser(this, "Save image as PNG", "", "mandelbrotter.png",
-                         "PNG images (*.png)|*.png", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+    wxFileDialog chooser(this, toWx(app::kSaveImageTitle), "", toWx(app::kSaveImageDefaultName),
+                         filterText(app::kPngFilter), wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
     if (chooser.ShowModal() != wxID_OK)
     {
         return;
@@ -440,7 +451,7 @@ void MainFrame::copyImage()
     const wxClipboardLocker locker;
     if (!locker)
     {
-        reportError("Copy image", "The clipboard is busy.");
+        reportError(std::string(app::kCopyImageTitle), std::string(app::kClipboardBusy));
         return;
     }
     // The clipboard takes ownership of the data object.
@@ -451,8 +462,8 @@ void MainFrame::copyImage()
 
 void MainFrame::exportView()
 {
-    wxFileDialog chooser(this, "Export view", "", "view.json",
-                         "Mandelbrotter views (*.json)|*.json", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+    wxFileDialog chooser(this, toWx(app::kExportViewTitle), "", toWx(app::kExportViewDefaultName),
+                         filterText(app::kViewFilter), wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
     if (chooser.ShowModal() != wxID_OK)
     {
         return;
@@ -462,8 +473,11 @@ void MainFrame::exportView()
 
 void MainFrame::importView()
 {
-    wxFileDialog chooser(this, "Import view", "", "",
-                         "Mandelbrotter views (*.json)|*.json|All files|*",
+    // "All files" without its pattern in the description, as wx dialogs usually show it.
+    const wxString filters =
+        filterText(app::kViewFilter) +
+        toWx(std::format("|{}|{}", app::kAllFilesFilter.description, app::kAllFilesFilter.pattern));
+    wxFileDialog chooser(this, toWx(app::kImportViewTitle), "", "", filters,
                          wxFD_OPEN | wxFD_FILE_MUST_EXIST);
     if (chooser.ShowModal() != wxID_OK)
     {
@@ -479,7 +493,8 @@ void MainFrame::onAddBookmark()
 {
     // Ends the demos first: the suggested name is for the user's view, not the tour's.
     const std::string suggested = m_app.beginAddBookmark();
-    wxTextEntryDialog dialog(this, "Name for this view:", "Add bookmark", toWx(suggested));
+    wxTextEntryDialog dialog(this, toWx(app::kAddBookmarkPrompt), toWx(app::kAddBookmarkTitle),
+                             toWx(suggested));
     if (dialog.ShowModal() != wxID_OK)
     {
         return;

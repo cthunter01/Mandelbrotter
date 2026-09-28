@@ -13,32 +13,6 @@
 namespace mandelbrotter::gui
 {
 
-namespace
-{
-
-/// The side panel section a tour target is; nullopt for the canvas.
-std::optional<SidePanel::Section> sectionFor(app::TourTarget target)
-{
-    switch (target)
-    {
-        case app::TourTarget::FRACTAL:
-            return SidePanel::Section::FRACTAL;
-        case app::TourTarget::ITERATIONS:
-            return SidePanel::Section::ITERATIONS;
-        case app::TourTarget::COLORING:
-            return SidePanel::Section::COLORING;
-        case app::TourTarget::OVERLAY:
-            return SidePanel::Section::OVERLAY;
-        case app::TourTarget::BOOKMARKS:
-            return SidePanel::Section::BOOKMARKS;
-        case app::TourTarget::CANVAS:
-            break;
-    }
-    return std::nullopt;
-}
-
-}  // namespace
-
 TourView::TourView(MainFrame& frame) : m_frame(frame) { }
 
 TourView::~TourView() = default;
@@ -75,7 +49,7 @@ void TourView::highlight(std::optional<app::TourTarget> target)
 {
     m_frame.app().canvas().setHighlighted(target == app::TourTarget::CANVAS);
     const std::optional<SidePanel::Section> section =
-        target ? sectionFor(*target) : std::optional<SidePanel::Section>();
+        target ? app::panelSectionFor(*target) : std::optional<SidePanel::Section>();
     if (section)
     {
         m_frame.setSidePanelShown(true);
@@ -86,7 +60,7 @@ void TourView::highlight(std::optional<app::TourTarget> target)
 
 wxRect TourView::anchorFor(app::TourTarget target) const
 {
-    const std::optional<SidePanel::Section> section = sectionFor(target);
+    const std::optional<SidePanel::Section> section = app::panelSectionFor(target);
     if (!section)
     {
         return m_frame.canvas().GetRect();

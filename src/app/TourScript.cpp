@@ -6,10 +6,31 @@
 #include <vector>
 
 #include "Mandelbrotter/app/AppController.h"
+#include "Mandelbrotter/app/panel_model.h"
 #include "Mandelbrotter/app/scenes.h"
 
 namespace mandelbrotter::app
 {
+
+std::optional<PanelSection> panelSectionFor(TourTarget target) noexcept
+{
+    switch (target)
+    {
+        case TourTarget::FRACTAL:
+            return PanelSection::FRACTAL;
+        case TourTarget::ITERATIONS:
+            return PanelSection::ITERATIONS;
+        case TourTarget::COLORING:
+            return PanelSection::COLORING;
+        case TourTarget::OVERLAY:
+            return PanelSection::OVERLAY;
+        case TourTarget::BOOKMARKS:
+            return PanelSection::BOOKMARKS;
+        case TourTarget::CANVAS:
+            break;
+    }
+    return std::nullopt;
+}
 
 TourScript::TourScript(AppController& app, Hooks hooks)
   : m_app(app), m_hooks(std::move(hooks)), m_steps(buildSteps())

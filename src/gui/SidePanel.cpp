@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 
 #include <wx/button.h>
@@ -21,6 +22,7 @@
 #include "Mandelbrotter/Palette.h"
 #include "Mandelbrotter/app/format.h"
 #include "Mandelbrotter/app/panel_model.h"
+#include "Mandelbrotter/app/ui_text.h"
 #include "Mandelbrotter/fractal.h"
 #include "gui/JuliaPreview.h"
 #include "gui/wx_util.h"
@@ -30,8 +32,6 @@ namespace mandelbrotter::gui
 
 namespace
 {
-
-constexpr int kBorderDip = 6;
 
 constexpr std::size_t index(SidePanel::Section section)
 {
@@ -43,18 +43,18 @@ wxString formatDouble(double value)
     return toWx(app::formatSeedComponent(value));
 }
 
-wxStaticBoxSizer* section(wxWindow* parent, wxSizer& into, const char* title)
+wxStaticBoxSizer* section(wxWindow* parent, wxSizer& into, SidePanel::Section section)
 {
-    auto* box = new wxStaticBoxSizer(wxVERTICAL, parent, title);
-    into.Add(box, wxSizerFlags().Expand().Border(wxALL, parent->FromDIP(kBorderDip)));
+    auto* box = new wxStaticBoxSizer(wxVERTICAL, parent, toWx(app::sectionTitle(section)));
+    into.Add(box, wxSizerFlags().Expand().Border(wxALL, parent->FromDIP(app::kSectionBorder)));
     return box;
 }
 
-wxSizer* labeled(wxWindow* parent, const char* label, wxWindow* control)
+wxSizer* labeled(wxWindow* parent, std::string_view label, wxWindow* control)
 {
     auto* row = new wxBoxSizer(wxHORIZONTAL);
-    row->Add(new wxStaticText(parent, wxID_ANY, label),
-             wxSizerFlags().CenterVertical().Border(wxRIGHT, parent->FromDIP(kBorderDip)));
+    row->Add(new wxStaticText(parent, wxID_ANY, toWx(label)),
+             wxSizerFlags().CenterVertical().Border(wxRIGHT, parent->FromDIP(app::kLabelGap)));
     row->Add(control, wxSizerFlags(1).Expand());
     return row;
 }
@@ -63,7 +63,7 @@ wxSizer* labeled(wxWindow* parent, const char* label, wxWindow* control)
 
 SidePanel::SidePanel(wxWindow* parent) : wxScrolledWindow(parent, wxID_ANY)
 {
-    SetScrollRate(0, FromDIP(10));
+    SetScrollRate(0, FromDIP(app::kPanelScrollStep));
     auto* sizer = new wxBoxSizer(wxVERTICAL);
     buildFractalSection(*sizer);
     buildIterationSection(*sizer);
@@ -73,7 +73,8 @@ SidePanel::SidePanel(wxWindow* parent) : wxScrolledWindow(parent, wxID_ANY)
     SetSizer(sizer);
     // Wide enough for the widest row plus the vertical scrollbar; the height is whatever the frame
     // gives us.
-    SetMinSize(wxSize(sizer->GetMinSize().x + FromDIP(24), FromDIP(200)));
+    SetMinSize(wxSize(sizer->GetMinSize().x + FromDIP(app::kPanelWidthSlack),
+                      FromDIP(app::kPanelMinHeight)));
     FitInside();
     setSettings(m_settings);
 }
@@ -83,7 +84,7 @@ SidePanel::SidePanel(wxWindow* parent) : wxScrolledWindow(parent, wxID_ANY)
 
 void SidePanel::buildFractalSection(wxSizer& sizer)
 {
-    wxStaticBoxSizer* box                  = section(this, sizer, "Fractal");
+    wxStaticBoxSizer* box                  = section(this, sizer, Section::FRACTAL);
     wxWindow*         owner                = box->GetStaticBox();
     m_sections.at(index(Section::FRACTAL)) = box->GetStaticBox();
 
@@ -101,8 +102,8 @@ void SidePanel::buildFractalSection(wxSizer& sizer)
             emitChange();
         }
     });
-    box->Add(labeled(owner, "Family", m_family),
-             wxSizerFlags().Expand().Border(wxALL, FromDIP(kBorderDip / 2)));
+    box->Add(labeled(owner, app::kFamilyLabel, m_family),
+             wxSizerFlags().Expand().Border(wxALL, FromDIP(app::kRowGap)));
 
     m_exponent = new wxSpinCtrl(owner, wxID_ANY, "", wxDefaultPosition, wxDefaultSize,
                                 wxSP_ARROW_KEYS, kMinExponent, kMaxExponent, 2);
@@ -110,15 +111,15 @@ void SidePanel::buildFractalSection(wxSizer& sizer)
         m_settings.fractal.exponent = clampExponent(event.GetPosition());
         emitChange();
     });
-    box->Add(labeled(owner, "Exponent n", m_exponent),
-             wxSizerFlags().Expand().Border(wxALL, FromDIP(kBorderDip / 2)));
+    box->Add(labeled(owner, app::kExponentLabel, m_exponent),
+             wxSizerFlags().Expand().Border(wxALL, FromDIP(app::kRowGap)));
 
-    m_julia = new wxCheckBox(owner, wxID_ANY, "Julia set (z0 = pixel, c = seed)");
+    m_julia = new wxCheckBox(owner, wxID_ANY, toWx(app::kJuliaLabel));
     m_julia->Bind(wxEVT_CHECKBOX, [this](wxCommandEvent& event) {
         m_settings.fractal.julia = event.IsChecked();
         emitChange();
     });
-    box->Add(m_julia, wxSizerFlags().Border(wxALL, FromDIP(kBorderDip / 2)));
+    box->Add(m_julia, wxSizerFlags().Border(wxALL, FromDIP(app::kRowGap)));
 
     auto* seedRow = new wxBoxSizer(wxHORIZONTAL);
     m_seedRe =
@@ -133,35 +134,35 @@ void SidePanel::buildFractalSection(wxSizer& sizer)
             event.Skip();
         });
     }
-    seedRow->Add(new wxStaticText(owner, wxID_ANY, "c ="),
-                 wxSizerFlags().CenterVertical().Border(wxRIGHT, FromDIP(kBorderDip)));
+    seedRow->Add(new wxStaticText(owner, wxID_ANY, toWx(app::kSeedPrefix)),
+                 wxSizerFlags().CenterVertical().Border(wxRIGHT, FromDIP(app::kLabelGap)));
     seedRow->Add(m_seedRe, wxSizerFlags(1).Expand());
-    seedRow->Add(new wxStaticText(owner, wxID_ANY, "+"),
-                 wxSizerFlags().CenterVertical().Border(wxLEFT | wxRIGHT, FromDIP(4)));
+    seedRow->Add(new wxStaticText(owner, wxID_ANY, toWx(app::kSeedPlus)),
+                 wxSizerFlags().CenterVertical().Border(wxLEFT | wxRIGHT, FromDIP(app::kSeedGap)));
     seedRow->Add(m_seedIm, wxSizerFlags(1).Expand());
-    seedRow->Add(new wxStaticText(owner, wxID_ANY, "i"),
-                 wxSizerFlags().CenterVertical().Border(wxLEFT, FromDIP(4)));
-    box->Add(seedRow, wxSizerFlags().Expand().Border(wxALL, FromDIP(kBorderDip / 2)));
+    seedRow->Add(new wxStaticText(owner, wxID_ANY, toWx(app::kSeedSuffix)),
+                 wxSizerFlags().CenterVertical().Border(wxLEFT, FromDIP(app::kSeedGap)));
+    box->Add(seedRow, wxSizerFlags().Expand().Border(wxALL, FromDIP(app::kRowGap)));
 
-    m_pickSeed = new wxToggleButton(owner, wxID_ANY, "Pick seed from canvas");
-    m_pickSeed->SetToolTip("Click a point of the set to use it as the Julia constant c");
+    m_pickSeed = new wxToggleButton(owner, wxID_ANY, toWx(app::kPickSeedLabel));
+    m_pickSeed->SetToolTip(toWx(app::kPickSeedTip));
     m_pickSeed->Bind(wxEVT_TOGGLEBUTTON, [this](wxCommandEvent& event) {
         if (onPickSeedToggled)
         {
             onPickSeedToggled(event.IsChecked());
         }
     });
-    box->Add(m_pickSeed, wxSizerFlags().Expand().Border(wxALL, FromDIP(kBorderDip / 2)));
+    box->Add(m_pickSeed, wxSizerFlags().Expand().Border(wxALL, FromDIP(app::kRowGap)));
 
-    box->Add(new wxStaticText(owner, wxID_ANY, "Julia preview (follows the mouse)"),
-             wxSizerFlags().Border(wxLEFT | wxTOP, FromDIP(kBorderDip / 2)));
+    box->Add(new wxStaticText(owner, wxID_ANY, toWx(app::kPreviewLabel)),
+             wxSizerFlags().Border(wxLEFT | wxTOP, FromDIP(app::kRowGap)));
     m_preview = new JuliaPreview(owner);
-    box->Add(m_preview, wxSizerFlags().Expand().Border(wxALL, FromDIP(kBorderDip / 2)));
+    box->Add(m_preview, wxSizerFlags().Expand().Border(wxALL, FromDIP(app::kRowGap)));
 }
 
 void SidePanel::buildIterationSection(wxSizer& sizer)
 {
-    wxStaticBoxSizer* box                     = section(this, sizer, "Iterations");
+    wxStaticBoxSizer* box                     = section(this, sizer, Section::ITERATIONS);
     wxWindow*         owner                   = box->GetStaticBox();
     m_sections.at(index(Section::ITERATIONS)) = box->GetStaticBox();
 
@@ -172,23 +173,23 @@ void SidePanel::buildIterationSection(wxSizer& sizer)
         m_settings.maxIterations = event.GetPosition();
         emitChange();
     });
-    box->Add(labeled(owner, "Maximum", m_iterations),
-             wxSizerFlags().Expand().Border(wxALL, FromDIP(kBorderDip / 2)));
+    box->Add(labeled(owner, app::kMaximumLabel, m_iterations),
+             wxSizerFlags().Expand().Border(wxALL, FromDIP(app::kRowGap)));
 
-    m_autoIterations = new wxCheckBox(owner, wxID_ANY, "Auto: grow with zoom");
+    m_autoIterations = new wxCheckBox(owner, wxID_ANY, toWx(app::kAutoIterationsLabel));
     m_autoIterations->Bind(wxEVT_CHECKBOX, [this](wxCommandEvent& event) {
         m_settings.autoIterations = event.IsChecked();
         emitChange();
     });
-    box->Add(m_autoIterations, wxSizerFlags().Border(wxALL, FromDIP(kBorderDip / 2)));
+    box->Add(m_autoIterations, wxSizerFlags().Border(wxALL, FromDIP(app::kRowGap)));
 
     m_effectiveIterations = new wxStaticText(owner, wxID_ANY, "");
-    box->Add(m_effectiveIterations, wxSizerFlags().Border(wxALL, FromDIP(kBorderDip / 2)));
+    box->Add(m_effectiveIterations, wxSizerFlags().Border(wxALL, FromDIP(app::kRowGap)));
 }
 
 void SidePanel::buildColoringSection(wxSizer& sizer)
 {
-    wxStaticBoxSizer* box                   = section(this, sizer, "Coloring");
+    wxStaticBoxSizer* box                   = section(this, sizer, Section::COLORING);
     wxWindow*         owner                 = box->GetStaticBox();
     m_sections.at(index(Section::COLORING)) = box->GetStaticBox();
 
@@ -206,53 +207,53 @@ void SidePanel::buildColoringSection(wxSizer& sizer)
             emitChange();
         }
     });
-    box->Add(labeled(owner, "Palette", m_palette),
-             wxSizerFlags().Expand().Border(wxALL, FromDIP(kBorderDip / 2)));
+    box->Add(labeled(owner, app::kPaletteLabel, m_palette),
+             wxSizerFlags().Expand().Border(wxALL, FromDIP(app::kRowGap)));
 
-    m_density = new wxSpinCtrlDouble(owner, wxID_ANY, "", wxDefaultPosition, wxDefaultSize,
-                                     wxSP_ARROW_KEYS, kMinDensity, kMaxDensity, 64.0, 1.0);
-    m_density->SetDigits(1);
-    m_density->SetToolTip("Iterations per palette cycle");
+    m_density =
+        new wxSpinCtrlDouble(owner, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS,
+                             kMinDensity, kMaxDensity, 64.0, app::kDensityStep);
+    m_density->SetDigits(app::kDensityDigits);
+    m_density->SetToolTip(toWx(app::kDensityTip));
     m_density->Bind(wxEVT_SPINCTRLDOUBLE, [this](wxSpinDoubleEvent& event) {
         m_settings.coloring.density = event.GetValue();
         emitChange();
     });
-    box->Add(labeled(owner, "Density", m_density),
-             wxSizerFlags().Expand().Border(wxALL, FromDIP(kBorderDip / 2)));
+    box->Add(labeled(owner, app::kDensityLabel, m_density),
+             wxSizerFlags().Expand().Border(wxALL, FromDIP(app::kRowGap)));
 
     m_offset = new wxSlider(owner, wxID_ANY, 0, 0, app::kOffsetSliderSteps);
-    m_offset->SetToolTip("Palette phase shift");
+    m_offset->SetToolTip(toWx(app::kOffsetTip));
     m_offset->Bind(wxEVT_SLIDER, [this](wxCommandEvent& event) {
         m_settings.coloring.offset = app::sliderToOffset(event.GetInt());
         emitChange();
     });
-    box->Add(labeled(owner, "Offset", m_offset),
-             wxSizerFlags().Expand().Border(wxALL, FromDIP(kBorderDip / 2)));
+    box->Add(labeled(owner, app::kOffsetLabel, m_offset),
+             wxSizerFlags().Expand().Border(wxALL, FromDIP(app::kRowGap)));
 }
 
 void SidePanel::buildOverlaySection(wxSizer& sizer)
 {
-    wxStaticBoxSizer* box                  = section(this, sizer, "Overlay");
+    wxStaticBoxSizer* box                  = section(this, sizer, Section::OVERLAY);
     m_sections.at(index(Section::OVERLAY)) = box->GetStaticBox();
-    m_orbit =
-        new wxCheckBox(box->GetStaticBox(), wxID_ANY, "Show orbit of the point under the cursor");
+    m_orbit = new wxCheckBox(box->GetStaticBox(), wxID_ANY, toWx(app::kShowOrbitLabel));
     m_orbit->Bind(wxEVT_CHECKBOX, [this](wxCommandEvent& event) {
         if (onOrbitToggled)
         {
             onOrbitToggled(event.IsChecked());
         }
     });
-    box->Add(m_orbit, wxSizerFlags().Border(wxALL, FromDIP(kBorderDip / 2)));
+    box->Add(m_orbit, wxSizerFlags().Border(wxALL, FromDIP(app::kRowGap)));
 }
 
 void SidePanel::buildBookmarkSection(wxSizer& sizer)
 {
-    wxStaticBoxSizer* box                    = section(this, sizer, "Bookmarks");
+    wxStaticBoxSizer* box                    = section(this, sizer, Section::BOOKMARKS);
     wxWindow*         owner                  = box->GetStaticBox();
     m_sections.at(index(Section::BOOKMARKS)) = box->GetStaticBox();
 
     m_bookmarks = new wxListBox(owner, wxID_ANY);
-    m_bookmarks->SetMinSize(FromDIP(wxSize(-1, 120)));
+    m_bookmarks->SetMinSize(FromDIP(wxSize(-1, app::kBookmarkListMinHeight)));
     m_bookmarks->Bind(wxEVT_LISTBOX, [this](wxCommandEvent&) { syncEnabledState(); });
     m_bookmarks->Bind(wxEVT_LISTBOX_DCLICK, [this](wxCommandEvent& event) {
         if (onBookmarkLoad && event.GetSelection() != wxNOT_FOUND)
@@ -260,18 +261,18 @@ void SidePanel::buildBookmarkSection(wxSizer& sizer)
             onBookmarkLoad(static_cast<std::size_t>(event.GetSelection()));
         }
     });
-    box->Add(m_bookmarks, wxSizerFlags(1).Expand().Border(wxALL, FromDIP(kBorderDip / 2)));
+    box->Add(m_bookmarks, wxSizerFlags(1).Expand().Border(wxALL, FromDIP(app::kRowGap)));
 
     auto* buttons = new wxBoxSizer(wxHORIZONTAL);
-    auto* add     = new wxButton(owner, wxID_ANY, "Add...");
-    add->SetToolTip("Bookmark the current view");
+    auto* add     = new wxButton(owner, wxID_ANY, toWx(app::kAddBookmarkButton));
+    add->SetToolTip(toWx(app::kAddBookmarkTip));
     add->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         if (onBookmarkAdd)
         {
             onBookmarkAdd();
         }
     });
-    m_loadBookmark = new wxButton(owner, wxID_ANY, "Load");
+    m_loadBookmark = new wxButton(owner, wxID_ANY, toWx(app::kLoadBookmarkButton));
     m_loadBookmark->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         const int index = m_bookmarks->GetSelection();
         if (onBookmarkLoad && index != wxNOT_FOUND)
@@ -279,7 +280,7 @@ void SidePanel::buildBookmarkSection(wxSizer& sizer)
             onBookmarkLoad(static_cast<std::size_t>(index));
         }
     });
-    m_deleteBookmark = new wxButton(owner, wxID_ANY, "Delete");
+    m_deleteBookmark = new wxButton(owner, wxID_ANY, toWx(app::kDeleteBookmarkButton));
     m_deleteBookmark->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
         const int index = m_bookmarks->GetSelection();
         if (onBookmarkDelete && index != wxNOT_FOUND)
@@ -287,10 +288,10 @@ void SidePanel::buildBookmarkSection(wxSizer& sizer)
             onBookmarkDelete(static_cast<std::size_t>(index));
         }
     });
-    buttons->Add(add, wxSizerFlags(1).Border(wxRIGHT, FromDIP(kBorderDip / 2)));
-    buttons->Add(m_loadBookmark, wxSizerFlags(1).Border(wxRIGHT, FromDIP(kBorderDip / 2)));
+    buttons->Add(add, wxSizerFlags(1).Border(wxRIGHT, FromDIP(app::kRowGap)));
+    buttons->Add(m_loadBookmark, wxSizerFlags(1).Border(wxRIGHT, FromDIP(app::kRowGap)));
     buttons->Add(m_deleteBookmark, wxSizerFlags(1));
-    box->Add(buttons, wxSizerFlags().Expand().Border(wxALL, FromDIP(kBorderDip / 2)));
+    box->Add(buttons, wxSizerFlags().Expand().Border(wxALL, FromDIP(app::kRowGap)));
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -371,21 +372,21 @@ void SidePanel::readSeedFields()
     {
         return;
     }
-    const std::optional<Complex> seed =
-        app::parseSeed(fromWx(m_seedRe->GetValue()), fromWx(m_seedIm->GetValue()));
-    if (!seed)
+    const app::SeedEdit edit = app::commitSeedFields(
+        fromWx(m_seedRe->GetValue()), fromWx(m_seedIm->GetValue()), m_settings.fractal.seed);
+    switch (edit.kind)
     {
-        // Restore the last valid values rather than guessing.
-        m_seedRe->ChangeValue(formatDouble(m_settings.fractal.seed.re));
-        m_seedIm->ChangeValue(formatDouble(m_settings.fractal.seed.im));
-        return;
+        case app::SeedEdit::Kind::RESTORE:
+            m_seedRe->ChangeValue(formatDouble(edit.seed.re));
+            m_seedIm->ChangeValue(formatDouble(edit.seed.im));
+            break;
+        case app::SeedEdit::Kind::UNCHANGED:
+            break;
+        case app::SeedEdit::Kind::APPLY:
+            m_settings.fractal.seed = edit.seed;
+            emitChange();
+            break;
     }
-    if (*seed == m_settings.fractal.seed)
-    {
-        return;
-    }
-    m_settings.fractal.seed = *seed;
-    emitChange();
 }
 
 void SidePanel::emitChange()
@@ -455,7 +456,8 @@ void SidePanel::scrollToSection(Section section)
     int unitY = 1;
     GetScrollPixelsPerUnit(nullptr, &unitY);
     const wxPoint unscrolled = CalcUnscrolledPosition(rect.GetPosition());
-    Scroll(wxDefaultCoord, std::max(0, (unscrolled.y - FromDIP(kBorderDip)) / std::max(1, unitY)));
+    Scroll(wxDefaultCoord,
+           std::max(0, (unscrolled.y - FromDIP(app::kScrollToMargin)) / std::max(1, unitY)));
     Refresh();  // GTK may leave the static boxes' frames and titles undrawn after a long scroll
 }
 
@@ -476,13 +478,14 @@ void SidePanel::OnDraw(wxDC& dc)
         return;
     }
     // The DC is already offset by the scroll position, so draw in unscrolled coordinates. The
-    // ring sits in the margin around the box (kBorderDip); the controls draw over the rest.
+    // ring sits in the margin around the box (kSectionBorder); the controls draw over the rest.
     const wxRect rect = box(*m_highlighted)->GetRect();
     wxRect       ring(CalcUnscrolledPosition(rect.GetPosition()), rect.GetSize());
-    ring.Inflate(FromDIP(3));
+    ring.Inflate(FromDIP(app::kSectionRingInflate));
     dc.SetBrush(*wxTRANSPARENT_BRUSH);
-    dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT), FromDIP(3)));
-    dc.DrawRoundedRectangle(ring, FromDIP(4));
+    dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT),
+                    FromDIP(app::kSectionRingWidth)));
+    dc.DrawRoundedRectangle(ring, FromDIP(app::kSectionRingRadius));
 }
 
 }  // namespace mandelbrotter::gui

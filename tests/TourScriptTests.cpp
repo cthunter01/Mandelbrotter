@@ -15,6 +15,7 @@
 #include "Mandelbrotter/Viewport.h"
 #include "Mandelbrotter/app/AppController.h"
 #include "Mandelbrotter/app/format.h"
+#include "Mandelbrotter/app/panel_model.h"
 #include "Mandelbrotter/app/scenes.h"
 #include "Mandelbrotter/bookmarks.h"
 
@@ -48,6 +49,16 @@ struct Started
     Harness                     h{app::seahorseFire()};
     const std::vector<Bookmark> stored{{.name = "mine", .settings = app::juliaExample()}};
 };
+
+TEST(TourScript, TargetsAreTheCanvasOrASidePanelSection)
+{
+    EXPECT_EQ(app::panelSectionFor(app::TourTarget::CANVAS), std::nullopt);
+    EXPECT_EQ(app::panelSectionFor(app::TourTarget::FRACTAL), app::PanelSection::FRACTAL);
+    EXPECT_EQ(app::panelSectionFor(app::TourTarget::ITERATIONS), app::PanelSection::ITERATIONS);
+    EXPECT_EQ(app::panelSectionFor(app::TourTarget::COLORING), app::PanelSection::COLORING);
+    EXPECT_EQ(app::panelSectionFor(app::TourTarget::OVERLAY), app::PanelSection::OVERLAY);
+    EXPECT_EQ(app::panelSectionFor(app::TourTarget::BOOKMARKS), app::PanelSection::BOOKMARKS);
+}
 
 TEST(TourScript, HasElevenSteps)
 {

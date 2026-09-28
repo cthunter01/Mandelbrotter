@@ -7,6 +7,7 @@
 
 #include "Mandelbrotter/ProgressiveRenderer.h"
 #include "Mandelbrotter/app/panel_model.h"
+#include "Mandelbrotter/app/ui_text.h"
 #include "Mandelbrotter/image.h"
 #include "gui/wx_util.h"
 
@@ -19,7 +20,7 @@ JuliaPreview::JuliaPreview(wxWindow* parent)
     m_timer(this)
 {
     SetBackgroundStyle(wxBG_STYLE_PAINT);
-    SetMinSize(FromDIP(wxSize(200, 150)));
+    SetMinSize(FromDIP(wxSize(app::kPreviewMinSize.width, app::kPreviewMinSize.height)));
     Bind(wxEVT_PAINT, &JuliaPreview::onPaint, this);
     Bind(wxEVT_SIZE, &JuliaPreview::onSize, this);
     Bind(wxEVT_TIMER, &JuliaPreview::onTimer, this, m_timer.GetId());
