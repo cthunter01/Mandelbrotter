@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include "Mandelbrotter/RenderSettings.h"
+#include "Mandelbrotter/app/help_sitemap.h"
 #include "Mandelbrotter/flights.h"
 #include "Mandelbrotter/help_action.h"
 #include "Mandelbrotter/help_images.h"
@@ -77,31 +78,22 @@ std::vector<std::string> attributeValues(const std::string& html, const std::str
     return values;
 }
 
-/// The (Name, Local) pairs of a sitemap file (.hhc / .hhk).
-std::vector<std::pair<std::string, std::string>> sitemapEntries(const std::string& sitemap)
+void flatten(const std::vector<mandelbrotter::app::HelpTopic>& topics,
+             std::vector<std::pair<std::string, std::string>>& into)
 {
-    const std::regex pattern(
-        R"re(<param name="Name" value="([^"]*)">\s*<param name="Local" value="([^"]*)">)re",
-        std::regex::icase);
-    std::vector<std::pair<std::string, std::string>> entries;
-    for (std::sregex_iterator it(sitemap.begin(), sitemap.end(), pattern), end; it != end; ++it)
+    for (const mandelbrotter::app::HelpTopic& topic : topics)
     {
-        entries.emplace_back((*it)[1].str(), (*it)[2].str());
+        into.emplace_back(topic.name, topic.local);
+        flatten(topic.children, into);
     }
-    return entries;
 }
 
-std::string hhpValue(const std::string& hhp, std::string_view key)
+/// The (Name, Local) pairs of a sitemap file (.hhc / .hhk), nested entries included.
+std::vector<std::pair<std::string, std::string>> sitemapEntries(const std::string& sitemap)
 {
-    const std::string prefix = std::string(key) + "=";
-    const auto        at     = hhp.find(prefix);
-    if (at == std::string::npos)
-    {
-        return {};
-    }
-    const auto end = hhp.find('\n', at);
-    return hhp.substr(at + prefix.size(),
-                      end == std::string::npos ? end : end - at - prefix.size());
+    std::vector<std::pair<std::string, std::string>> entries;
+    flatten(mandelbrotter::app::parseHelpSitemap(sitemap), entries);
+    return entries;
 }
 
 /// True when `target` ("page.html" or "page.html#anchor") names an existing page and anchor.
@@ -128,13 +120,13 @@ testing::AssertionResult pageExists(const std::string& target)
 TEST(HelpBook, ControlFilesReferToExistingFiles)
 {
     ASSERT_TRUE(std::filesystem::exists(helpDir() / "help.hhp")) << helpDir();
-    const std::string hhp = readFile(helpDir() / "help.hhp");
-    EXPECT_FALSE(hhpValue(hhp, "Title").empty());
-    for (const std::string_view key : {"Default topic", "Contents file", "Index file"})
+    const auto project = mandelbrotter::app::parseHelpProject(readFile(helpDir() / "help.hhp"));
+    ASSERT_TRUE(project.has_value()) << project.error();
+    EXPECT_FALSE(project->title.empty());
+    for (const std::string& file :
+         {project->defaultTopic, project->contentsFile, project->indexFile})
     {
-        const std::string value = hhpValue(hhp, key);
-        EXPECT_FALSE(value.empty()) << key;
-        EXPECT_TRUE(std::filesystem::exists(helpDir() / value)) << key << " = " << value;
+        EXPECT_TRUE(std::filesystem::exists(helpDir() / file)) << file;
     }
 }
 

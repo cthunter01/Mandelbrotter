@@ -17,6 +17,7 @@ add_executable(Mandelbrotter_tests
     help_action_tests.cpp
     help_book_tests.cpp
     help_routing_tests.cpp
+    help_sitemap_tests.cpp
     help_images_tests.cpp
     image_tests.cpp
     kernel_tests.cpp

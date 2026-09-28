@@ -41,6 +41,7 @@ add_library(Mandelbrotter_app STATIC
     app/ExportTask.cpp
     app/format.cpp
     app/help_routing.cpp
+    app/help_sitemap.cpp
     app/panel_model.cpp
     app/scenes.cpp
     app/ScreenshotScript.cpp
