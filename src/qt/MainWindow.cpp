@@ -2,11 +2,17 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QClipboard>
 #include <QCloseEvent>
+#include <QDialog>
 #include <QDockWidget>
 #include <QEvent>
+#include <QFileDialog>
+#include <QGuiApplication>
+#include <QInputDialog>
 #include <QKeyCombination>
 #include <QKeySequence>
+#include <QLineEdit>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
@@ -21,6 +27,7 @@
 #include <format>
 #include <optional>
 #include <span>
+#include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -32,11 +39,15 @@
 #include "Mandelbrotter/app/help_routing.h"
 #include "Mandelbrotter/app/ui_text.h"
 #include "Mandelbrotter/bookmarks.h"
+#include "Mandelbrotter/exporter.h"
 #include "Mandelbrotter/geometry.h"
+#include "Mandelbrotter/image.h"
 #include "qt/ElidedLabel.h"
+#include "qt/ExportDialog.h"
 #include "qt/FractalCanvas.h"
 #include "qt/GlobalKeyFilter.h"
 #include "qt/SidePanel.h"
+#include "qt/export_runner.h"
 #include "qt/qt_util.h"
 
 namespace mandelbrotter::qt
@@ -140,8 +151,8 @@ app::AppController::Shell MainWindow::makeShell()
                 }
             },
         .panelPreviewSeed  = [this](std::optional<Complex> seed) { m_panel->setPreviewSeed(seed); },
-        .showExportDialog  = {},
-        .closeExportDialog = {},
+        .showExportDialog  = [this] { showExportDialog(); },
+        .closeExportDialog = [this] { closeExportDialog(); },
         .raiseWindow =
             [this] {
                 if (isMinimized())
@@ -301,10 +312,20 @@ void MainWindow::runCommand(app::Command command, std::size_t flight, bool check
             m_app.showHelpPage(app::kReferencePage);
             break;
         case app::Command::SAVE_IMAGE:
+            showExportDialog();
+            break;
         case app::Command::COPY_IMAGE:
+            copyImage();
+            break;
         case app::Command::EXPORT_VIEW:
+            exportView();
+            break;
         case app::Command::IMPORT_VIEW:
+            importView();
+            break;
         case app::Command::ADD_BOOKMARK:
+            addBookmark();
+            break;
         case app::Command::ZOOM_IN:
         case app::Command::ZOOM_OUT:
         case app::Command::RESET_VIEW:
@@ -312,7 +333,7 @@ void MainWindow::runCommand(app::Command command, std::size_t flight, bool check
         case app::Command::STOP_DEMO:
         case app::Command::TOUR:
         case app::Command::BACK_TO_SNAPSHOT:
-            break;  // run by the app layer above, or not there yet
+            break;  // run by the app layer above
     }
 }
 
@@ -336,6 +357,7 @@ void MainWindow::wirePanel()
         m_app.panelEdited(edited);
     };
     m_panel->onPickSeedToggled = [this](bool enabled) { m_app.setPickSeedMode(enabled); };
+    m_panel->onBookmarkAdd     = [this] { addBookmark(); };
     m_panel->onOrbitToggled    = [this](bool enabled) { m_app.setShowOrbit(enabled); };
     m_panel->onBookmarkLoad    = [this](std::size_t index) { m_app.loadBookmark(index); };
     m_panel->onBookmarkDelete  = [this](std::size_t index) { m_app.deleteBookmark(index); };
@@ -371,6 +393,10 @@ app::HelpContext MainWindow::helpContext() const
         context.area         = app::HelpContext::Area::PANEL;
         context.section      = section;
         context.juliaControl = m_panel->isJuliaControl(focus);
+    }
+    else if (m_exportDialog && (focus == m_exportDialog || m_exportDialog->isAncestorOf(focus)))
+    {
+        context.area = app::HelpContext::Area::EXPORT_DIALOG;
     }
     return context;
 }
@@ -444,12 +470,168 @@ void MainWindow::setSidePanelShown(bool shown)
 void MainWindow::closeEvent(QCloseEvent* event)
 {
     m_app.stopDemos();
+    closeExportDialog();
     event->accept();
 }
 
 void MainWindow::reportError(std::string_view title, std::string_view message)
 {
+    if (dialogSeams.showError)
+    {
+        dialogSeams.showError(title, message);
+        return;
+    }
     QMessageBox::critical(this, toQt(title), toQt(message));
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Files, the clipboard and bookmarks
+
+void MainWindow::showExportDialog()
+{
+    if (m_exportDialog)
+    {
+        m_exportDialog->raise();
+        m_exportDialog->activateWindow();
+        return;
+    }
+    auto* dialog   = new ExportDialog(this, m_canvas->controller().image().size());
+    dialog->onHelp = [this] { m_app.showHelpPage(app::kExportingPage); };
+    connect(dialog, &QDialog::accepted, this, [this] {
+        if (!m_exportDialog)
+        {
+            return;
+        }
+        const ExportOptions options = m_exportDialog->options();
+        closeExportDialog();
+        saveImage(options);
+    });
+    connect(dialog, &QDialog::rejected, this, [this] { closeExportDialog(); });
+    m_exportDialog = dialog;
+    dialog->show();
+}
+
+void MainWindow::closeExportDialog()
+{
+    // Nulled first: hiding the dialog may come back here. Deleted later: this may run inside one
+    // of its own signals.
+    ExportDialog* dialog = m_exportDialog;
+    m_exportDialog       = nullptr;
+    if (dialog != nullptr)
+    {
+        dialog->hide();
+        dialog->deleteLater();
+    }
+}
+
+std::optional<std::filesystem::path> MainWindow::chooseFile(FileChoice choice)
+{
+    if (dialogSeams.chooseFile)
+    {
+        return dialogSeams.chooseFile(choice);
+    }
+    const auto filter = [](const app::FileFilter& f) {
+        return toQt(std::format("{} ({})", f.description, f.pattern));
+    };
+    QFileDialog dialog(this);
+    switch (choice)
+    {
+        case FileChoice::SAVE_IMAGE:
+            dialog.setWindowTitle(toQt(app::kSaveImageTitle));
+            dialog.setAcceptMode(QFileDialog::AcceptSave);
+            dialog.setNameFilter(filter(app::kPngFilter));
+            dialog.selectFile(toQt(app::kSaveImageDefaultName));
+            dialog.setDefaultSuffix(u"png"_s);  // Qt's own dialog does not add it
+            break;
+        case FileChoice::EXPORT_VIEW:
+            dialog.setWindowTitle(toQt(app::kExportViewTitle));
+            dialog.setAcceptMode(QFileDialog::AcceptSave);
+            dialog.setNameFilter(filter(app::kViewFilter));
+            dialog.selectFile(toQt(app::kExportViewDefaultName));
+            dialog.setDefaultSuffix(u"json"_s);
+            break;
+        case FileChoice::IMPORT_VIEW:
+            dialog.setWindowTitle(toQt(app::kImportViewTitle));
+            dialog.setAcceptMode(QFileDialog::AcceptOpen);
+            dialog.setFileMode(QFileDialog::ExistingFile);
+            dialog.setNameFilters({filter(app::kViewFilter), filter(app::kAllFilesFilter)});
+            break;
+    }
+    if (dialog.exec() != QDialog::Accepted || dialog.selectedFiles().isEmpty())
+    {
+        return std::nullopt;
+    }
+    return toPath(dialog.selectedFiles().front());
+}
+
+void MainWindow::saveImage(const ExportOptions& options)
+{
+    const std::optional<std::filesystem::path> path = chooseFile(FileChoice::SAVE_IMAGE);
+    if (!path)
+    {
+        return;
+    }
+    if (exportPngWithProgress(this, m_app.settings(), options, *path,
+                              [this](std::string_view title, std::string_view message) {
+                                  reportError(title, message);
+                              }))
+    {
+        m_app.imageSaved(*path);
+    }
+}
+
+void MainWindow::copyImage()
+{
+    const RgbImage& image = m_app.canvas().image();
+    if (image.size().empty())
+    {
+        return;
+    }
+    // The full-resolution picture, possibly mid-render. Qt has no clipboard lock to wait for.
+    QGuiApplication::clipboard()->setImage(toQImage(image, 1.0));
+    m_app.imageCopied();
+}
+
+void MainWindow::exportView()
+{
+    if (const auto path = chooseFile(FileChoice::EXPORT_VIEW))
+    {
+        m_app.exportView(*path);
+    }
+}
+
+void MainWindow::importView()
+{
+    if (const auto path = chooseFile(FileChoice::IMPORT_VIEW))
+    {
+        m_app.importView(*path);
+    }
+}
+
+void MainWindow::addBookmark()
+{
+    // Ends the demos first: the suggested name is for the user's view, not the tour's.
+    const std::string          suggested = m_app.beginAddBookmark();
+    std::optional<std::string> name;
+    if (dialogSeams.askName)
+    {
+        name = dialogSeams.askName(suggested);
+    }
+    else
+    {
+        bool          ok = false;
+        const QString text =
+            QInputDialog::getText(this, toQt(app::kAddBookmarkTitle), toQt(app::kAddBookmarkPrompt),
+                                  QLineEdit::Normal, toQt(suggested), &ok);
+        if (ok)
+        {
+            name = fromQt(text);
+        }
+    }
+    if (name)
+    {
+        m_app.addBookmark(*name);
+    }
 }
 
 }  // namespace mandelbrotter::qt

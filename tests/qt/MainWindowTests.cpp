@@ -308,8 +308,7 @@ TEST(MainWindow, ClosingWithAFocusedSeedFieldAndAFlightIsClean)
     const mandelbrotter::test::TempDir dir;
     auto window = std::make_unique<qt::MainWindow>(app::juliaExample(), dir / "bookmarks.json");
     window->show();
-    window->activateWindow();
-    ASSERT_TRUE(QTest::qWaitForWindowActive(window.get()));
+    ASSERT_TRUE(mandelbrotter::test::activate(*window));
     QLineEdit* seed = window->panel().controls().seedRe;
     seed->setFocus();
     seed->setText(u"0.3"_s);  // edited, not committed: committing it is the danger

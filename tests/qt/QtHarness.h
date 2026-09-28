@@ -3,6 +3,7 @@
 #include <QCoreApplication>
 #include <QString>
 #include <QTest>
+#include <QWidget>
 #include <chrono>
 #include <functional>
 #include <string>
@@ -37,6 +38,15 @@ namespace mandelbrotter::test
     return true;
 }
 
+/// Makes `window` the active window: shortcuts and the focus need it. QTest's own wait returns
+/// before QApplication has caught up, so this waits for QWidget::isActiveWindow() too.
+[[nodiscard]] inline bool activate(QWidget& window)
+{
+    window.activateWindow();
+    return QTest::qWaitForWindowActive(&window) &&
+           pumpUntil([&window] { return window.isActiveWindow(); });
+}
+
 /// A main window, shown, with its bookmarks in a fresh directory.
 struct QtHarness
 {
@@ -47,11 +57,7 @@ struct QtHarness
     }
 
     /// Makes the window the active one: shortcuts and the focus need it.
-    void activate()
-    {
-        window.activateWindow();
-        EXPECT_TRUE(QTest::qWaitForWindowActive(&window));
-    }
+    void activate() { EXPECT_TRUE(test::activate(window)); }
 
     [[nodiscard]] std::string status(app::StatusField field) const
     {

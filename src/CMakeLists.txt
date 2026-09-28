@@ -119,6 +119,8 @@ if(MANDELBROTTER_GUI STREQUAL "qt")
     add_library(Mandelbrotter_qt STATIC
         qt/cursors.cpp
         qt/ElidedLabel.cpp
+        qt/export_runner.cpp
+        qt/ExportDialog.cpp
         qt/FractalCanvas.cpp
         qt/GlobalKeyFilter.cpp
         qt/JuliaPreview.cpp

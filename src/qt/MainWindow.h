@@ -7,12 +7,17 @@
 #include <QKeyEvent>
 #include <QMainWindow>
 #include <QMenu>
+#include <QPointer>
 #include <QString>
 #include <QTimer>
 #include <QWidget>
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
+#include <functional>
+#include <optional>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -20,6 +25,8 @@
 #include "Mandelbrotter/app/AppController.h"
 #include "Mandelbrotter/app/commands.h"
 #include "Mandelbrotter/app/help_routing.h"
+#include "Mandelbrotter/exporter.h"
+#include "qt/ExportDialog.h"
 
 namespace mandelbrotter::qt
 {
@@ -45,6 +52,25 @@ public:
 
     [[nodiscard]] app::AppController& app() noexcept { return m_app; }
 
+    /// The file dialogs the window asks.
+    enum class FileChoice : std::uint8_t
+    {
+        SAVE_IMAGE,
+        EXPORT_VIEW,
+        IMPORT_VIEW,
+    };
+    /// Stand-ins for the modal dialogs, which a test cannot answer; unset, the dialogs are shown.
+    struct DialogSeams
+    {
+        /// The file the dialog would return; nullopt: canceled.
+        std::function<std::optional<std::filesystem::path>(FileChoice)> chooseFile;
+        /// The name the Add bookmark dialog would return; nullopt: canceled.
+        std::function<std::optional<std::string>(std::string_view suggested)> askName;
+        /// Shown instead of an error box.
+        std::function<void(std::string_view title, std::string_view message)> showError;
+    };
+    DialogSeams dialogSeams;
+
     // ---- widgets
     [[nodiscard]] FractalCanvas& canvas() const noexcept { return *m_canvas; }
     /// The menu item of `command` (FLIGHT: the one of builtinFlights()[flight]); nullptr if none.
@@ -60,6 +86,11 @@ public:
     [[nodiscard]] app::HelpContext helpContext() const;
     /// True when `event` is the shortcut of one of the menu items.
     [[nodiscard]] bool isMenuShortcut(const QKeyEvent& event) const;
+    /// The Save image as PNG dialog, modeless; a second call raises it.
+    void showExportDialog();
+    void closeExportDialog();
+    /// The open Save image as PNG dialog, if any.
+    [[nodiscard]] ExportDialog* exportDialog() const noexcept { return m_exportDialog; }
 
 protected:
     bool event(QEvent* event) override;
@@ -92,12 +123,19 @@ private:
     /// F1: the page about whatever has the keyboard focus.
     void showContextHelp();
     void reportError(std::string_view title, std::string_view message);
+    [[nodiscard]] std::optional<std::filesystem::path> chooseFile(FileChoice choice);
+    void                                               saveImage(const ExportOptions& options);
+    void                                               copyImage();
+    void                                               exportView();
+    void                                               importView();
+    void                                               addBookmark();
 
     QTimer                     m_demoTimer;  ///< ticks the flights; stopped first on destruction
     FractalCanvas*             m_canvas{nullptr};  ///< the central widget
     QDockWidget*               m_dock{nullptr};
     SidePanel*                 m_panel{nullptr};
     GlobalKeyFilter*           m_keyFilter{nullptr};
+    QPointer<ExportDialog>     m_exportDialog;
     std::vector<CommandAction> m_actions;
     QAction*                   m_aboutQt{nullptr};
     std::array<ElidedLabel*, app::kStatusFieldCount> m_status{};

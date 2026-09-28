@@ -1,5 +1,6 @@
 # The Qt layer's view tests: the real widgets on Qt's offscreen platform (no display needed).
 add_executable(Mandelbrotter_qt_tests
+    ExportDialogTests.cpp
     FractalCanvasTests.cpp
     MainWindowTests.cpp
     platform_tests.cpp
