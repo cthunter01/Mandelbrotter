@@ -7,6 +7,7 @@ add_executable(Mandelbrotter_qt_tests
     platform_tests.cpp
     qt_test_main.cpp
     qt_util_tests.cpp
+    ScreenshotRunTests.cpp
     SidePanelTests.cpp
     TourViewTests.cpp)
 target_include_directories(Mandelbrotter_qt_tests PRIVATE ${PROJECT_SOURCE_DIR}/tests)
@@ -20,7 +21,11 @@ Mandelbrotter_configure_target(Mandelbrotter_qt_tests)
 include(GoogleTest)
 # PRE_TEST: the tests are listed when ctest runs them, with ctest's environment (not a test's ENVIRONMENT), which
 # is why qt_test_main.cpp picks the offscreen platform itself.
-gtest_discover_tests(Mandelbrotter_qt_tests DISCOVERY_MODE PRE_TEST TEST_FILTER "-FractionalRatio.*")
+gtest_discover_tests(Mandelbrotter_qt_tests DISCOVERY_MODE PRE_TEST
+    TEST_FILTER "-FractionalRatio.*:ScreenshotRun.*")
+# The whole screenshot mode: minutes in a Debug build (label slow; the asan-qt and tidy-qt presets skip it).
+gtest_discover_tests(Mandelbrotter_qt_tests DISCOVERY_MODE PRE_TEST TEST_FILTER "ScreenshotRun.*"
+    PROPERTIES LABELS slow TIMEOUT 900)
 
 # The canvas at a fractional pixel ratio (Windows at 150%, fractional desktop scaling).
 add_test(NAME qt.fractional_ratio COMMAND Mandelbrotter_qt_tests --gtest_filter=FractionalRatio.*)

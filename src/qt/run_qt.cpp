@@ -8,12 +8,14 @@
 #include <array>
 #include <filesystem>
 #include <iostream>
+#include <memory>
 #include <string>
 
 #include "Mandelbrotter/app/startup.h"
 #include "Mandelbrotter/app/ui_text.h"
 #include "gui_entry.h"
 #include "qt/MainWindow.h"
+#include "qt/ScreenshotRun.h"
 #include "qt/platform.h"
 #include "qt/qt_util.h"
 
@@ -57,7 +59,17 @@ int runGui(const app::StartupOptions& options, char* argv0)
         app::bookmarksPathFor(options, qt::userDataDir(), std::filesystem::temp_directory_path());
     qt::MainWindow window(options.settings, bookmarks);
     window.show();
-    return QApplication::exec();
+    std::unique_ptr<qt::ScreenshotRun> screenshots;
+    if (options.screenshotsDir)
+    {
+        // Only the window's pictures (ui-*.png): the rendered examples are the same in every build.
+        std::cout << "Taking screenshots into " << options.screenshotsDir->string() << '\n';
+        screenshots = std::make_unique<qt::ScreenshotRun>(window, *options.screenshotsDir);
+        screenshots->start();
+    }
+    // The loop's own code if it failed, else the screenshot run's.
+    const int code = QApplication::exec();
+    return code != 0 || !screenshots ? code : screenshots->exitCode();
 }
 
 }  // namespace mandelbrotter

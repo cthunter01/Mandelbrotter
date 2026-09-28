@@ -85,6 +85,25 @@ TEST(TourView, WalksForwardAndBackThroughElevenSteps)
     EXPECT_EQ(h.tour().currentStep(), 9U);
 }
 
+TEST(TourView, TheCardFitsEachStepsText)
+{
+    TourHarness h;
+    for (std::size_t step = 0; step < h.tour().stepCount(); ++step)
+    {
+        SCOPED_TRACE(step);
+        h.tour().showStep(step);
+        TourHarness::settle();
+        const QLabel& text = h.card().textLabel();
+        const int     needed =
+            text.fontMetrics()
+                .boundingRect(QRect(0, 0, text.width(), 10000), Qt::TextWordWrap, text.text())
+                .height();
+        // All of it shows, and no longer step leaves its height behind.
+        EXPECT_GE(text.height(), needed);
+        EXPECT_LE(text.height(), needed + text.fontMetrics().lineSpacing());
+    }
+}
+
 TEST(TourView, TheCardSitsInsideTheWindowBesideItsAnchor)
 {
     TourHarness h;
@@ -98,9 +117,11 @@ TEST(TourView, TheCardSitsInsideTheWindowBesideItsAnchor)
         EXPECT_TRUE(h.window.rect().contains(card));
         if (app::panelSectionFor(h.tour().steps()[step].anchor))
         {
-            // Beside the section: to its left, where the canvas has room.
+            // Beside the section: to its left, where the canvas has room, top-aligned unless the
+            // window's bottom pushes it up.
             EXPECT_LE(card.right(), anchor.left());
-            EXPECT_EQ(card.top(), anchor.top());
+            EXPECT_LE(card.top(), anchor.top());
+            EXPECT_TRUE(card.top() == anchor.top() || card.bottom() == h.window.rect().bottom());
         }
         else
         {

@@ -152,6 +152,7 @@ if(MANDELBROTTER_GUI STREQUAL "qt")
         qt/platform.cpp
         qt/qt_util.cpp
         qt/run_qt.cpp
+        qt/ScreenshotRun.cpp
         qt/SidePanel.cpp
         qt/TourCard.cpp
         qt/TourView.cpp)

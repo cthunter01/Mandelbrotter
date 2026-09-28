@@ -52,10 +52,16 @@ std::vector<std::filesystem::path> pages()
     return result;
 }
 
-std::vector<std::filesystem::path> imageFiles()
+/// The files of an images directory: images/ (the rendered examples and the wx build's screenshots)
+/// or images-qt/ (the Qt build's screenshots; empty when there is none).
+std::vector<std::filesystem::path> imageFiles(std::string_view dir = "images")
 {
     std::vector<std::filesystem::path> result;
-    for (const auto& entry : std::filesystem::directory_iterator(helpDir() / "images"))
+    if (!std::filesystem::is_directory(helpDir() / dir))
+    {
+        return result;
+    }
+    for (const auto& entry : std::filesystem::directory_iterator(helpDir() / dir))
     {
         if (entry.is_regular_file())
         {
@@ -64,6 +70,11 @@ std::vector<std::filesystem::path> imageFiles()
     }
     std::ranges::sort(result);
     return result;
+}
+
+bool isScreenshot(const std::filesystem::path& file)
+{
+    return file.filename().string().starts_with("ui-");
 }
 
 /// The values of every `attribute="..."` in `html`.
@@ -236,8 +247,10 @@ TEST(HelpBook, ImagesAreUsedAndRenderedOnesHaveSpecs)
         EXPECT_TRUE(std::filesystem::exists(helpDir() / "images" / spec.file))
             << spec.file << " (run Mandelbrotter --screenshots docs/help/images)";
     }
-    const auto files = imageFiles();
+    auto files = imageFiles();
     EXPECT_FALSE(files.empty()) << "no images (run Mandelbrotter --screenshots docs/help/images)";
+    // The Qt build's screenshots stand in for the wx ones under the same images/ name.
+    std::ranges::copy(imageFiles("images-qt"), std::back_inserter(files));
     for (const std::filesystem::path& file : files)
     {
         const std::string name = file.filename().string();
@@ -260,14 +273,50 @@ TEST(HelpBook, EveryFlightIsDocumented)
     }
 }
 
-TEST(HelpBook, ImagesStayWithinBudget)
+TEST(HelpBook, EachBuildsImagesStayWithinBudget)
 {
-    std::uintmax_t total = 0;
+    // Each executable embeds the rendered examples and one set of screenshots: its toolkit's.
+    std::uintmax_t rendered = 0;
+    std::uintmax_t wxShots  = 0;
     for (const std::filesystem::path& file : imageFiles())
     {
-        total += std::filesystem::file_size(file);
+        (isScreenshot(file) ? wxShots : rendered) += std::filesystem::file_size(file);
     }
-    EXPECT_LE(total, kImageBudgetBytes) << "the embedded book is getting large";
+    std::uintmax_t qtShots = 0;
+    for (const std::filesystem::path& file : imageFiles())
+    {
+        const std::filesystem::path qtFile = helpDir() / "images-qt" / file.filename();
+        if (isScreenshot(file))
+        {
+            qtShots += std::filesystem::file_size(std::filesystem::exists(qtFile) ? qtFile : file);
+        }
+    }
+    EXPECT_LE(rendered + wxShots, kImageBudgetBytes) << "the wx build's book is getting large";
+    EXPECT_LE(rendered + qtShots, kImageBudgetBytes) << "the Qt build's book is getting large";
+}
+
+TEST(HelpBook, QtScreenshotsMirrorTheWxSet)
+{
+    const auto qtFiles = imageFiles("images-qt");
+    if (qtFiles.empty())
+    {
+        GTEST_SKIP() << "no Qt screenshots (the Qt build shows the wx ones)";
+    }
+    std::set<std::string> wx;
+    for (const std::filesystem::path& file : imageFiles())
+    {
+        if (isScreenshot(file))
+        {
+            wx.insert(file.filename().string());
+        }
+    }
+    std::set<std::string> qt;
+    for (const std::filesystem::path& file : qtFiles)
+    {
+        EXPECT_TRUE(isScreenshot(file) && file.extension() == ".png") << file.filename();
+        qt.insert(file.filename().string());
+    }
+    EXPECT_EQ(qt, wx) << "run the Qt build's --screenshots docs/help/images-qt";
 }
 
 }  // namespace

@@ -44,6 +44,8 @@ protected:
     void paintEvent(QPaintEvent* event) override;
 
 private:
+    void fitText();
+
     QLabel*      m_title{nullptr};
     QLabel*      m_text{nullptr};
     QLabel*      m_progress{nullptr};

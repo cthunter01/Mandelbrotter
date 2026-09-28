@@ -59,6 +59,7 @@ TourCard::TourCard(QWidget* parent)
     titleFont.setPointSizeF(titleFont.pointSizeF() * 1.2);
     m_title->setFont(titleFont);
     m_text->setWordWrap(true);
+    m_text->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     m_text->setFixedWidth(app::kCardTextWidth);
     for (QLabel* label : {m_title, m_text, m_progress})
     {
@@ -79,6 +80,8 @@ TourCard::TourCard(QWidget* parent)
     buttons->addWidget(m_next);
 
     auto* layout = new QVBoxLayout(this);
+    // Always the size its content asks for, the wrapped text's height included.
+    layout->setSizeConstraint(QLayout::SetFixedSize);
     layout->setContentsMargins(app::kCardPadding, app::kCardPadding, app::kCardPadding,
                                app::kCardPadding);
     layout->setSpacing(app::kCardPadding);
@@ -93,6 +96,7 @@ void TourCard::setStep(std::string_view title, std::string_view text, std::size_
 {
     m_title->setText(toQt(title));
     m_text->setText(toQt(text));
+    fitText();
     m_progress->setText(toQt(app::stepText(index, count)));
     m_back->setEnabled(index > 0);
     m_next->setText(toQt(index + 1 == count ? app::kFinish : app::kNext));
@@ -100,9 +104,22 @@ void TourCard::setStep(std::string_view title, std::string_view text, std::size_
     adjustSize();
 }
 
+void TourCard::fitText()
+{
+    // A wrapped label's size hint does not follow its fixed width: give it the height it needs, in
+    // the font it has once the style has polished it (measured again once the card is shown).
+    // heightForWidth() never answers less than the minimum height, so the last step's goes first.
+    ensurePolished();
+    m_text->ensurePolished();
+    m_text->setMinimumHeight(0);
+    m_text->setMaximumHeight(QWIDGETSIZE_MAX);
+    m_text->setFixedHeight(m_text->heightForWidth(app::kCardTextWidth));
+    adjustSize();
+}
+
 void TourCard::placeNear(const QRect& anchor)
 {
-    adjustSize();
+    fitText();
     move(toQt(app::placeTourCard(fromQt(anchor), fromQt(size()), fromQt(parentWidget()->size()),
                                  app::kCardGap)));
     raise();
