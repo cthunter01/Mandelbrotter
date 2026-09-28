@@ -46,6 +46,13 @@ struct QtHarness
         window.show();
     }
 
+    /// Makes the window the active one: shortcuts and the focus need it.
+    void activate()
+    {
+        window.activateWindow();
+        EXPECT_TRUE(QTest::qWaitForWindowActive(&window));
+    }
+
     [[nodiscard]] std::string status(app::StatusField field) const
     {
         return qt::fromQt(window.statusField(field).fullText());

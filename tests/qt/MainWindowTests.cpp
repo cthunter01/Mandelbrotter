@@ -2,13 +2,20 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QCheckBox>
+#include <QComboBox>
 #include <QDockWidget>
 #include <QKeySequence>
+#include <QLineEdit>
+#include <QListWidget>
 #include <QMenu>
 #include <QMenuBar>
+#include <QSpinBox>
 #include <QStatusTipEvent>
 #include <QString>
+#include <QTest>
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -16,10 +23,15 @@
 
 #include "Mandelbrotter/app/AppController.h"
 #include "Mandelbrotter/app/commands.h"
+#include "Mandelbrotter/app/help_routing.h"
+#include "Mandelbrotter/app/scenes.h"
 #include "Mandelbrotter/flights.h"
 #include "Mandelbrotter/help_action.h"
 #include "QtHarness.h"
+#include "TempDir.h"
 #include "qt/ElidedLabel.h"
+#include "qt/FractalCanvas.h"
+#include "qt/SidePanel.h"
 #include "qt/qt_util.h"
 
 namespace
@@ -201,17 +213,110 @@ TEST(MainWindow, TheSidePanelItemFollowsTheDock)
     EXPECT_FALSE(show->isChecked());
 }
 
-TEST(MainWindow, TheOrbitItemFollowsTheOverlay)
+TEST(MainWindow, TheOrbitItemAndCheckboxFollowTheOverlay)
 {
-    QtHarness h;
-    QAction*  orbit = h.window.action(Command::SHOW_ORBIT);
+    QtHarness  h;
+    QAction*   orbit = h.window.action(Command::SHOW_ORBIT);
+    QCheckBox* box   = h.window.panel().controls().orbit;
     ASSERT_NE(orbit, nullptr);
     orbit->trigger();
     EXPECT_TRUE(h.window.app().showOrbit());
-    h.window.app().setShowOrbit(false);
+    EXPECT_TRUE(box->isChecked());
+    box->click();
+    EXPECT_FALSE(h.window.app().showOrbit());
     EXPECT_FALSE(orbit->isChecked());
-    h.window.app().runHelpAction(mandelbrotter::OrbitAction{.on = true});
+    h.window.app().setShowOrbit(true);
     EXPECT_TRUE(orbit->isChecked());
+    EXPECT_TRUE(box->isChecked());
+    h.window.app().runHelpAction(mandelbrotter::OrbitAction{.on = false});
+    EXPECT_FALSE(orbit->isChecked());
+    EXPECT_FALSE(box->isChecked());
+}
+
+TEST(MainWindow, EscapeStopsAFlightAndTheTour)
+{
+    QtHarness h;
+    h.activate();
+    h.window.canvas().setFocus();
+    h.window.app().startFlight("seahorse-dive");
+    QTest::keyClick(&h.window.canvas(), Qt::Key_Escape);
+    EXPECT_FALSE(h.window.app().flightPlaying());
+
+    h.window.app().startTour();
+    h.window.panel().controls().family->setFocus();
+    QTest::keyClick(h.window.panel().controls().family, Qt::Key_Escape);
+    EXPECT_FALSE(h.window.app().tourRunning());
+}
+
+TEST(MainWindow, AnyKeyEndsAFlightAndStillDoesItsJob)
+{
+    QtHarness h;
+    h.activate();
+    h.window.canvas().setFocus();
+    h.window.app().startFlight("palette-sweep");
+    QTest::keyClick(&h.window.canvas(), Qt::Key_Plus);
+    EXPECT_FALSE(h.window.app().flightPlaying());
+    EXPECT_DOUBLE_EQ(
+        h.window.app().settings().view.zoom,
+        mandelbrotter::builtinFlights().back().keyframes.front().settings.view.zoom * 2.0);
+
+    // A menu shortcut never reaches the control as a key press, but ends a flight too.
+    h.window.app().startFlight("palette-sweep");
+    QTest::keyClick(&h.window.canvas(), Qt::Key_Home, Qt::ControlModifier);
+    EXPECT_FALSE(h.window.app().flightPlaying());
+    EXPECT_DOUBLE_EQ(h.window.app().settings().view.zoom, 1.0);
+}
+
+TEST(MainWindow, MenuShortcutsBeatTextFields)
+{
+    QtHarness    h(mandelbrotter::app::juliaExample());
+    const double home = h.window.app().settings().view.zoom;
+    h.activate();
+    h.window.action(Command::ZOOM_IN)->trigger();
+    ASSERT_DOUBLE_EQ(h.window.app().settings().view.zoom, home * 2.0);
+    QLineEdit* seed = h.window.panel().controls().seedRe;
+    seed->setFocus();
+    // A line edit would take Ctrl+Home for itself (to the start of the text).
+    QTest::keyClick(seed, Qt::Key_Home, Qt::ControlModifier);
+    EXPECT_DOUBLE_EQ(h.window.app().settings().view.zoom, home);
+    QTest::keyClick(seed, Qt::Key_Plus, Qt::ControlModifier);
+    EXPECT_DOUBLE_EQ(h.window.app().settings().view.zoom, home * 2.0);
+    EXPECT_TRUE(seed->hasFocus());
+}
+
+TEST(MainWindow, HelpForTheFocusedControl)
+{
+    QtHarness h;
+    h.activate();
+    const auto page = [&h] { return std::string(app::helpPageFor(h.window.helpContext())); };
+    h.window.canvas().setFocus();
+    EXPECT_EQ(page(), "navigating.html");
+    h.window.panel().controls().seedRe->setFocus();
+    EXPECT_EQ(page(), "julia.html");
+    h.window.panel().controls().exponent->setFocus();
+    EXPECT_EQ(page(), "fractals.html");
+    h.window.panel().controls().iterations->setFocus();
+    EXPECT_EQ(page(), "iterations.html");
+    h.window.panel().controls().bookmarks->setFocus();
+    EXPECT_EQ(page(), "bookmarks.html");
+    QApplication::focusWidget()->clearFocus();
+    EXPECT_EQ(page(), "index.html");
+}
+
+TEST(MainWindow, ClosingWithAFocusedSeedFieldAndAFlightIsClean)
+{
+    const mandelbrotter::test::TempDir dir;
+    auto window = std::make_unique<qt::MainWindow>(app::juliaExample(), dir / "bookmarks.json");
+    window->show();
+    window->activateWindow();
+    ASSERT_TRUE(QTest::qWaitForWindowActive(window.get()));
+    QLineEdit* seed = window->panel().controls().seedRe;
+    seed->setFocus();
+    seed->setText(u"0.3"_s);  // edited, not committed: committing it is the danger
+    window->app().startFlight("julia-sweep");
+    window->close();
+    window.reset();
+    QApplication::processEvents();
 }
 
 }  // namespace

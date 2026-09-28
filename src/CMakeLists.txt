@@ -120,10 +120,13 @@ if(MANDELBROTTER_GUI STREQUAL "qt")
         qt/cursors.cpp
         qt/ElidedLabel.cpp
         qt/FractalCanvas.cpp
+        qt/GlobalKeyFilter.cpp
+        qt/JuliaPreview.cpp
         qt/MainWindow.cpp
         qt/platform.cpp
         qt/qt_util.cpp
-        qt/run_qt.cpp)
+        qt/run_qt.cpp
+        qt/SidePanel.cpp)
     add_library(Mandelbrotter::qt ALIAS Mandelbrotter_qt)
     target_include_directories(Mandelbrotter_qt PUBLIC ${PROJECT_SOURCE_DIR}/src)
     target_link_libraries(Mandelbrotter_qt PUBLIC

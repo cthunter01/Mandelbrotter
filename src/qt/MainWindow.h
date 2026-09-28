@@ -4,6 +4,7 @@
 #include <QCloseEvent>
 #include <QDockWidget>
 #include <QEvent>
+#include <QKeyEvent>
 #include <QMainWindow>
 #include <QMenu>
 #include <QString>
@@ -18,12 +19,15 @@
 #include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/app/AppController.h"
 #include "Mandelbrotter/app/commands.h"
+#include "Mandelbrotter/app/help_routing.h"
 
 namespace mandelbrotter::qt
 {
 
 class ElidedLabel;
 class FractalCanvas;
+class GlobalKeyFilter;
+class SidePanel;
 
 /// The main window: the Qt side of app::AppController, which holds the model and the policies.
 /// The window builds the widgets, menus and dialogs and routes their events to app(); app() and the
@@ -49,7 +53,13 @@ public:
     [[nodiscard]] QAction*     aboutQtAction() const noexcept { return m_aboutQt; }
     [[nodiscard]] ElidedLabel& statusField(app::StatusField field) const;
     [[nodiscard]] QDockWidget& panelDock() const noexcept { return *m_dock; }
-    void                       setSidePanelShown(bool shown);
+    [[nodiscard]] SidePanel&   panel() const noexcept { return *m_panel; }
+    /// Shows (and raises) or hides the side panel's dock; View > Show side panel follows.
+    void setSidePanelShown(bool shown);
+    /// Where the keyboard focus is, for F1.
+    [[nodiscard]] app::HelpContext helpContext() const;
+    /// True when `event` is the shortcut of one of the menu items.
+    [[nodiscard]] bool isMenuShortcut(const QKeyEvent& event) const;
 
 protected:
     bool event(QEvent* event) override;
@@ -73,16 +83,21 @@ private:
     void runCommand(app::Command command, std::size_t flight, bool checked);
     /// Stop demo and Back to where I was follow the app's state when their menu opens.
     void refreshEnabledActions();
+    void wirePanel();
     void buildStatusBar();
     void setStatus(app::StatusField field, const QString& text);
     /// A menu item's status tip covers the pointer field while it is hovered (empty: uncover).
     void showStatusTip(const QString& tip);
     void showAbout();
+    /// F1: the page about whatever has the keyboard focus.
+    void showContextHelp();
     void reportError(std::string_view title, std::string_view message);
 
     QTimer                     m_demoTimer;  ///< ticks the flights; stopped first on destruction
     FractalCanvas*             m_canvas{nullptr};  ///< the central widget
     QDockWidget*               m_dock{nullptr};
+    SidePanel*                 m_panel{nullptr};
+    GlobalKeyFilter*           m_keyFilter{nullptr};
     std::vector<CommandAction> m_actions;
     QAction*                   m_aboutQt{nullptr};
     std::array<ElidedLabel*, app::kStatusFieldCount> m_status{};

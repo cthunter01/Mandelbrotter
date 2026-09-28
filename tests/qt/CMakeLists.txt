@@ -4,7 +4,8 @@ add_executable(Mandelbrotter_qt_tests
     MainWindowTests.cpp
     platform_tests.cpp
     qt_test_main.cpp
-    qt_util_tests.cpp)
+    qt_util_tests.cpp
+    SidePanelTests.cpp)
 target_include_directories(Mandelbrotter_qt_tests PRIVATE ${PROJECT_SOURCE_DIR}/tests)
 target_link_libraries(Mandelbrotter_qt_tests PRIVATE Mandelbrotter::qt Qt6::Test GTest::gtest)
 set_target_properties(Mandelbrotter_qt_tests PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
