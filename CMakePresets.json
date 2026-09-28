@@ -41,6 +41,11 @@
       "cacheVariables": { "MANDELBROTTER_WARNINGS_AS_ERRORS": "ON" }
     },
     {
+      "name": "gui-none",
+      "hidden": true,
+      "cacheVariables": { "MANDELBROTTER_GUI": "none" }
+    },
+    {
       "name": "clang-debug",
       "displayName": "Clang Debug",
       "inherits": "clang",
@@ -101,6 +106,11 @@
       "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "MANDELBROTTER_ENABLE_CLANG_TIDY": "ON" }
     },
     {
+      "name": "headless",
+      "displayName": "Clang Debug, no GUI (CLI only; wxWidgets is not fetched)",
+      "inherits": ["clang-debug", "gui-none"]
+    },
+    {
       "name": "ci-gcc",
       "displayName": "GCC Release, warnings as errors",
       "inherits": ["gcc-release", "werror"]
@@ -119,7 +129,7 @@
       "name": "dist",
       "hidden": true,
       "description": "Release archives: dependencies are built from source and linked in, never taken from the build machine",
-      "cacheVariables": { "FETCHCONTENT_TRY_FIND_PACKAGE_MODE": "NEVER" }
+      "cacheVariables": { "FETCHCONTENT_TRY_FIND_PACKAGE_MODE": "NEVER", "MANDELBROTTER_GUI": "wx" }
     },
     {
       "name": "dist-linux",
@@ -163,6 +173,7 @@
     { "name": "tsan", "configurePreset": "tsan" },
     { "name": "coverage", "configurePreset": "coverage", "targets": ["coverage"] },
     { "name": "tidy", "configurePreset": "tidy" },
+    { "name": "headless", "configurePreset": "headless" },
     { "name": "ci-gcc", "configurePreset": "ci-gcc" },
     { "name": "ci-clang", "configurePreset": "ci-clang" },
     { "name": "ci-msvc", "configurePreset": "ci-msvc" },
@@ -199,6 +210,7 @@
       "environment": { "TSAN_OPTIONS": "halt_on_error=1" }
     },
     { "name": "tidy", "inherits": "test-base", "configurePreset": "tidy" },
+    { "name": "headless", "inherits": "test-base", "configurePreset": "headless" },
     { "name": "ci-gcc", "inherits": "test-base", "configurePreset": "ci-gcc" },
     { "name": "ci-clang", "inherits": "test-base", "configurePreset": "ci-clang" },
     { "name": "ci-msvc", "inherits": "test-base", "configurePreset": "ci-msvc" },
@@ -296,6 +308,15 @@
         { "type": "configure", "name": "tidy" },
         { "type": "build", "name": "tidy" },
         { "type": "test", "name": "tidy" }
+      ]
+    },
+    {
+      "name": "headless",
+      "displayName": "Configure, build and test the build without a window (Clang Debug)",
+      "steps": [
+        { "type": "configure", "name": "headless" },
+        { "type": "build", "name": "headless" },
+        { "type": "test", "name": "headless" }
       ]
     },
     {

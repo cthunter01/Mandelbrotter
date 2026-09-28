@@ -2,7 +2,10 @@
 
 #include <filesystem>
 #include <optional>
+#include <ostream>
+#include <span>
 #include <string_view>
+#include <variant>
 
 #include "Mandelbrotter/RenderSettings.h"
 
@@ -16,6 +19,13 @@ struct StartupOptions
     RenderSettings                       settings;
     std::optional<std::filesystem::path> screenshotsDir;
 };
+
+/// The command line, parsed and acted on as far as it can be without a window: an exit code when
+/// the program is done (--help, --render, --flight-frames, or an error, reported on `err`), or the
+/// options for the window. Drops macOS's "-psn_..." argument. `args` are the arguments after the
+/// program name.
+[[nodiscard]] std::variant<int, StartupOptions> prepareStartup(
+    std::span<const std::string_view> args, std::ostream& out, std::ostream& err);
 
 /// The screenshot mode's scratch directory under the temp directory. The screenshot run deletes
 /// the bookmarks file's directory when it ends, so it must only ever receive this path.

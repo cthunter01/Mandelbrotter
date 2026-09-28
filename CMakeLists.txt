@@ -24,6 +24,15 @@ option(MANDELBROTTER_ENABLE_COVERAGE "Clang source-based coverage and a 'coverag
 option(MANDELBROTTER_ENABLE_CLANG_TIDY "Run clang-tidy on our sources while compiling" OFF)
 option(MANDELBROTTER_ENABLE_IPO "Link-time optimisation for our targets" OFF)
 set(MANDELBROTTER_SANITIZERS "" CACHE STRING "Sanitizers for our targets, e.g. address;undefined or thread")
+# The window's toolkit. `none` builds the command line only (--render works; wxWidgets is never fetched).
+set(MANDELBROTTER_GUI "wx" CACHE STRING "GUI toolkit: wx, qt, or none (CLI only)")
+set_property(CACHE MANDELBROTTER_GUI PROPERTY STRINGS wx qt none)
+if(NOT MANDELBROTTER_GUI MATCHES "^(wx|qt|none)$")
+    message(FATAL_ERROR "MANDELBROTTER_GUI must be wx, qt or none, not '${MANDELBROTTER_GUI}'")
+endif()
+if(MANDELBROTTER_GUI STREQUAL "qt")
+    message(FATAL_ERROR "MANDELBROTTER_GUI=qt: the Qt front end is not there yet")
+endif()
 
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM AND NOT CMAKE_CXX_COMPILER_LAUNCHER)   # a launcher the user chose wins

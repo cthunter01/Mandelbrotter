@@ -49,7 +49,9 @@ add_test(NAME cli.render_png
         -P ${CMAKE_CURRENT_SOURCE_DIR}/cli_render_test.cmake)
 set_tests_properties(cli.render_png PROPERTIES ENVIRONMENT "DISPLAY=;WAYLAND_DISPLAY=" TIMEOUT 120)
 
-# The help book zip that gets embedded into the GUI (cmake/HelpBook.cmake) must carry the book at its root.
+# The help book zip that gets embedded into the wx GUI (cmake/HelpBook.cmake) must carry the book at its root.
 get_property(help_zip GLOBAL PROPERTY MANDELBROTTER_HELP_ZIP)
-add_test(NAME help.book_zip
-    COMMAND ${CMAKE_COMMAND} -DZIP=${help_zip} -P ${CMAKE_CURRENT_SOURCE_DIR}/help_zip_test.cmake)
+if(help_zip)
+    add_test(NAME help.book_zip
+        COMMAND ${CMAKE_COMMAND} -DZIP=${help_zip} -P ${CMAKE_CURRENT_SOURCE_DIR}/help_zip_test.cmake)
+endif()

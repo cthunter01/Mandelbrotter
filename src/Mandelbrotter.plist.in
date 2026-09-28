@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!-- Info.plist of Mandelbrotter.app, filled in by CMake from the MACOSX_BUNDLE_* properties in
-     src/CMakeLists.txt. Based on wxWidgets' src/osx/carbon/Info.plist.in, plus NSHighResolutionCapable so
-     Retina displays get full-resolution drawing. -->
+     src/CMakeLists.txt and its MANDELBROTTER_PRINCIPAL_CLASS (the toolkit's application class). Based on
+     wxWidgets' src/osx/carbon/Info.plist.in, plus NSHighResolutionCapable so Retina displays get
+     full-resolution drawing. -->
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
@@ -26,6 +27,6 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSPrincipalClass</key>
-	<string>wxNSApplication</string>
+	<string>${MANDELBROTTER_PRINCIPAL_CLASS}</string>
 </dict>
 </plist>

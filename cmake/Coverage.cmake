@@ -32,7 +32,7 @@ add_custom_target(coverage
         "-DBUILD_DIR=${PROJECT_BINARY_DIR}"
         "-DSOURCE_DIR=${PROJECT_SOURCE_DIR}"
         "-DBINARIES=${coverage_binaries_arg}"
-        "-DIGNORE_REGEX=.*/(build|_deps|tests|gui)/.*"
+        "-DIGNORE_REGEX=.*/(build|_deps|tests|gui|qt)/.*"
         "-DLLVM_PROFDATA=${LLVM_PROFDATA_PROGRAM}"
         "-DLLVM_COV=${LLVM_COV_PROGRAM}"
         "-DCTEST=${CMAKE_CTEST_COMMAND}"

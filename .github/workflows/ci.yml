@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        preset: [ci-gcc, ci-clang, asan, tidy]
+        preset: [ci-gcc, ci-clang, asan, tidy, headless]   # headless: the build without a window (no wx)
     steps:
       - name: Install toolchain and wxWidgets build dependencies
         run: pacman -Syu --noconfirm --needed cmake ninja clang git ccache pkgconf gtk3 libpng zlib

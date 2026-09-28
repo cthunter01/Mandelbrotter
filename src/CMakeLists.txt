@@ -51,63 +51,78 @@ target_link_libraries(Mandelbrotter_app PUBLIC Mandelbrotter::lib)   # never wx
 Mandelbrotter_configure_target(Mandelbrotter_app)
 
 # GUI library: the wxWidgets layer. Headers live next to the sources and are included as "gui/<name>.h".
-add_library(Mandelbrotter_gui STATIC
-    gui/app_icon.cpp
-    gui/export_runner.cpp
-    gui/ExportDialog.cpp
-    gui/FractalCanvas.cpp
-    gui/HelpController.cpp
-    gui/JuliaPreview.cpp
-    gui/MainFrame.cpp
-    gui/MandelbrotterApp.cpp
-    gui/ScreenshotRun.cpp
-    gui/SidePanel.cpp
-    gui/TourCard.cpp
-    gui/TourView.cpp
-    gui/window_capture.cpp
-    gui/wx_util.cpp)
-add_library(Mandelbrotter::gui ALIAS Mandelbrotter_gui)
-target_include_directories(Mandelbrotter_gui PUBLIC ${PROJECT_SOURCE_DIR}/src)
-target_link_libraries(Mandelbrotter_gui PUBLIC Mandelbrotter::app Mandelbrotter::lib wx::html wx::core wx::base)
-# window_capture.cpp reads a window's pixels back through GDK on Linux; wx keeps its GTK include directories
-# private, so the file needs them itself (an imported target: the headers count as system headers).
-if(UNIX AND NOT APPLE)
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(GTK3 REQUIRED IMPORTED_TARGET gtk+-3.0)
-    target_link_libraries(Mandelbrotter_gui PRIVATE PkgConfig::GTK3)
+if(MANDELBROTTER_GUI STREQUAL "wx")
+    add_library(Mandelbrotter_gui STATIC
+        gui/app_icon.cpp
+        gui/export_runner.cpp
+        gui/ExportDialog.cpp
+        gui/FractalCanvas.cpp
+        gui/HelpController.cpp
+        gui/JuliaPreview.cpp
+        gui/MainFrame.cpp
+        gui/MandelbrotterApp.cpp
+        gui/ScreenshotRun.cpp
+        gui/SidePanel.cpp
+        gui/TourCard.cpp
+        gui/TourView.cpp
+        gui/window_capture.cpp
+        gui/wx_util.cpp)
+    add_library(Mandelbrotter::gui ALIAS Mandelbrotter_gui)
+    target_include_directories(Mandelbrotter_gui PUBLIC ${PROJECT_SOURCE_DIR}/src)
+    target_link_libraries(Mandelbrotter_gui PUBLIC Mandelbrotter::app Mandelbrotter::lib wx::html wx::core wx::base)
+    # window_capture.cpp reads a window's pixels back through GDK on Linux; wx keeps its GTK include directories
+    # private, so the file needs them itself (an imported target: the headers count as system headers).
+    if(UNIX AND NOT APPLE)
+        find_package(PkgConfig REQUIRED)
+        pkg_check_modules(GTK3 REQUIRED IMPORTED_TARGET gtk+-3.0)
+        target_link_libraries(Mandelbrotter_gui PRIVATE PkgConfig::GTK3)
 
-    # The window icon (gui/app_icon.cpp), compiled in so the executable needs no files beside it.
-    set(icon_png ${CMAKE_CURRENT_SOURCE_DIR}/icons/mandelbrotter.png)
-    set(icon_cpp ${PROJECT_BINARY_DIR}/icons/app_icon_data.cpp)
-    add_custom_command(OUTPUT ${icon_cpp}
-        COMMAND Mandelbrotter_embed ${icon_png} ${icon_cpp} gui/app_icon.h mandelbrotter::gui appIconPngChunks
-        DEPENDS ${icon_png} Mandelbrotter_embed
-        COMMENT "Embedding the application icon"
-        VERBATIM)
-    set_source_files_properties(${icon_cpp} PROPERTIES GENERATED TRUE SKIP_LINTING ON)
-    target_sources(Mandelbrotter_gui PRIVATE ${icon_cpp})
+        # The window icon (gui/app_icon.cpp), compiled in so the executable needs no files beside it.
+        set(icon_png ${CMAKE_CURRENT_SOURCE_DIR}/icons/mandelbrotter.png)
+        set(icon_cpp ${PROJECT_BINARY_DIR}/icons/app_icon_data.cpp)
+        add_custom_command(OUTPUT ${icon_cpp}
+            COMMAND Mandelbrotter_embed ${icon_png} ${icon_cpp} gui/app_icon.h mandelbrotter::gui appIconPngChunks
+            DEPENDS ${icon_png} Mandelbrotter_embed
+            COMMENT "Embedding the application icon"
+            VERBATIM)
+        set_source_files_properties(${icon_cpp} PROPERTIES GENERATED TRUE SKIP_LINTING ON)
+        target_sources(Mandelbrotter_gui PRIVATE ${icon_cpp})
+    endif()
+    target_compile_definitions(Mandelbrotter_gui PRIVATE MANDELBROTTER_VERSION="${PROJECT_VERSION}")
+    include(${PROJECT_SOURCE_DIR}/cmake/HelpBook.cmake)
+    Mandelbrotter_add_help_book(Mandelbrotter_gui)
+    Mandelbrotter_configure_target(Mandelbrotter_gui)
 endif()
-target_compile_definitions(Mandelbrotter_gui PRIVATE MANDELBROTTER_VERSION="${PROJECT_VERSION}")
-include(${PROJECT_SOURCE_DIR}/cmake/HelpBook.cmake)
-Mandelbrotter_add_help_book(Mandelbrotter_gui)
-Mandelbrotter_configure_target(Mandelbrotter_gui)
 
-# The executable. wxIMPLEMENT_APP_NO_MAIN must live in this target: in a static library the linker would drop
-# the app initializer object.
+# The executable. main.cpp is free of any toolkit: it runs the command line (which never needs a display) and
+# hands the window to runGui() (gui_entry.h), which the GUI build defines.
 add_executable(Mandelbrotter main.cpp)
-target_link_libraries(Mandelbrotter PRIVATE Mandelbrotter::gui)
-# Windows: the application icon and wxWidgets' resources (wxMSW loads its stock cursors from the executable),
-# and wx's per-monitor DPI manifest, which the linker merges into the one it writes so Windows stops
-# bitmap-scaling the window.
+target_link_libraries(Mandelbrotter PRIVATE Mandelbrotter::app)
+if(MANDELBROTTER_GUI STREQUAL "wx")
+    # wxIMPLEMENT_APP_NO_MAIN must live in this target: in a static library the linker would drop the app
+    # initializer object.
+    target_sources(Mandelbrotter PRIVATE main_wx.cpp)
+    target_link_libraries(Mandelbrotter PRIVATE Mandelbrotter::gui)
+else()
+    target_sources(Mandelbrotter PRIVATE main_headless.cpp)
+endif()
+# Windows: the application icon (Explorer shows it for every build). For wx also wxWidgets' resources (wxMSW
+# loads its stock cursors from the executable) and wx's per-monitor DPI manifest, which the linker merges into the
+# one it writes so Windows stops bitmap-scaling the window.
 if(WIN32)
-    target_sources(Mandelbrotter PRIVATE
-        Mandelbrotter.rc
-        ${wxwidgets_SOURCE_DIR}/include/wx/msw/wx_dpi_aware_pmv2.manifest)
+    target_sources(Mandelbrotter PRIVATE Mandelbrotter.rc)
     set_source_files_properties(Mandelbrotter.rc PROPERTIES
         OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/icons/mandelbrotter.ico)
+    if(MANDELBROTTER_GUI STREQUAL "wx")
+        set_property(SOURCE Mandelbrotter.rc APPEND PROPERTY COMPILE_DEFINITIONS MANDELBROTTER_GUI_WX)
+        target_sources(Mandelbrotter PRIVATE ${wxwidgets_SOURCE_DIR}/include/wx/msw/wx_dpi_aware_pmv2.manifest)
+    endif()
 endif()
-# macOS: Mandelbrotter.app, so Finder opens it as an application (not in Terminal) and shows its icon.
-if(APPLE)
+# macOS: Mandelbrotter.app, so Finder opens it as an application (not in Terminal) and shows its icon. A build
+# without a window stays a plain command-line executable.
+if(APPLE AND NOT MANDELBROTTER_GUI STREQUAL "none")
+    # Substituted into Mandelbrotter.plist.in along with the MACOSX_BUNDLE_* properties.
+    set(MANDELBROTTER_PRINCIPAL_CLASS wxNSApplication)
     set_target_properties(Mandelbrotter PROPERTIES
         MACOSX_BUNDLE                      TRUE
         MACOSX_BUNDLE_INFO_PLIST           ${CMAKE_CURRENT_SOURCE_DIR}/Mandelbrotter.plist.in
@@ -125,15 +140,15 @@ include(GNUInstallDirs)
 install(TARGETS Mandelbrotter RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} BUNDLE DESTINATION .)
 # The linker signs only the executable inside the bundle; sign the installed bundle as a whole (ad hoc, no
 # identity), so its Info.plist and icon are sealed too and `codesign --verify` accepts it.
-if(APPLE)
+if(APPLE AND NOT MANDELBROTTER_GUI STREQUAL "none")
     install(CODE [[
         execute_process(COMMAND codesign --force --sign - "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/Mandelbrotter.app"
                         COMMAND_ERROR_IS_FATAL ANY)
     ]])
 endif()
 # Linux desktops find an application's name and icon through a .desktop file named after its window class
-# (the Wayland app_id), "Mandelbrotter".
-if(UNIX AND NOT APPLE)
+# (the Wayland app_id), "Mandelbrotter". A build without a window has no menu entry.
+if(UNIX AND NOT APPLE AND NOT MANDELBROTTER_GUI STREQUAL "none")
     install(FILES Mandelbrotter.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
     install(FILES icons/mandelbrotter.png DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/256x256/apps)
 endif()
