@@ -17,6 +17,15 @@ if(MANDELBROTTER_BUILD_TESTS)
         EXCLUDE_FROM_ALL
         FIND_PACKAGE_ARGS NAMES GTest)
     FetchContent_MakeAvailable(googletest)
+    # Built from source (no installed GoogleTest found): sanitized like the tests it is linked into.
+    foreach(gtest_target gtest gtest_main gmock gmock_main)
+        if(TARGET ${gtest_target})
+            get_target_property(gtest_imported ${gtest_target} IMPORTED)
+            if(NOT gtest_imported)
+                Mandelbrotter_sanitize_dependency(${gtest_target})
+            endif()
+        endif()
+    endforeach()
 endif()
 
 find_package(Threads REQUIRED)

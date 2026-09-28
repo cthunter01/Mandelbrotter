@@ -30,6 +30,29 @@ if(MANDELBROTTER_ENABLE_CLANG_TIDY)
     endif()
 endif()
 
+# Mandelbrotter_sanitize_dependency(<target>)
+# The sanitizer part of Mandelbrotter_configure_target alone, for a dependency built from source into a sanitized
+# executable (GoogleTest): with ASan, libstdc++'s std::vector annotations must be the same in every object that
+# instantiates the same vector code, or a vector filled on one side and grown on the other reports a false
+# container-overflow. No-op without MANDELBROTTER_SANITIZERS or with MSVC.
+function(Mandelbrotter_sanitize_dependency target)
+    if(NOT MANDELBROTTER_SANITIZERS OR NOT CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        return()
+    endif()
+    list(JOIN MANDELBROTTER_SANITIZERS "," sanitizers)
+    set(sanitize -fsanitize=${sanitizers})
+    if("undefined" IN_LIST MANDELBROTTER_SANITIZERS)
+        list(APPEND sanitize -fno-sanitize-recover=all)   # UB stops the program, so a test fails
+    endif()
+    target_compile_options(${target} PRIVATE ${sanitize} -fno-omit-frame-pointer)
+    target_link_options(${target} PUBLIC ${sanitize})
+    if("address" IN_LIST MANDELBROTTER_SANITIZERS)
+        # libstdc++ annotates std::vector's spare capacity for ASan only on request (libc++ does it by default),
+        # so reads past size() but within capacity() are caught. Ignored by libc++.
+        target_compile_definitions(${target} PRIVATE _GLIBCXX_SANITIZE_VECTOR)
+    endif()
+endfunction()
+
 # Mandelbrotter_configure_target(<target>)
 # Applies warnings, sanitizers, coverage, clang-tidy and IPO to one of *our* targets (never to dependencies).
 # Call it for every target you add.
@@ -59,20 +82,7 @@ function(Mandelbrotter_configure_target target)
             $<$<CONFIG:Debug>:_GLIBCXX_ASSERTIONS>
             $<$<CONFIG:Debug>:_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE>)
 
-        if(MANDELBROTTER_SANITIZERS)
-            list(JOIN MANDELBROTTER_SANITIZERS "," sanitizers)
-            set(sanitize -fsanitize=${sanitizers})
-            if("undefined" IN_LIST MANDELBROTTER_SANITIZERS)
-                list(APPEND sanitize -fno-sanitize-recover=all)   # UB stops the program, so a test fails
-            endif()
-            target_compile_options(${target} PRIVATE ${sanitize} -fno-omit-frame-pointer)
-            target_link_options(${target} PUBLIC ${sanitize})
-            if("address" IN_LIST MANDELBROTTER_SANITIZERS)
-                # libstdc++ annotates std::vector's spare capacity for ASan only on request (libc++ does it by
-                # default), so reads past size() but within capacity() are caught. Ignored by libc++ and MSVC.
-                target_compile_definitions(${target} PRIVATE _GLIBCXX_SANITIZE_VECTOR)
-            endif()
-        endif()
+        Mandelbrotter_sanitize_dependency(${target})
     endif()
 
     if(MANDELBROTTER_ENABLE_COVERAGE)
