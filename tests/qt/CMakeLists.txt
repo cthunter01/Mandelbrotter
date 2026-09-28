@@ -1,5 +1,6 @@
 # The Qt layer's view tests: the real widgets on Qt's offscreen platform (no display needed).
 add_executable(Mandelbrotter_qt_tests
+    FractalCanvasTests.cpp
     MainWindowTests.cpp
     platform_tests.cpp
     qt_test_main.cpp
@@ -15,4 +16,8 @@ Mandelbrotter_configure_target(Mandelbrotter_qt_tests)
 include(GoogleTest)
 # PRE_TEST: the tests are listed when ctest runs them, with ctest's environment (not a test's ENVIRONMENT), which
 # is why qt_test_main.cpp picks the offscreen platform itself.
-gtest_discover_tests(Mandelbrotter_qt_tests DISCOVERY_MODE PRE_TEST)
+gtest_discover_tests(Mandelbrotter_qt_tests DISCOVERY_MODE PRE_TEST TEST_FILTER "-FractionalRatio.*")
+
+# The canvas at a fractional pixel ratio (Windows at 150%, fractional desktop scaling).
+add_test(NAME qt.fractional_ratio COMMAND Mandelbrotter_qt_tests --gtest_filter=FractionalRatio.*)
+set_tests_properties(qt.fractional_ratio PROPERTIES ENVIRONMENT "QT_SCALE_FACTOR=1.5")

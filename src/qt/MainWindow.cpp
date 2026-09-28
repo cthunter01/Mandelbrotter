@@ -9,7 +9,6 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
-#include <QMetaObject>
 #include <QStatusBar>
 #include <QStatusTipEvent>
 #include <QString>
@@ -18,7 +17,6 @@
 #include <cstddef>
 #include <filesystem>
 #include <format>
-#include <functional>
 #include <optional>
 #include <string_view>
 #include <utility>
@@ -26,11 +24,11 @@
 
 #include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/app/AppController.h"
-#include "Mandelbrotter/app/CanvasController.h"
 #include "Mandelbrotter/app/DemoPlayer.h"
 #include "Mandelbrotter/app/commands.h"
 #include "Mandelbrotter/app/ui_text.h"
 #include "qt/ElidedLabel.h"
+#include "qt/FractalCanvas.h"
 #include "qt/qt_util.h"
 
 namespace mandelbrotter::qt
@@ -65,18 +63,11 @@ QAction::MenuRole menuRole(app::MenuRole role)
 }  // namespace
 
 MainWindow::MainWindow(RenderSettings initial, std::filesystem::path bookmarksPath)
-  : m_canvasController(initial, {.post =
-                                     [this](std::function<void()> work) {
-                                         QMetaObject::invokeMethod(this, std::move(work),
-                                                                   Qt::QueuedConnection);
-                                     },
-                                 .requestRepaint = {},
-                                 .setCursor      = {},
-                                 .captureMouse   = {}}),
-    m_app(std::move(initial), std::move(bookmarksPath), m_canvasController, makeShell())
+  : m_canvas(new FractalCanvas(this, initial)),
+    m_app(std::move(initial), std::move(bookmarksPath), m_canvas->controller(), makeShell())
 {
     setWindowTitle(toQt(app::kWindowTitle));
-    setCentralWidget(new QWidget(this));
+    setCentralWidget(m_canvas);
 
     // Titled before its toggle action is taken: the action copies the title.
     m_dock = new QDockWidget(u"Settings"_s, this);
@@ -95,6 +86,7 @@ MainWindow::MainWindow(RenderSettings initial, std::filesystem::path bookmarksPa
 
     m_app.start();
     refreshEnabledActions();
+    m_canvas->setFocus();
 }
 
 MainWindow::~MainWindow()

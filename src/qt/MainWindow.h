@@ -17,13 +17,13 @@
 
 #include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/app/AppController.h"
-#include "Mandelbrotter/app/CanvasController.h"
 #include "Mandelbrotter/app/commands.h"
 
 namespace mandelbrotter::qt
 {
 
 class ElidedLabel;
+class FractalCanvas;
 
 /// The main window: the Qt side of app::AppController, which holds the model and the policies.
 /// The window builds the widgets, menus and dialogs and routes their events to app(); app() and the
@@ -42,6 +42,7 @@ public:
     [[nodiscard]] app::AppController& app() noexcept { return m_app; }
 
     // ---- widgets
+    [[nodiscard]] FractalCanvas& canvas() const noexcept { return *m_canvas; }
     /// The menu item of `command` (FLIGHT: the one of builtinFlights()[flight]); nullptr if none.
     [[nodiscard]] QAction* action(app::Command command, std::size_t flight = 0) const;
     /// Help > About Qt, which only the Qt build has.
@@ -80,7 +81,7 @@ private:
     void reportError(std::string_view title, std::string_view message);
 
     QTimer                     m_demoTimer;  ///< ticks the flights; stopped first on destruction
-    app::CanvasController      m_canvasController;
+    FractalCanvas*             m_canvas{nullptr};  ///< the central widget
     QDockWidget*               m_dock{nullptr};
     std::vector<CommandAction> m_actions;
     QAction*                   m_aboutQt{nullptr};

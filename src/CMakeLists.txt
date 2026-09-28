@@ -117,7 +117,9 @@ if(MANDELBROTTER_GUI STREQUAL "qt")
     set_target_properties(Mandelbrotter_qt_resources PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
 
     add_library(Mandelbrotter_qt STATIC
+        qt/cursors.cpp
         qt/ElidedLabel.cpp
+        qt/FractalCanvas.cpp
         qt/MainWindow.cpp
         qt/platform.cpp
         qt/qt_util.cpp
