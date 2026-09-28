@@ -43,6 +43,7 @@ add_library(Mandelbrotter_app STATIC
     app/help_routing.cpp
     app/panel_model.cpp
     app/scenes.cpp
+    app/ScreenshotScript.cpp
     app/startup.cpp
     app/tour_layout.cpp
     app/TourScript.cpp

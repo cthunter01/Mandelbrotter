@@ -164,20 +164,23 @@ struct RecordingShell
 };
 
 /// An application on a 40 x 30 canvas whose renders post to `queue`, with its bookmarks in a
-/// fresh directory. start() is left to the test.
+/// fresh directory (or in its subdirectory `bookmarksDir`). start() is left to the test.
 struct Harness
 {
     static constexpr PixelSize kCanvasSize{40, 30};
 
-    explicit Harness(const RenderSettings& initial = app::mandelbrotDefault())
-      : canvas(initial,
+    explicit Harness(const RenderSettings& initial      = app::mandelbrotDefault(),
+                     const std::string&    bookmarksDir = {})
+      : bookmarks(bookmarksDir.empty() ? dir / "bookmarks.json"
+                                       : dir.path() / bookmarksDir / "bookmarks.json"),
+        canvas(initial,
                {.post = queue.hook(), .requestRepaint = {}, .setCursor = {}, .captureMouse = {}}),
-        app(initial, bookmarksFile(), canvas, shell.shell())
+        app(initial, bookmarks, canvas, shell.shell())
     {
         canvas.setSize(kCanvasSize, 1.0);
     }
 
-    [[nodiscard]] std::filesystem::path bookmarksFile() const { return dir / "bookmarks.json"; }
+    [[nodiscard]] std::filesystem::path bookmarksFile() const { return bookmarks; }
     /// Runs the posted render work until the status bar says the render in progress finished.
     [[nodiscard]] bool finishRender()
     {
@@ -192,6 +195,7 @@ struct Harness
     }
 
     TempDir               dir;
+    std::filesystem::path bookmarks;
     PostQueue             queue;
     app::CanvasController canvas;
     RecordingShell        shell;

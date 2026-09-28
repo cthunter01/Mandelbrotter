@@ -28,6 +28,7 @@ add_executable(Mandelbrotter_tests
     ReferenceOrbitTests.cpp
     RenderSettingsTests.cpp
     scenes_tests.cpp
+    ScreenshotScriptTests.cpp
     startup_tests.cpp
     tour_layout_tests.cpp
     TourScriptTests.cpp

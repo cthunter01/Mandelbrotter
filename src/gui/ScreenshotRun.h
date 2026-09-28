@@ -1,11 +1,9 @@
 #pragma once
 
-#include <cstddef>
+#include <expected>
 #include <filesystem>
-#include <functional>
 #include <optional>
 #include <string>
-#include <vector>
 
 #include <wx/dialog.h>
 #include <wx/event.h>
@@ -13,15 +11,17 @@
 #include <wx/timer.h>
 #include <wx/window.h>
 
+#include "Mandelbrotter/app/ScreenshotScript.h"
+#include "Mandelbrotter/geometry.h"
+
 namespace mandelbrotter::gui
 {
 
 class MainFrame;
 
-/// The developer screenshot mode (--screenshots DIR): walks the window through the states the help
-/// book shows, saves each as a PNG under DIR, then closes the window. A shot is taken after the
-/// canvas has finished rendering and a short pause for the toolkit to repaint. Failures are
-/// printed and turn into exit code 1.
+/// The developer screenshot mode (--screenshots DIR) on wx: app::ScreenshotScript walks the window
+/// through the states the help book shows; this fills its hooks with wx's timers, dialogs and
+/// window capture (window_capture.h), and closes the window when the script is done.
 class ScreenshotRun : public wxEvtHandler
 {
 public:
@@ -35,35 +35,20 @@ public:
     void start();
 
 private:
-    struct Shot
-    {
-        std::string                file;
-        bool                       rendersFirst;  ///< wait for the canvas after prepare()
-        std::function<void()>      prepare;
-        std::function<wxWindow*()> target;            ///< the window to capture
-        std::function<std::optional<wxRect>()> crop;  ///< screen rectangle to keep, if any
-        std::function<void()>                  cleanup;
-    };
-
-    [[nodiscard]] std::vector<Shot> buildShots();
-    void                            runCurrent();
-    void                            onRenderFinished();
-    void                            settle();
-    void                            onSettled(wxTimerEvent& event);
-    void                            onWatchdog(wxTimerEvent& event);
-    void                            capture();
-    void                            fail(const std::string& why);
-    void                            finish(int exitCode);
+    [[nodiscard]] app::ScreenshotScript::Hooks makeHooks();
+    [[nodiscard]] wxWindow*                    targetWindow(app::ShotTarget target);
+    /// The region's rectangle in screen coordinates, with the margin; nullopt for the whole target.
+    [[nodiscard]] std::optional<wxRect>                 regionRect(app::ShotRegion region);
+    [[nodiscard]] std::expected<PixelSize, std::string> capture(app::ShotTarget              target,
+                                                                app::ShotRegion              region,
+                                                                const std::filesystem::path& path);
+    void                                                closeBookmarkDialog();
 
     MainFrame&            m_frame;
-    std::filesystem::path m_dir;
-    std::vector<Shot>     m_shots;
-    std::size_t           m_index{0};
     wxTimer               m_settle;
     wxTimer               m_watchdog;
-    bool                  m_waitingForRender{false};
-    bool                  m_done{false};
-    wxDialog*             m_dialog{nullptr};  ///< a dialog created for one shot
+    wxDialog*             m_dialog{nullptr};  ///< the Add bookmark dialog of its shot
+    app::ScreenshotScript m_script;           ///< last: its hooks use the members above
 };
 
 }  // namespace mandelbrotter::gui
