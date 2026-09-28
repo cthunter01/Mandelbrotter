@@ -7,6 +7,7 @@ add_executable(Mandelbrotter_tests
     BookmarkStoreTests.cpp
     CanvasControllerTests.cpp
     cli_tests.cpp
+    commands_tests.cpp
     DemoPlayerTests.cpp
     exporter_tests.cpp
     ExportTaskTests.cpp

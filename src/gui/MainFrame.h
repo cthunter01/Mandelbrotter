@@ -1,8 +1,10 @@
 #pragma once
 
+#include <cstddef>
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <wx/frame.h>
 #include <wx/menu.h>
@@ -10,6 +12,7 @@
 
 #include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/app/AppController.h"
+#include "Mandelbrotter/app/commands.h"
 #include "Mandelbrotter/exporter.h"
 #include "gui/FractalCanvas.h"
 #include "gui/HelpController.h"
@@ -57,12 +60,15 @@ public:
 private:
     [[nodiscard]] app::AppController::Shell makeShell();
     void                                    buildMenus();
-    void                                    buildHelpMenu(wxMenu& help);
-    void                                    wirePanel();
-    void                                    wireHelp();
-    void                                    onCharHook(wxKeyEvent& event);
-    void                                    onClose(wxCloseEvent& event);
-    void                                    showAbout();
+    /// Appends `entries` (app::menuBar()) to `menu`; `nextId` numbers the items without a stock ID.
+    void appendMenuEntries(wxMenu& menu, const std::vector<app::MenuEntry>& entries, int& nextId);
+    /// A menu item was chosen: the app layer's commands first, then the ones that need wx.
+    void runCommand(app::Command command, std::size_t flight, bool checked);
+    void wirePanel();
+    void wireHelp();
+    void onCharHook(wxKeyEvent& event);
+    void onClose(wxCloseEvent& event);
+    void showAbout();
 
     void saveImage(const ExportOptions& options);
     void copyImage();

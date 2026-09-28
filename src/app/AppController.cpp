@@ -20,6 +20,7 @@
 #include "Mandelbrotter/app/CanvasController.h"
 #include "Mandelbrotter/app/DemoPlayer.h"
 #include "Mandelbrotter/app/TourScript.h"
+#include "Mandelbrotter/app/commands.h"
 #include "Mandelbrotter/app/format.h"
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/flights.h"
@@ -207,6 +208,69 @@ void AppController::showRenderStatus(const RenderStatus& status)
 
 // ---------------------------------------------------------------------------------------------------------------
 // Menus
+
+bool AppController::commandEnabled(Command command) const noexcept
+{
+    switch (command)
+    {
+        case Command::STOP_DEMO:
+            return flightPlaying() || tourRunning();
+        case Command::BACK_TO_SNAPSHOT:
+            return hasSnapshot();
+        default:
+            return true;
+    }
+}
+
+bool AppController::runCommand(Command command, std::size_t flight)
+{
+    switch (command)
+    {
+        case Command::ZOOM_IN:
+            zoomIn();
+            return true;
+        case Command::ZOOM_OUT:
+            zoomOut();
+            return true;
+        case Command::RESET_VIEW:
+            resetView();
+            return true;
+        case Command::FLIGHT:
+        {
+            const auto flights = builtinFlights();
+            if (flight < flights.size())
+            {
+                takeSnapshot();
+                startFlight(flights[flight].id);
+            }
+            return true;
+        }
+        case Command::STOP_DEMO:
+            stopDemos();
+            return true;
+        case Command::TOUR:
+            takeSnapshot();
+            startTour();
+            return true;
+        case Command::BACK_TO_SNAPSHOT:
+            restoreSnapshot();
+            return true;
+        case Command::SAVE_IMAGE:
+        case Command::COPY_IMAGE:
+        case Command::EXPORT_VIEW:
+        case Command::IMPORT_VIEW:
+        case Command::QUIT:
+        case Command::SHOW_PANEL:
+        case Command::SHOW_ORBIT:
+        case Command::ADD_BOOKMARK:
+        case Command::HELP_CONTENTS:
+        case Command::CONTEXT_HELP:
+        case Command::REFERENCE:
+        case Command::ABOUT:
+            break;
+    }
+    return false;
+}
 
 void AppController::zoomIn()
 {

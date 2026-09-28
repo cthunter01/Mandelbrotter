@@ -17,6 +17,7 @@
 #include "Mandelbrotter/app/CanvasController.h"
 #include "Mandelbrotter/app/DemoPlayer.h"
 #include "Mandelbrotter/app/TourScript.h"
+#include "Mandelbrotter/app/commands.h"
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/geometry.h"
 #include "Mandelbrotter/help_action.h"
@@ -120,6 +121,13 @@ public:
     void panelEdited(const RenderSettings& edited);
 
     // ---- menus and buttons (the toolkit runs the dialogs and passes on the result)
+    /// Whether a menu item is enabled now (its MenuEntry::enable rule): Stop demo while a flight or
+    /// the tour runs, Back to where I was while there is a snapshot; everything else always.
+    [[nodiscard]] bool commandEnabled(Command command) const noexcept;
+    /// Runs a menu command that needs no toolkit and returns true: the zooms and the reset, the
+    /// demos (a flight or the tour takes the snapshot first), Stop demo and Back to where I was.
+    /// Returns false for the others, which the toolkit runs. `flight` indexes builtinFlights().
+    bool runCommand(Command command, std::size_t flight = 0);
     void zoomIn();
     void zoomOut();
     void resetView();

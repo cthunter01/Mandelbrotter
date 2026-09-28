@@ -11,8 +11,6 @@ namespace mandelbrotter::app
 namespace
 {
 
-constexpr std::string_view kIndexPage = "index.html";
-
 std::string_view panelPageFor(PanelSection section, bool juliaControl) noexcept
 {
     switch (section)
@@ -28,7 +26,7 @@ std::string_view panelPageFor(PanelSection section, bool juliaControl) noexcept
         case PanelSection::BOOKMARKS:
             return "bookmarks.html";
     }
-    return kIndexPage;
+    return kContentsPage;
 }
 
 }  // namespace
@@ -48,9 +46,9 @@ std::string_view helpPageFor(const HelpContext& context) noexcept
             }
             break;
         case HelpContext::Area::EXPORT_DIALOG:
-            return "exporting.html";
+            return kExportingPage;
     }
-    return kIndexPage;
+    return kContentsPage;
 }
 
 HelpLinkKind classifyHelpLink(std::string_view url) noexcept

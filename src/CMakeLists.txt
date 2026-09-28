@@ -36,6 +36,7 @@ add_library(Mandelbrotter_app STATIC
     app/AppController.cpp
     app/BookmarkStore.cpp
     app/CanvasController.cpp
+    app/commands.cpp
     app/DemoPlayer.cpp
     app/ExportTask.cpp
     app/format.cpp

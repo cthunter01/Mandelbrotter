@@ -15,6 +15,7 @@
 #include "Mandelbrotter/RenderSettings.h"
 #include "Mandelbrotter/Viewport.h"
 #include "Mandelbrotter/app/CanvasController.h"
+#include "Mandelbrotter/app/commands.h"
 #include "Mandelbrotter/app/format.h"
 #include "Mandelbrotter/app/scenes.h"
 #include "Mandelbrotter/bookmarks.h"
@@ -32,6 +33,7 @@ using mandelbrotter::Bookmark;
 using mandelbrotter::Complex;
 using mandelbrotter::FractalFamily;
 using mandelbrotter::RenderSettings;
+using mandelbrotter::app::Command;
 using mandelbrotter::app::GlobalKey;
 using mandelbrotter::app::StatusField;
 using mandelbrotter::test::Harness;
@@ -294,6 +296,99 @@ TEST(AppController, MenuZoomAndResetStopAFlightFirst)
     h.app.resetView();
     EXPECT_FALSE(h.app.flightPlaying());
     EXPECT_EQ(h.app.settings().view, mandelbrotter::defaultView(h.app.settings().fractal));
+}
+
+TEST(AppController, StopDemoIsEnabledWhileADemoRuns)
+{
+    Harness h;
+    h.app.start();
+    EXPECT_FALSE(h.app.commandEnabled(Command::STOP_DEMO));
+    h.app.startFlight("seahorse-dive");
+    EXPECT_TRUE(h.app.commandEnabled(Command::STOP_DEMO));
+    h.app.startTour();
+    EXPECT_TRUE(h.app.commandEnabled(Command::STOP_DEMO));
+    h.app.stopDemos();
+    EXPECT_FALSE(h.app.commandEnabled(Command::STOP_DEMO));
+}
+
+TEST(AppController, BackToWhereIWasFollowsTheSnapshot)
+{
+    Harness h;
+    h.app.start();
+    EXPECT_FALSE(h.app.commandEnabled(Command::BACK_TO_SNAPSHOT));
+    h.app.takeSnapshot();
+    EXPECT_TRUE(h.app.commandEnabled(Command::BACK_TO_SNAPSHOT));
+    EXPECT_TRUE(h.app.runCommand(Command::BACK_TO_SNAPSHOT));
+    EXPECT_FALSE(h.app.commandEnabled(Command::BACK_TO_SNAPSHOT));
+    EXPECT_TRUE(h.app.commandEnabled(Command::ZOOM_IN));  // the rest are always enabled
+}
+
+TEST(AppController, TheFlightCommandTakesTheSnapshotThenFlies)
+{
+    Harness h(app::seahorse());
+    h.app.start();
+    const auto flights = mandelbrotter::builtinFlights();
+    ASSERT_GT(flights.size(), 2U);
+    EXPECT_TRUE(h.app.runCommand(Command::FLIGHT, 2));
+    EXPECT_TRUE(h.app.flightPlaying());
+    EXPECT_EQ(h.app.settings(), flights[2].keyframes.front().settings);
+    EXPECT_TRUE(h.app.runCommand(Command::STOP_DEMO));
+    EXPECT_FALSE(h.app.flightPlaying());
+    h.app.restoreSnapshot();
+    EXPECT_EQ(h.app.settings(), app::seahorse());
+
+    EXPECT_TRUE(h.app.runCommand(Command::FLIGHT, flights.size()));  // out of range: nothing
+    EXPECT_FALSE(h.app.flightPlaying());
+    EXPECT_FALSE(h.app.hasSnapshot());
+}
+
+TEST(AppController, TheTourCommandTakesTheSnapshotThenStartsTheTour)
+{
+    Harness h(app::seahorse());
+    h.app.start();
+    EXPECT_TRUE(h.app.runCommand(Command::TOUR));
+    EXPECT_TRUE(h.app.tourRunning());
+    EXPECT_TRUE(h.app.hasSnapshot());
+    h.app.tour().next();  // the tour changes the view
+    EXPECT_TRUE(h.app.runCommand(Command::BACK_TO_SNAPSHOT));
+    EXPECT_FALSE(h.app.tourRunning());
+    EXPECT_EQ(h.app.settings(), app::seahorse());
+}
+
+TEST(AppController, TheZoomCommandsStopAFlight)
+{
+    for (const Command command : {Command::ZOOM_IN, Command::ZOOM_OUT, Command::RESET_VIEW})
+    {
+        Harness h;
+        h.app.start();
+        h.app.startFlight("seahorse-dive");
+        EXPECT_TRUE(h.app.runCommand(command));
+        EXPECT_FALSE(h.app.flightPlaying());
+    }
+    Harness h;
+    h.app.start();
+    EXPECT_TRUE(h.app.runCommand(Command::ZOOM_IN));
+    EXPECT_DOUBLE_EQ(h.app.settings().view.zoom, 2.0);
+    EXPECT_TRUE(h.app.runCommand(Command::ZOOM_OUT));
+    EXPECT_TRUE(h.app.runCommand(Command::ZOOM_OUT));
+    EXPECT_DOUBLE_EQ(h.app.settings().view.zoom, 0.5);
+    EXPECT_TRUE(h.app.runCommand(Command::RESET_VIEW));
+    EXPECT_DOUBLE_EQ(h.app.settings().view.zoom, 1.0);
+}
+
+TEST(AppController, TheToolkitsCommandsAreLeftToIt)
+{
+    Harness h;
+    h.app.start();
+    const int calls = h.shell.calls();
+    for (const Command command :
+         {Command::SAVE_IMAGE, Command::COPY_IMAGE, Command::EXPORT_VIEW, Command::IMPORT_VIEW,
+          Command::QUIT, Command::SHOW_PANEL, Command::SHOW_ORBIT, Command::ADD_BOOKMARK,
+          Command::HELP_CONTENTS, Command::CONTEXT_HELP, Command::REFERENCE, Command::ABOUT})
+    {
+        EXPECT_FALSE(h.app.runCommand(command)) << static_cast<int>(command);
+    }
+    EXPECT_EQ(h.shell.calls(), calls);
 }
 
 TEST(AppController, ViewsExportAndImport)

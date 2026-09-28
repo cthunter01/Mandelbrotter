@@ -9,6 +9,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 #include <wx/aboutdlg.h>
 #include <wx/clipbrd.h>
@@ -24,10 +25,10 @@
 #include "Mandelbrotter/app/AppController.h"
 #include "Mandelbrotter/app/DemoPlayer.h"
 #include "Mandelbrotter/app/TourScript.h"
+#include "Mandelbrotter/app/commands.h"
 #include "Mandelbrotter/app/help_routing.h"
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/exporter.h"
-#include "Mandelbrotter/flights.h"
 #include "Mandelbrotter/help_action.h"
 #include "gui/ExportDialog.h"
 #include "gui/ScreenshotRun.h"
@@ -41,24 +42,6 @@ namespace mandelbrotter::gui
 
 namespace
 {
-
-constexpr int kMenuSaveImage   = wxID_HIGHEST + 1;
-constexpr int kMenuCopyImage   = wxID_HIGHEST + 2;
-constexpr int kMenuExportView  = wxID_HIGHEST + 3;
-constexpr int kMenuImportView  = wxID_HIGHEST + 4;
-constexpr int kMenuShowPanel   = wxID_HIGHEST + 5;
-constexpr int kMenuShowOrbit   = wxID_HIGHEST + 6;
-constexpr int kMenuResetView   = wxID_HIGHEST + 7;
-constexpr int kMenuZoomIn      = wxID_HIGHEST + 8;
-constexpr int kMenuZoomOut     = wxID_HIGHEST + 9;
-constexpr int kMenuAddBookmark = wxID_HIGHEST + 10;
-constexpr int kMenuContextHelp = wxID_HIGHEST + 11;
-constexpr int kMenuReference   = wxID_HIGHEST + 12;
-constexpr int kMenuTour        = wxID_HIGHEST + 13;
-constexpr int kMenuStopDemo    = wxID_HIGHEST + 14;
-constexpr int kMenuBackToView  = wxID_HIGHEST + 15;
-/// One item per built-in flight, in order.
-constexpr int kMenuFlightFirst = wxID_HIGHEST + 100;
 
 constexpr int field(app::StatusField f)
 {
@@ -162,108 +145,141 @@ app::AppController::Shell MainFrame::makeShell()
 
 void MainFrame::buildMenus()
 {
-    auto* file = new wxMenu();
-    file->Append(kMenuSaveImage, "&Save image as PNG...\tCtrl+S");
-    file->Append(kMenuCopyImage, "&Copy image\tCtrl+C");
-    file->AppendSeparator();
-    file->Append(kMenuExportView, "&Export view...", "Save the current view as a JSON file");
-    file->Append(kMenuImportView, "&Import view...", "Open a view saved as JSON");
-    file->AppendSeparator();
-    file->Append(wxID_EXIT, "&Quit\tCtrl+Q");
-
-    auto* view      = new wxMenu();
-    m_showPanelItem = view->AppendCheckItem(kMenuShowPanel, "Show &side panel\tCtrl+B");
-    m_showPanelItem->Check(true);
-    m_showOrbitItem = view->AppendCheckItem(kMenuShowOrbit, "Show &orbit under cursor\tCtrl+O");
-    view->AppendSeparator();
-    view->Append(kMenuZoomIn, "Zoom &in\tCtrl++");
-    view->Append(kMenuZoomOut, "Zoom &out\tCtrl+-");
-    view->Append(kMenuResetView, "&Reset view\tCtrl+Home");
-
-    auto* bookmarks = new wxMenu();
-    bookmarks->Append(kMenuAddBookmark, "&Add bookmark...\tCtrl+D");
-
-    auto* help = new wxMenu();
-    buildHelpMenu(*help);
-
-    auto* bar = new wxMenuBar();
-    bar->Append(file, "&File");
-    bar->Append(view, "&View");
-    bar->Append(bookmarks, "&Bookmarks");
-    bar->Append(help, "&Help");
+    auto* bar    = new wxMenuBar();
+    int   nextId = wxID_HIGHEST + 1;
+    for (const app::Menu& menu : app::menuBar())
+    {
+        auto* items = new wxMenu();
+        appendMenuEntries(*items, menu.entries, nextId);
+        bar->Append(items, toWx(menu.title));
+    }
     SetMenuBar(bar);
-
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) { showExportDialog(); }, kMenuSaveImage);
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) { copyImage(); }, kMenuCopyImage);
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) { exportView(); }, kMenuExportView);
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) { importView(); }, kMenuImportView);
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) { Close(true); }, wxID_EXIT);
-    Bind(
-        wxEVT_MENU, [this](wxCommandEvent& event) { setSidePanelShown(event.IsChecked()); },
-        kMenuShowPanel);
-    Bind(
-        wxEVT_MENU, [this](wxCommandEvent& event) { m_app.setShowOrbit(event.IsChecked()); },
-        kMenuShowOrbit);
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) { m_app.zoomIn(); }, kMenuZoomIn);
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) { m_app.zoomOut(); }, kMenuZoomOut);
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) { m_app.resetView(); }, kMenuResetView);
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) { onAddBookmark(); }, kMenuAddBookmark);
 }
 
-void MainFrame::buildHelpMenu(wxMenu& help)
+void MainFrame::appendMenuEntries(wxMenu& menu, const std::vector<app::MenuEntry>& entries,
+                                  int& nextId)
 {
-    help.Append(wxID_HELP_CONTENTS, "&Contents", "Open the user guide");
-    help.Append(kMenuContextHelp, "Help for the &focused control\tF1",
-                "Open the page about the control that has the keyboard focus");
-    help.Append(kMenuReference, "Keyboard and mouse &reference");
-    help.AppendSeparator();
-
-    auto* demos = new wxMenu();
-    int   id    = kMenuFlightFirst;
-    for (const Flight& flight : builtinFlights())
+    using Kind = app::MenuEntry::Kind;
+    for (const app::MenuEntry& entry : entries)
     {
-        demos->Append(id, toWx(flight.title), toWx(flight.description));
+        if (entry.kind == Kind::SEPARATOR)
+        {
+            menu.AppendSeparator();
+            continue;
+        }
+        if (entry.kind == Kind::SUBMENU)
+        {
+            auto* submenu = new wxMenu();
+            appendMenuEntries(*submenu, entry.children, nextId);
+            menu.AppendSubMenu(submenu, toWx(entry.label), toWx(entry.statusTip));
+            continue;
+        }
+        // Stock IDs let wx place the item where the platform wants it (macOS: the application
+        // menu).
+        int id = 0;
+        switch (entry.role)
+        {
+            case app::MenuRole::QUIT:
+                id = wxID_EXIT;
+                break;
+            case app::MenuRole::ABOUT:
+                id = wxID_ABOUT;
+                break;
+            case app::MenuRole::HELP_CONTENTS:
+                id = wxID_HELP_CONTENTS;
+                break;
+            case app::MenuRole::NONE:
+                id = nextId++;
+                break;
+        }
+        const std::string label =
+            entry.shortcut.empty() ? entry.label : entry.label + "\t" + entry.shortcut;
+        wxMenuItem* item = entry.kind == Kind::CHECK
+                               ? menu.AppendCheckItem(id, toWx(label), toWx(entry.statusTip))
+                               : menu.Append(id, toWx(label), toWx(entry.statusTip));
+        if (entry.kind == Kind::CHECK)
+        {
+            item->Check(entry.checked);
+        }
+        if (entry.command == app::Command::SHOW_PANEL)
+        {
+            m_showPanelItem = item;
+        }
+        else if (entry.command == app::Command::SHOW_ORBIT)
+        {
+            m_showOrbitItem = item;
+        }
         Bind(
             wxEVT_MENU,
-            [this, &flight](wxCommandEvent&) {
-                m_app.takeSnapshot();
-                m_app.startFlight(flight.id);
+            [this, command = entry.command, flight = entry.flight](wxCommandEvent& event) {
+                runCommand(command, flight, event.IsChecked());
             },
             id);
-        ++id;
+        if (entry.enable != app::EnableRule::ALWAYS)
+        {
+            Bind(
+                wxEVT_UPDATE_UI,
+                [this, command = entry.command](wxUpdateUIEvent& event) {
+                    event.Enable(m_app.commandEnabled(command));
+                },
+                id);
+        }
     }
-    demos->AppendSeparator();
-    demos->Append(kMenuStopDemo, "&Stop demo", "Stop the flight or the tour");
-    help.AppendSubMenu(demos, "&Demos", "Animated dives into famous places");
-    help.Append(kMenuTour, "Take a &tour", "A guided walk through the window, step by step");
-    help.Append(kMenuBackToView, "&Back to where I was",
-                "Return to the view from before the last demo");
-    help.AppendSeparator();
-    help.Append(wxID_ABOUT, "&About Mandelbrotter");
+}
 
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) { m_help.showContents(); }, wxID_HELP_CONTENTS);
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) { showContextHelp(); }, kMenuContextHelp);
-    Bind(
-        wxEVT_MENU, [this](wxCommandEvent&) { m_help.showPage("reference.html"); }, kMenuReference);
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) { m_app.stopDemos(); }, kMenuStopDemo);
-    Bind(
-        wxEVT_MENU,
-        [this](wxCommandEvent&) {
-            m_app.takeSnapshot();
-            m_app.startTour();
-        },
-        kMenuTour);
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) { m_app.restoreSnapshot(); }, kMenuBackToView);
-    Bind(wxEVT_MENU, [this](wxCommandEvent&) { showAbout(); }, wxID_ABOUT);
-    Bind(
-        wxEVT_UPDATE_UI,
-        [this](wxUpdateUIEvent& event) {
-            event.Enable(m_app.flightPlaying() || m_app.tourRunning());
-        },
-        kMenuStopDemo);
-    Bind(
-        wxEVT_UPDATE_UI, [this](wxUpdateUIEvent& event) { event.Enable(m_app.hasSnapshot()); },
-        kMenuBackToView);
+void MainFrame::runCommand(app::Command command, std::size_t flight, bool checked)
+{
+    if (m_app.runCommand(command, flight))
+    {
+        return;
+    }
+    switch (command)
+    {
+        case app::Command::SAVE_IMAGE:
+            showExportDialog();
+            break;
+        case app::Command::COPY_IMAGE:
+            copyImage();
+            break;
+        case app::Command::EXPORT_VIEW:
+            exportView();
+            break;
+        case app::Command::IMPORT_VIEW:
+            importView();
+            break;
+        case app::Command::QUIT:
+            Close(true);
+            break;
+        case app::Command::SHOW_PANEL:
+            setSidePanelShown(checked);
+            break;
+        case app::Command::SHOW_ORBIT:
+            m_app.setShowOrbit(checked);
+            break;
+        case app::Command::ADD_BOOKMARK:
+            onAddBookmark();
+            break;
+        case app::Command::HELP_CONTENTS:
+            m_help.showContents();
+            break;
+        case app::Command::CONTEXT_HELP:
+            showContextHelp();
+            break;
+        case app::Command::REFERENCE:
+            m_help.showPage(app::kReferencePage);
+            break;
+        case app::Command::ABOUT:
+            showAbout();
+            break;
+        case app::Command::ZOOM_IN:
+        case app::Command::ZOOM_OUT:
+        case app::Command::RESET_VIEW:
+        case app::Command::FLIGHT:
+        case app::Command::STOP_DEMO:
+        case app::Command::TOUR:
+        case app::Command::BACK_TO_SNAPSHOT:
+            break;  // run by the app layer above
+    }
 }
 
 void MainFrame::showAbout()
@@ -373,7 +389,7 @@ void MainFrame::showExportDialog()
         return;
     }
     m_exportDialog         = new ExportDialog(this, m_app.canvas().image().size());
-    m_exportDialog->onHelp = [this] { m_help.showPage("exporting.html"); };
+    m_exportDialog->onHelp = [this] { m_help.showPage(app::kExportingPage); };
     m_exportDialog->Bind(
         wxEVT_BUTTON,
         [this](wxCommandEvent&) {

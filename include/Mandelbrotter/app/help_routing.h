@@ -9,6 +9,11 @@
 namespace mandelbrotter::app
 {
 
+/// Pages of the help book the views open by name.
+inline constexpr std::string_view kContentsPage  = "index.html";
+inline constexpr std::string_view kReferencePage = "reference.html";  ///< Help > Keyboard and mouse
+inline constexpr std::string_view kExportingPage = "exporting.html";  ///< F1 in the export dialog
+
 /// Where the keyboard focus is when the user asks for help (F1).
 struct HelpContext
 {
