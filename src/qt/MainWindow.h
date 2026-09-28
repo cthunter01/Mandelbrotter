@@ -16,6 +16,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -34,6 +35,7 @@ namespace mandelbrotter::qt
 class ElidedLabel;
 class FractalCanvas;
 class GlobalKeyFilter;
+class HelpWindow;
 class SidePanel;
 
 /// The main window: the Qt side of app::AppController, which holds the model and the policies.
@@ -89,6 +91,9 @@ public:
     /// The Save image as PNG dialog, modeless; a second call raises it.
     void showExportDialog();
     void closeExportDialog();
+    /// The help window, created on first use.
+    [[nodiscard]] HelpWindow& help();
+    [[nodiscard]] bool        helpShown() const noexcept;
     /// The open Save image as PNG dialog, if any.
     [[nodiscard]] ExportDialog* exportDialog() const noexcept { return m_exportDialog; }
 
@@ -142,6 +147,7 @@ private:
     QString                                          m_pointerText;  ///< under a status tip
     bool                                             m_showingTip{false};
     app::AppController                               m_app;  ///< after the widgets its shell drives
+    std::unique_ptr<HelpWindow>                      m_help;  ///< a top-level window of its own
 };
 
 }  // namespace mandelbrotter::qt

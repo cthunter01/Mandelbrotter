@@ -2,6 +2,7 @@
 add_executable(Mandelbrotter_qt_tests
     ExportDialogTests.cpp
     FractalCanvasTests.cpp
+    HelpWindowTests.cpp
     MainWindowTests.cpp
     platform_tests.cpp
     qt_test_main.cpp

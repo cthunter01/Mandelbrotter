@@ -25,6 +25,7 @@
 #include <cstddef>
 #include <filesystem>
 #include <format>
+#include <memory>
 #include <optional>
 #include <span>
 #include <string>
@@ -41,11 +42,13 @@
 #include "Mandelbrotter/bookmarks.h"
 #include "Mandelbrotter/exporter.h"
 #include "Mandelbrotter/geometry.h"
+#include "Mandelbrotter/help_action.h"
 #include "Mandelbrotter/image.h"
 #include "qt/ElidedLabel.h"
 #include "qt/ExportDialog.h"
 #include "qt/FractalCanvas.h"
 #include "qt/GlobalKeyFilter.h"
+#include "qt/HelpWindow.h"
 #include "qt/SidePanel.h"
 #include "qt/export_runner.h"
 #include "qt/qt_util.h"
@@ -162,7 +165,7 @@ app::AppController::Shell MainWindow::makeShell()
                 raise();
                 activateWindow();
             },
-        .showHelpPage = {},
+        .showHelpPage = [this](std::string_view page) { help().showPage(page); },
         .demoTimer =
             [this](bool on) {
                 if (on)
@@ -306,7 +309,7 @@ void MainWindow::runCommand(app::Command command, std::size_t flight, bool check
             showContextHelp();
             break;
         case app::Command::CONTENTS:
-            m_app.showHelpPage(app::kContentsPage);
+            help().showContents();
             break;
         case app::Command::REFERENCE:
             m_app.showHelpPage(app::kReferencePage);
@@ -471,7 +474,29 @@ void MainWindow::closeEvent(QCloseEvent* event)
 {
     m_app.stopDemos();
     closeExportDialog();
+    if (m_help)
+    {
+        m_help->close();
+    }
     event->accept();
+}
+
+HelpWindow& MainWindow::help()
+{
+    if (!m_help)
+    {
+        m_help           = std::make_unique<HelpWindow>();
+        m_help->onAction = [this](const HelpAction& action) { m_app.runHelpAction(action); };
+        m_help->onError  = [this](const std::string& message) {
+            reportError(app::kHelpErrorTitle, message);
+        };
+    }
+    return *m_help;
+}
+
+bool MainWindow::helpShown() const noexcept
+{
+    return m_help && m_help->isVisible();
 }
 
 void MainWindow::reportError(std::string_view title, std::string_view message)
