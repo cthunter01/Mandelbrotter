@@ -5,9 +5,12 @@
 #include <QListWidget>
 #include <QPushButton>
 #include <QRect>
+#include <QScreen>
+#include <QStyle>
 #include <QTest>
 #include <cstddef>
 #include <cstdlib>
+#include <format>
 #include <optional>
 #include <string>
 
@@ -63,6 +66,12 @@ struct TourHarness : QtHarness
     static void settle() { QTest::qWait(20); }
 };
 
+/// "x,y WxH", for a failure's message.
+[[nodiscard]] std::string describe(const QRect& rect)
+{
+    return std::format("{},{} {}x{}", rect.x(), rect.y(), rect.width(), rect.height());
+}
+
 TEST(TourView, WalksForwardAndBackThroughElevenSteps)
 {
     TourHarness h;
@@ -114,6 +123,12 @@ TEST(TourView, TheCardSitsInsideTheWindowBesideItsAnchor)
         TourHarness::settle();
         const QRect card   = h.card().geometry();
         const QRect anchor = h.window.tourView().anchorRect();
+        // The style's metrics and the screen decide where the card goes: say what they came to
+        // when a check fails.
+        SCOPED_TRACE(std::format("card {}, anchor {}, window {}, screen {}, style {}",
+                                 describe(card), describe(anchor), describe(h.window.rect()),
+                                 describe(h.window.screen()->geometry()),
+                                 qt::fromQt(QApplication::style()->name())));
         EXPECT_TRUE(h.window.rect().contains(card));
         if (app::panelSectionFor(h.tour().steps()[step].anchor))
         {
