@@ -42,35 +42,45 @@ double fract(double t) noexcept
 std::vector<Palette> makeBuiltinPalettes()
 {
     std::vector<Palette> palettes;
-    palettes.emplace_back("classic", std::vector<ColorStop>{{0.0, {0, 7, 100}},
-                                                            {0.16, {32, 107, 203}},
-                                                            {0.42, {237, 255, 255}},
-                                                            {0.6425, {255, 170, 0}},
-                                                            {0.8575, {0, 2, 0}}});
+    palettes.emplace_back("classic", std::vector<ColorStop>{
+                                         {0.0, {0, 7, 100}},
+                                         {0.16, {32, 107, 203}},
+                                         {0.42, {237, 255, 255}},
+                                         {0.6425, {255, 170, 0}},
+                                         {0.8575, {0, 2, 0}},
+                                     });
     palettes.emplace_back("grayscale",
                           std::vector<ColorStop>{{0.0, {0, 0, 0}}, {0.5, {255, 255, 255}}});
-    palettes.emplace_back("fire", std::vector<ColorStop>{{0.0, {0, 0, 0}},
-                                                         {0.25, {140, 10, 0}},
-                                                         {0.5, {255, 130, 0}},
-                                                         {0.7, {255, 240, 180}},
-                                                         {0.9, {70, 0, 0}}});
-    palettes.emplace_back("ocean", std::vector<ColorStop>{{0.0, {0, 0, 40}},
-                                                          {0.3, {0, 60, 140}},
-                                                          {0.55, {0, 170, 200}},
-                                                          {0.75, {220, 250, 255}},
-                                                          {0.9, {0, 50, 100}}});
-    palettes.emplace_back("rainbow", std::vector<ColorStop>{{0.0, {255, 0, 0}},
-                                                            {1.0 / 6.0, {255, 255, 0}},
-                                                            {2.0 / 6.0, {0, 255, 0}},
-                                                            {3.0 / 6.0, {0, 255, 255}},
-                                                            {4.0 / 6.0, {0, 0, 255}},
-                                                            {5.0 / 6.0, {255, 0, 255}}});
-    palettes.emplace_back("electric", std::vector<ColorStop>{{0.0, {0, 0, 0}},
-                                                             {0.2, {20, 0, 120}},
-                                                             {0.45, {120, 0, 255}},
-                                                             {0.65, {0, 200, 255}},
-                                                             {0.8, {255, 255, 255}},
-                                                             {0.92, {60, 0, 160}}});
+    palettes.emplace_back("fire", std::vector<ColorStop>{
+                                      {0.0, {0, 0, 0}},
+                                      {0.25, {140, 10, 0}},
+                                      {0.5, {255, 130, 0}},
+                                      {0.7, {255, 240, 180}},
+                                      {0.9, {70, 0, 0}},
+                                  });
+    palettes.emplace_back("ocean", std::vector<ColorStop>{
+                                       {0.0, {0, 0, 40}},
+                                       {0.3, {0, 60, 140}},
+                                       {0.55, {0, 170, 200}},
+                                       {0.75, {220, 250, 255}},
+                                       {0.9, {0, 50, 100}},
+                                   });
+    palettes.emplace_back("rainbow", std::vector<ColorStop>{
+                                         {0.0, {255, 0, 0}},
+                                         {1.0 / 6.0, {255, 255, 0}},
+                                         {2.0 / 6.0, {0, 255, 0}},
+                                         {3.0 / 6.0, {0, 255, 255}},
+                                         {4.0 / 6.0, {0, 0, 255}},
+                                         {5.0 / 6.0, {255, 0, 255}},
+                                     });
+    palettes.emplace_back("electric", std::vector<ColorStop>{
+                                          {0.0, {0, 0, 0}},
+                                          {0.2, {20, 0, 120}},
+                                          {0.45, {120, 0, 255}},
+                                          {0.65, {0, 200, 255}},
+                                          {0.8, {255, 255, 255}},
+                                          {0.92, {60, 0, 160}},
+                                      });
     return palettes;
 }
 
@@ -100,7 +110,7 @@ Rgb Palette::interpolate(double t) const noexcept
 {
     // Find the last stop at or before t; the segment runs from it to the next stop (or wraps to the
     // first at 1).
-    auto         next         = std::ranges::upper_bound(m_stops, t, {}, &ColorStop::position);
+    const auto   next         = std::ranges::upper_bound(m_stops, t, {}, &ColorStop::position);
     const auto   current      = std::prev(next);
     const double segmentStart = current->position;
     const double segmentEnd   = next == m_stops.end() ? 1.0 : next->position;

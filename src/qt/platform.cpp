@@ -4,7 +4,7 @@
 #include <QStandardPaths>
 #include <QtGlobal>
 #include <filesystem>
-#include <string>
+#include <string_view>
 
 #include "qt/qt_util.h"
 
@@ -25,7 +25,7 @@ std::filesystem::path userDataDir()
     return toPath(QDir::homePath()) / ".Mandelbrotter";
 }
 
-std::string missingDisplay()
+std::string_view missingDisplay()
 {
     if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM") && qEnvironmentVariableIsEmpty("DISPLAY") &&
         qEnvironmentVariableIsEmpty("WAYLAND_DISPLAY"))
@@ -43,7 +43,7 @@ std::filesystem::path userDataDir()
            "Mandelbrotter";
 }
 
-std::string missingDisplay()
+std::string_view missingDisplay()
 {
     return {};
 }
@@ -56,7 +56,7 @@ std::filesystem::path userDataDir()
     return toPath(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
 }
 
-std::string missingDisplay()
+std::string_view missingDisplay()
 {
     return {};
 }

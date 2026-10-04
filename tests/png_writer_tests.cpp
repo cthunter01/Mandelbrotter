@@ -30,8 +30,11 @@ RgbImage testImage()
         for (int x = 0; x < 5; ++x)
         {
             image.set(x, y,
-                      {static_cast<std::uint8_t>(x * 50), static_cast<std::uint8_t>(y * 100),
-                       static_cast<std::uint8_t>(255 - (x * 10))});
+                      {
+                          static_cast<std::uint8_t>(x * 50),
+                          static_cast<std::uint8_t>(y * 100),
+                          static_cast<std::uint8_t>(255 - (x * 10)),
+                      });
         }
     }
     return image;

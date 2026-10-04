@@ -81,8 +81,10 @@ TEST(AppController, TheConstructorAndTheDestructorCallNoHook)
 TEST(AppController, StartLoadsTheBookmarksAndShowsTheSettings)
 {
     Harness                     h(app::seahorse());
-    const std::vector<Bookmark> stored{named("one", app::mandelbrotDefault()),
-                                       named("two", app::juliaExample())};
+    const std::vector<Bookmark> stored{
+        named("one", app::mandelbrotDefault()),
+        named("two", app::juliaExample()),
+    };
     mandelbrotter::saveBookmarks(h.bookmarksFile(), stored);
     h.app.start();
 
@@ -381,10 +383,20 @@ TEST(AppController, TheToolkitsCommandsAreLeftToIt)
     Harness h;
     h.app.start();
     const int calls = h.shell.calls();
-    for (const Command command :
-         {Command::SAVE_IMAGE, Command::COPY_IMAGE, Command::EXPORT_VIEW, Command::IMPORT_VIEW,
-          Command::QUIT, Command::SHOW_PANEL, Command::SHOW_ORBIT, Command::ADD_BOOKMARK,
-          Command::CONTENTS, Command::CONTEXT_HELP, Command::REFERENCE, Command::ABOUT})
+    for (const Command command : {
+             Command::SAVE_IMAGE,
+             Command::COPY_IMAGE,
+             Command::EXPORT_VIEW,
+             Command::IMPORT_VIEW,
+             Command::QUIT,
+             Command::SHOW_PANEL,
+             Command::SHOW_ORBIT,
+             Command::ADD_BOOKMARK,
+             Command::CONTENTS,
+             Command::CONTEXT_HELP,
+             Command::REFERENCE,
+             Command::ABOUT,
+         })
     {
         EXPECT_FALSE(h.app.runCommand(command)) << static_cast<int>(command);
     }
@@ -432,8 +444,10 @@ TEST(AppController, AddingABookmarkSavesTheView)
     EXPECT_EQ(h.app.beginAddBookmark(), "Mandelbrot at 5000x");
     h.app.addBookmark("Seahorses");
     h.app.addBookmark("");
-    const std::vector<Bookmark> expected{named("Seahorses", app::seahorse()),
-                                         named("Untitled", app::seahorse())};
+    const std::vector<Bookmark> expected{
+        named("Seahorses", app::seahorse()),
+        named("Untitled", app::seahorse()),
+    };
     EXPECT_EQ(savedBookmarks(h), expected);
     EXPECT_EQ(h.shell.bookmarks, expected);
 }
@@ -545,8 +559,10 @@ TEST(AppController, TheTemporaryBookmarkIsFoundByEquality)
 {
     // The user already has a bookmark equal to the tour's example: the example (the last one) goes.
     Harness                     h(app::seahorse());
-    const std::vector<Bookmark> stored{named("Tour example", app::seahorse()),
-                                       named("b", app::juliaExample())};
+    const std::vector<Bookmark> stored{
+        named("Tour example", app::seahorse()),
+        named("b", app::juliaExample()),
+    };
     mandelbrotter::saveBookmarks(h.bookmarksFile(), stored);
     h.app.start();
     h.app.addTemporaryBookmark("Tour example");

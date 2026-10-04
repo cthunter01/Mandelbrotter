@@ -59,7 +59,8 @@ RenderSettings deepScene()
     RenderSettings   s;
     s.view = {
         {mandelbrotter::BigFixed::fromDecimal("-2", bits).value(), mandelbrotter::BigFixed{bits}},
-        kZoom};
+        kZoom,
+    };
     s.maxIterations  = 300;
     s.autoIterations = false;
     return s;
@@ -76,9 +77,9 @@ struct Collected
 Collected runJob(ProgressiveRenderer& renderer, RenderJob job,
                  std::chrono::milliseconds timeout = std::chrono::seconds(30))
 {
-    auto                    collected = std::make_shared<Collected>();
-    auto                    mutex     = std::make_shared<std::mutex>();
-    auto                    done      = std::make_shared<std::promise<void>>();
+    const auto              collected = std::make_shared<Collected>();
+    const auto              mutex     = std::make_shared<std::mutex>();
+    const auto              done      = std::make_shared<std::promise<void>>();
     const std::future<void> finished  = done->get_future();
     renderer.start(
         std::move(job),
@@ -327,7 +328,7 @@ TEST(Renderer, CancelInterruptsTheReferenceOrbit)
     RenderSettings      deep               = deepScene();
     deep.view.zoom                         = mandelbrotter::kMaxZoom;
     deep.maxIterations                     = mandelbrotter::kMaxIterations;
-    auto                          done     = std::make_shared<std::promise<RenderCompletion>>();
+    const auto                    done     = std::make_shared<std::promise<RenderCompletion>>();
     std::future<RenderCompletion> finished = done->get_future();
     renderer.start(RenderJob{.settings = deep, .size = kSize, .threads = 2}, {},
                    [done](const RenderCompletion& c) { done->set_value(c); });
@@ -344,9 +345,11 @@ TEST(Renderer, CancelStopsAJobPromptlyAndReportsIt)
     ProgressiveRenderer renderer;
     RenderSettings      heavy = smallScene();
     heavy.maxIterations       = mandelbrotter::kMaxIterations;
-    heavy.view = {{-0.5, 0.0},
-                  0.5};  // mostly interior points: every pixel runs the full iteration count
-    auto                          done     = std::make_shared<std::promise<RenderCompletion>>();
+    heavy.view                = {
+        {-0.5, 0.0},
+        0.5,
+    };  // mostly interior points: every pixel runs the full iteration count
+    const auto                    done     = std::make_shared<std::promise<RenderCompletion>>();
     std::future<RenderCompletion> finished = done->get_future();
     const std::uint64_t           generation =
         renderer.start(RenderJob{.settings = heavy, .size = {1200, 1200}, .threads = 2}, {},
@@ -388,7 +391,7 @@ TEST(Renderer, StartingAgainCancelsThePreviousJob)
 
 TEST(Renderer, DestructorCancelsARunningJob)
 {
-    auto                          done     = std::make_shared<std::promise<RenderCompletion>>();
+    const auto                    done     = std::make_shared<std::promise<RenderCompletion>>();
     std::future<RenderCompletion> finished = done->get_future();
     {
         ProgressiveRenderer renderer;
@@ -427,11 +430,13 @@ TEST(Renderer, WorkerCountDefaultsToHardware)
 
 TEST(Renderer, TileCopyIsClipped)
 {
-    TileResult tile{.generation = 1,
-                    .pass       = 1,
-                    .rect       = {-1, -1, 3, 3},
-                    .smoothIter = std::vector<float>(9, 0.0F),
-                    .interior   = std::vector<std::uint8_t>(9, 0)};
+    TileResult tile{
+        .generation = 1,
+        .pass       = 1,
+        .rect       = {-1, -1, 3, 3},
+        .smoothIter = std::vector<float>(9, 0.0F),
+        .interior   = std::vector<std::uint8_t>(9, 0),
+    };
     tile.smoothIter[4] = 5.0F;  // local (1, 1) -> buffer (0, 0)
     tile.interior[8]   = 1;     // local (2, 2) -> buffer (1, 1)
     IterationBuffer buffer(2, 2);

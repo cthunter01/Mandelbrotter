@@ -152,9 +152,19 @@ TEST(HelpAction, ViewActionStartsFromTheDefaultViewWhenTheFractalChanges)
 
 TEST(HelpAction, ViewActionKeepsAGivenCenterAndZoom)
 {
-    const auto next = resolveViewAction(
-        seahorse(), {.args = {"--fractal", "burning-ship", "--center", "-1.75,-0.03", "--zoom",
-                              "40", "--iterations", "500"}});
+    const auto next = resolveViewAction(seahorse(), {
+                                                        .args =
+                                                            {
+                                                                "--fractal",
+                                                                "burning-ship",
+                                                                "--center",
+                                                                "-1.75,-0.03",
+                                                                "--zoom",
+                                                                "40",
+                                                                "--iterations",
+                                                                "500",
+                                                            },
+                                                    });
     ASSERT_TRUE(next.has_value()) << next.error();
     EXPECT_EQ(next->fractal.family, FractalFamily::BURNING_SHIP);
     EXPECT_DOUBLE_EQ(next->view.zoom, 40.0);

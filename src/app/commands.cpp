@@ -76,36 +76,56 @@ MenuEntry demosMenu()
 std::vector<Menu> menuBar()
 {
     return {
-        {.title   = "&File",
-         .entries = {item(Command::SAVE_IMAGE, "&Save image as PNG...", "Ctrl+S"),
-                     item(Command::COPY_IMAGE, "&Copy image", "Ctrl+C"), separator(),
-                     item(Command::EXPORT_VIEW, "&Export view...", {},
-                          "Save the current view as a JSON file"),
-                     item(Command::IMPORT_VIEW, "&Import view...", {}, "Open a view saved as JSON"),
-                     separator(),
-                     withRole(item(Command::QUIT, "&Quit", "Ctrl+Q"), MenuRole::QUIT)}},
-        {.title   = "&View",
-         .entries = {check(Command::SHOW_PANEL, "Show &side panel", "Ctrl+B", true),
-                     check(Command::SHOW_ORBIT, "Show &orbit under cursor", "Ctrl+O", false),
-                     separator(), item(Command::ZOOM_IN, "Zoom &in", "Ctrl++"),
-                     item(Command::ZOOM_OUT, "Zoom &out", "Ctrl+-"),
-                     item(Command::RESET_VIEW, "&Reset view", "Ctrl+Home")}},
-        {.title   = "&Bookmarks",
-         .entries = {item(Command::ADD_BOOKMARK, "&Add bookmark...", "Ctrl+D")}},
-        {.title   = "&Help",
-         .entries = {withRole(item(Command::CONTENTS, "&Contents", {}, "Open the user guide"),
-                              MenuRole::CONTENTS),
-                     item(Command::CONTEXT_HELP, "Help for the &focused control", "F1",
-                          "Open the page about the control that has the keyboard focus"),
-                     item(Command::REFERENCE, "Keyboard and mouse &reference"), separator(),
-                     demosMenu(),
-                     item(Command::TOUR, "Take a &tour", {},
-                          "A guided walk through the window, step by step"),
-                     enabledWhen(item(Command::BACK_TO_SNAPSHOT, "&Back to where I was", {},
-                                      "Return to the view from before the last demo"),
-                                 EnableRule::WITH_SNAPSHOT),
-                     separator(),
-                     withRole(item(Command::ABOUT, "&About Mandelbrotter"), MenuRole::ABOUT)}},
+        {
+            .title = "&File",
+            .entries =
+                {
+                    item(Command::SAVE_IMAGE, "&Save image as PNG...", "Ctrl+S"),
+                    item(Command::COPY_IMAGE, "&Copy image", "Ctrl+C"),
+                    separator(),
+                    item(Command::EXPORT_VIEW, "&Export view...", {},
+                         "Save the current view as a JSON file"),
+                    item(Command::IMPORT_VIEW, "&Import view...", {}, "Open a view saved as JSON"),
+                    separator(),
+                    withRole(item(Command::QUIT, "&Quit", "Ctrl+Q"), MenuRole::QUIT),
+                },
+        },
+        {
+            .title = "&View",
+            .entries =
+                {
+                    check(Command::SHOW_PANEL, "Show &side panel", "Ctrl+B", true),
+                    check(Command::SHOW_ORBIT, "Show &orbit under cursor", "Ctrl+O", false),
+                    separator(),
+                    item(Command::ZOOM_IN, "Zoom &in", "Ctrl++"),
+                    item(Command::ZOOM_OUT, "Zoom &out", "Ctrl+-"),
+                    item(Command::RESET_VIEW, "&Reset view", "Ctrl+Home"),
+                },
+        },
+        {
+            .title   = "&Bookmarks",
+            .entries = {item(Command::ADD_BOOKMARK, "&Add bookmark...", "Ctrl+D")},
+        },
+        {
+            .title = "&Help",
+            .entries =
+                {
+                    withRole(item(Command::CONTENTS, "&Contents", {}, "Open the user guide"),
+                             MenuRole::CONTENTS),
+                    item(Command::CONTEXT_HELP, "Help for the &focused control", "F1",
+                         "Open the page about the control that has the keyboard focus"),
+                    item(Command::REFERENCE, "Keyboard and mouse &reference"),
+                    separator(),
+                    demosMenu(),
+                    item(Command::TOUR, "Take a &tour", {},
+                         "A guided walk through the window, step by step"),
+                    enabledWhen(item(Command::BACK_TO_SNAPSHOT, "&Back to where I was", {},
+                                     "Return to the view from before the last demo"),
+                                EnableRule::WITH_SNAPSHOT),
+                    separator(),
+                    withRole(item(Command::ABOUT, "&About Mandelbrotter"), MenuRole::ABOUT),
+                },
+        },
     };
 }
 

@@ -83,130 +83,161 @@ std::vector<ScreenshotScript::Shot> ScreenshotScript::buildShots()
         return [this, which] { call(m_hooks.scrollPanelTo, which); };
     };
     std::vector<Shot> shots{
-        {.file         = kFiles[0],
-         .rendersFirst = true,
-         .target       = ShotTarget::MAIN,
-         .region       = region(Kind::WHOLE),
-         .prepare      = [this] { m_app.applySettings(mandelbrotDefault()); },
-         .cleanup      = nothing},
-        {.file         = kFiles[1],
-         .rendersFirst = true,
-         .target       = ShotTarget::MAIN,
-         .region       = region(Kind::PANEL),
-         .prepare =
-             [this] {
-                 // Tall enough for the whole panel (normally it scrolls).
-                 call(m_hooks.growToWholePanel);
-                 call(m_hooks.scrollPanelTo, PanelSection::FRACTAL);
-             },
-         .cleanup = [this] { call(m_hooks.setContentSize, kScreenshotContentSize); }},
-        {.file         = kFiles[2],
-         .rendersFirst = true,
-         .target       = ShotTarget::MAIN,
-         .region       = section(PanelSection::FRACTAL),
-         .prepare =
-             [this] {
-                 m_app.applySettings(juliaExample());
-                 m_app.setPreviewSeed(kJuliaSeed);
-             },
-         .cleanup = nothing},
-        {.file         = kFiles[3],
-         .rendersFirst = true,
-         .target       = ShotTarget::MAIN,
-         .region       = section(PanelSection::ITERATIONS),
-         .prepare      = [this] { m_app.applySettings(seahorse("classic")); },
-         .cleanup      = nothing},
-        {.file         = kFiles[4],
-         .rendersFirst = false,
-         .target       = ShotTarget::MAIN,
-         .region       = section(PanelSection::COLORING),
-         .prepare      = [this] { m_app.applySettings(seahorseFire()); },
-         .cleanup      = nothing},
-        {.file         = kFiles[5],
-         .rendersFirst = false,
-         .target       = ShotTarget::MAIN,
-         .region       = section(PanelSection::OVERLAY),
-         .prepare =
-             [this, scrollTo] {
-                 m_app.setShowOrbit(true);
-                 scrollTo(PanelSection::OVERLAY)();
-             },
-         .cleanup = nothing},
-        {.file         = kFiles[6],
-         .rendersFirst = false,
-         .target       = ShotTarget::MAIN,
-         .region       = section(PanelSection::BOOKMARKS),
-         .prepare      = scrollTo(PanelSection::BOOKMARKS),  // the scratch bookmarks
-         .cleanup      = nothing},
-        {.file         = kFiles[7],
-         .rendersFirst = true,
-         .target       = ShotTarget::MAIN,
-         .region       = region(Kind::CANVAS),
-         .prepare =
-             [this] {
-                 m_app.applySettings(mandelbrotDefault());
-                 m_app.setShowOrbit(true);
-                 m_app.canvas().showOrbitAt(kOrbitPoint);
-             },
-         .cleanup = [this] { m_app.canvas().clearPinnedOrbit(); }},
-        {.file         = kFiles[8],
-         .rendersFirst = true,
-         .target       = ShotTarget::MAIN,
-         .region       = region(Kind::CANVAS),
-         .prepare =
-             [this] {
-                 m_app.setShowOrbit(false);
-                 m_app.applySettings(seahorse("electric"));
-             },
-         .cleanup = nothing},
-        {.file         = kFiles[9],
-         .rendersFirst = true,
-         .target       = ShotTarget::MAIN,
-         .region       = region(Kind::STATUS_BAR),
-         .prepare =
-             [this, scrollTo] {
-                 scrollTo(PanelSection::FRACTAL)();
-                 m_app.applySettings(deepSeahorse(kScreenshotDeepZoom));
-             },
-         .cleanup = nothing},
-        {.file         = kFiles[10],  // keeps the deep zoom of the status bar's shot
-         .rendersFirst = false,
-         .target       = ShotTarget::MAIN,
-         .region       = region(Kind::WHOLE),
-         .prepare      = nothing,
-         .cleanup      = nothing},
-        {.file         = kFiles[11],
-         .rendersFirst = false,
-         .target       = ShotTarget::EXPORT_DIALOG,
-         .region       = region(Kind::WHOLE),
-         .prepare      = [this] { m_app.showExportDialog(); },
-         .cleanup      = [this] { m_app.closeExportDialog(); }},
-        {.file         = kFiles[12],
-         .rendersFirst = false,
-         .target       = ShotTarget::BOOKMARK_DIALOG,
-         .region       = region(Kind::WHOLE),
-         .prepare =
-             [this] {
-                 m_bookmarkDialogOpen = true;
-                 call(m_hooks.showBookmarkDialog, kScreenshotBookmarkName);
-             },
-         .cleanup = [this] { closeBookmarkDialog(); }},
-        {.file         = kFiles[13],
-         .rendersFirst = false,
-         .target       = ShotTarget::HELP,
-         .region       = region(Kind::WHOLE),
-         .prepare      = [this] { call(m_hooks.showHelpContents); },
-         .cleanup      = [this] { call(m_hooks.closeHelp); }},
-        {.file         = kFiles[14],
-         .rendersFirst = true,
-         .target       = ShotTarget::MAIN,
-         .region       = region(Kind::WHOLE),
-         .prepare =
-             [this] {
-                 m_app.startTour();
-                 m_app.tour().showStep(2);  // the Families step: card beside a highlighted section
-             },
-         .cleanup = [this] { m_app.stopDemos(); }},
+        {
+            .file         = kFiles[0],
+            .rendersFirst = true,
+            .target       = ShotTarget::MAIN,
+            .region       = region(Kind::WHOLE),
+            .prepare      = [this] { m_app.applySettings(mandelbrotDefault()); },
+            .cleanup      = nothing,
+        },
+        {
+            .file         = kFiles[1],
+            .rendersFirst = true,
+            .target       = ShotTarget::MAIN,
+            .region       = region(Kind::PANEL),
+            .prepare =
+                [this] {
+                    // Tall enough for the whole panel (normally it scrolls).
+                    call(m_hooks.growToWholePanel);
+                    call(m_hooks.scrollPanelTo, PanelSection::FRACTAL);
+                },
+            .cleanup = [this] { call(m_hooks.setContentSize, kScreenshotContentSize); },
+        },
+        {
+            .file         = kFiles[2],
+            .rendersFirst = true,
+            .target       = ShotTarget::MAIN,
+            .region       = section(PanelSection::FRACTAL),
+            .prepare =
+                [this] {
+                    m_app.applySettings(juliaExample());
+                    m_app.setPreviewSeed(kJuliaSeed);
+                },
+            .cleanup = nothing,
+        },
+        {
+            .file         = kFiles[3],
+            .rendersFirst = true,
+            .target       = ShotTarget::MAIN,
+            .region       = section(PanelSection::ITERATIONS),
+            .prepare      = [this] { m_app.applySettings(seahorse("classic")); },
+            .cleanup      = nothing,
+        },
+        {
+            .file         = kFiles[4],
+            .rendersFirst = false,
+            .target       = ShotTarget::MAIN,
+            .region       = section(PanelSection::COLORING),
+            .prepare      = [this] { m_app.applySettings(seahorseFire()); },
+            .cleanup      = nothing,
+        },
+        {
+            .file         = kFiles[5],
+            .rendersFirst = false,
+            .target       = ShotTarget::MAIN,
+            .region       = section(PanelSection::OVERLAY),
+            .prepare =
+                [this, scrollTo] {
+                    m_app.setShowOrbit(true);
+                    scrollTo(PanelSection::OVERLAY)();
+                },
+            .cleanup = nothing,
+        },
+        {
+            .file         = kFiles[6],
+            .rendersFirst = false,
+            .target       = ShotTarget::MAIN,
+            .region       = section(PanelSection::BOOKMARKS),
+            .prepare      = scrollTo(PanelSection::BOOKMARKS),  // the scratch bookmarks
+            .cleanup      = nothing,
+        },
+        {
+            .file         = kFiles[7],
+            .rendersFirst = true,
+            .target       = ShotTarget::MAIN,
+            .region       = region(Kind::CANVAS),
+            .prepare =
+                [this] {
+                    m_app.applySettings(mandelbrotDefault());
+                    m_app.setShowOrbit(true);
+                    m_app.canvas().showOrbitAt(kOrbitPoint);
+                },
+            .cleanup = [this] { m_app.canvas().clearPinnedOrbit(); },
+        },
+        {
+            .file         = kFiles[8],
+            .rendersFirst = true,
+            .target       = ShotTarget::MAIN,
+            .region       = region(Kind::CANVAS),
+            .prepare =
+                [this] {
+                    m_app.setShowOrbit(false);
+                    m_app.applySettings(seahorse("electric"));
+                },
+            .cleanup = nothing,
+        },
+        {
+            .file         = kFiles[9],
+            .rendersFirst = true,
+            .target       = ShotTarget::MAIN,
+            .region       = region(Kind::STATUS_BAR),
+            .prepare =
+                [this, scrollTo] {
+                    scrollTo(PanelSection::FRACTAL)();
+                    m_app.applySettings(deepSeahorse(kScreenshotDeepZoom));
+                },
+            .cleanup = nothing,
+        },
+        {
+            .file         = kFiles[10],  // keeps the deep zoom of the status bar's shot
+            .rendersFirst = false,
+            .target       = ShotTarget::MAIN,
+            .region       = region(Kind::WHOLE),
+            .prepare      = nothing,
+            .cleanup      = nothing,
+        },
+        {
+            .file         = kFiles[11],
+            .rendersFirst = false,
+            .target       = ShotTarget::EXPORT_DIALOG,
+            .region       = region(Kind::WHOLE),
+            .prepare      = [this] { m_app.showExportDialog(); },
+            .cleanup      = [this] { m_app.closeExportDialog(); },
+        },
+        {
+            .file         = kFiles[12],
+            .rendersFirst = false,
+            .target       = ShotTarget::BOOKMARK_DIALOG,
+            .region       = region(Kind::WHOLE),
+            .prepare =
+                [this] {
+                    m_bookmarkDialogOpen = true;
+                    call(m_hooks.showBookmarkDialog, kScreenshotBookmarkName);
+                },
+            .cleanup = [this] { closeBookmarkDialog(); },
+        },
+        {
+            .file         = kFiles[13],
+            .rendersFirst = false,
+            .target       = ShotTarget::HELP,
+            .region       = region(Kind::WHOLE),
+            .prepare      = [this] { call(m_hooks.showHelpContents); },
+            .cleanup      = [this] { call(m_hooks.closeHelp); },
+        },
+        {
+            .file         = kFiles[14],
+            .rendersFirst = true,
+            .target       = ShotTarget::MAIN,
+            .region       = region(Kind::WHOLE),
+            .prepare =
+                [this] {
+                    m_app.startTour();
+                    m_app.tour().showStep(
+                        2);  // the Families step: card beside a highlighted section
+                },
+            .cleanup = [this] { m_app.stopDemos(); },
+        },
     };
     return shots;
 }

@@ -75,7 +75,10 @@ TEST(Palette, DensityAndOffsetMapIterationsOntoTheCycle)
     const ColoringSettings shifted{.palette = "rainbow", .density = 64.0, .offset = 0.5};
     EXPECT_EQ(mandelbrotter::colorFor({.smoothIter = 16.0}, p, shifted), p.sample(0.75));
     const ColoringSettings tiny{
-        .palette = "rainbow", .density = 0.0, .offset = 0.0};  // clamped to 1
+        .palette = "rainbow",
+        .density = 0.0,
+        .offset  = 0.0,
+    };  // clamped to 1
     EXPECT_EQ(mandelbrotter::colorFor({.smoothIter = 0.25}, p, tiny), p.sample(0.25));
 }
 

@@ -68,13 +68,18 @@ FlightKeyframe leg(RenderSettings settings, std::chrono::milliseconds duration,
 Flight seahorseDive()
 {
     const RenderSettings start = mandelbrot("electric");
-    return {.id    = "seahorse-dive",
-            .title = "Dive into Seahorse Valley",
-            .description =
-                "From the whole set down to a minibrot at zoom 1e13; the status bar "
-                "switches to deep rendering on the way.",
-            .keyframes = {leg(start, milliseconds{0}),
-                          leg(at(start, kSeahorseDeepRe, kSeahorseDeepIm, 1e13), seconds{43})}};
+    return {
+        .id    = "seahorse-dive",
+        .title = "Dive into Seahorse Valley",
+        .description =
+            "From the whole set down to a minibrot at zoom 1e13; the status bar "
+            "switches to deep rendering on the way.",
+        .keyframes =
+            {
+                leg(start, milliseconds{0}),
+                leg(at(start, kSeahorseDeepRe, kSeahorseDeepIm, 1e13), seconds{43}),
+            },
+    };
 }
 
 Flight antennaMinibrot()
@@ -83,14 +88,20 @@ Flight antennaMinibrot()
     // The period-3 island on the antenna, then the period-9 island on its own antenna.
     // Zoom 60 shows the whole island; from about 250 the screen is inside its body, all black.
     const RenderSettings island = at(start, {-1.7548776662466927, 0.0}, 60);
-    return {.id    = "antenna-minibrot",
-            .title = "The minibrot on the antenna",
-            .description =
-                "Along the real axis to the little copy of the set at -1.75, then on "
-                "to the copy on its own antenna.",
-            .keyframes = {leg(start, milliseconds{0}), leg(island, seconds{10}),
-                          leg(island, seconds{2}),
-                          leg(at(start, {-1.7864402555, 0.0}, 1e7), seconds{13})}};
+    return {
+        .id    = "antenna-minibrot",
+        .title = "The minibrot on the antenna",
+        .description =
+            "Along the real axis to the little copy of the set at -1.75, then on "
+            "to the copy on its own antenna.",
+        .keyframes =
+            {
+                leg(start, milliseconds{0}),
+                leg(island, seconds{10}),
+                leg(island, seconds{2}),
+                leg(at(start, {-1.7864402555, 0.0}, 1e7), seconds{13}),
+            },
+    };
 }
 
 Flight elephantValley()
@@ -100,8 +111,12 @@ Flight elephantValley()
         .id          = "elephant-valley",
         .title       = "Elephant Valley spirals",
         .description = "Into the spirals on the right-hand side of the set, to zoom 1e7.",
-        .keyframes = {leg(start, milliseconds{0}),
-                      leg(at(start, {0.2549870375144766, -0.0005679790528465}, 1e7), seconds{23})}};
+        .keyframes =
+            {
+                leg(start, milliseconds{0}),
+                leg(at(start, {0.2549870375144766, -0.0005679790528465}, 1e7), seconds{23}),
+            },
+    };
 }
 
 Flight feigenbaum()
@@ -110,13 +125,18 @@ Flight feigenbaum()
     // so the flight starts from a higher iteration base than usual and stops at 3e5.
     RenderSettings start = mandelbrot("classic");
     start.maxIterations  = 2500;
-    return {.id    = "feigenbaum",
-            .title = "The Feigenbaum cascade",
-            .description =
-                "Down the real axis into the point where the period-doubling pattern "
-                "repeats itself at every scale.",
-            .keyframes = {leg(start, milliseconds{0}),
-                          leg(at(start, {-1.401155189092, 0.0}, 3e5), seconds{18})}};
+    return {
+        .id    = "feigenbaum",
+        .title = "The Feigenbaum cascade",
+        .description =
+            "Down the real axis into the point where the period-doubling pattern "
+            "repeats itself at every scale.",
+        .keyframes =
+            {
+                leg(start, milliseconds{0}),
+                leg(at(start, {-1.401155189092, 0.0}, 3e5), seconds{18}),
+            },
+    };
 }
 
 Flight juliaSweep()
@@ -127,12 +147,14 @@ Flight juliaSweep()
     settings.fractal.julia    = true;
     settings.view             = defaultView(settings.fractal);
 
-    Flight flight{.id    = "julia-sweep",
-                  .title = "A walk around the Julia sets",
-                  .description =
-                      "The Julia set morphs as its constant travels once around the "
-                      "circle |c| = 0.7885.",
-                  .keyframes = {}};
+    Flight flight{
+        .id    = "julia-sweep",
+        .title = "A walk around the Julia sets",
+        .description =
+            "The Julia set morphs as its constant travels once around the "
+            "circle |c| = 0.7885.",
+        .keyframes = {},
+    };
     for (int i = 0; i <= kLegs; ++i)
     {
         const double angle    = 2.0 * std::numbers::pi * i / kLegs;
@@ -147,16 +169,20 @@ Flight paletteSweep()
     const RenderSettings settings = at(mandelbrot("classic"), kSeahorseValley, 5000.0);
     RenderSettings       end      = settings;
     end.coloring.offset           = 1.0;
-    return {.id          = "palette-sweep",
-            .title       = "Palette sweep",
-            .description = "The same view while the palette cycles once through its colors.",
-            .keyframes   = {leg(settings, milliseconds{0}), leg(end, seconds{12}, Easing::LINEAR)}};
+    return {
+        .id          = "palette-sweep",
+        .title       = "Palette sweep",
+        .description = "The same view while the palette cycles once through its colors.",
+        .keyframes   = {leg(settings, milliseconds{0}), leg(end, seconds{12}, Easing::LINEAR)},
+    };
 }
 
 const std::vector<Flight>& flights()
 {
-    static const std::vector<Flight> kFlights{seahorseDive(), antennaMinibrot(), elephantValley(),
-                                              feigenbaum(),   juliaSweep(),      paletteSweep()};
+    static const std::vector<Flight> kFlights{
+        seahorseDive(), antennaMinibrot(), elephantValley(),
+        feigenbaum(),   juliaSweep(),      paletteSweep(),
+    };
     return kFlights;
 }
 
@@ -229,9 +255,11 @@ RenderSettings interpolateSettings(const RenderSettings& from, const RenderSetti
 
     out.coloring.offset  = lerp(from.coloring.offset, to.coloring.offset, u);
     out.coloring.density = lerp(from.coloring.density, to.coloring.density, u);
-    out.fractal.seed     = {lerp(from.fractal.seed.re, to.fractal.seed.re, u),
-                            lerp(from.fractal.seed.im, to.fractal.seed.im, u)};
-    out.maxIterations    = static_cast<int>(std::lround(
+    out.fractal.seed     = {
+        lerp(from.fractal.seed.re, to.fractal.seed.re, u),
+        lerp(from.fractal.seed.im, to.fractal.seed.im, u),
+    };
+    out.maxIterations = static_cast<int>(std::lround(
         lerp(static_cast<double>(from.maxIterations), static_cast<double>(to.maxIterations), u)));
     return out;
 }

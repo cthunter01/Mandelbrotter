@@ -160,14 +160,16 @@ IterationResult iteratePerturbed(const ReferenceOrbit& reference, Complex delta0
                                  const BlaTable* bla, PerturbationStats* stats) noexcept
 {
     const FractalSpec& spec = reference.spec();
-    const Task         task{.delta0  = delta0,
-                            .julia   = spec.julia,
-                            .n       = clampExponent(spec.exponent),
-                            .maxIter = reference.length() < 2 ? 0  // a lone Z_0: nothing to step
-                                                              : std::max(maxIter, 0),
-                            .bla     = bla};
-    int                skipped = 0;
-    const RawResult    raw     = runAny(spec.family, reference.points(), task, skipped);
+    const Task         task{
+        .delta0  = delta0,
+        .julia   = spec.julia,
+        .n       = clampExponent(spec.exponent),
+        .maxIter = reference.length() < 2 ? 0  // a lone Z_0: nothing to step
+                                          : std::max(maxIter, 0),
+        .bla     = bla,
+    };
+    int             skipped = 0;
+    const RawResult raw     = runAny(spec.family, reference.points(), task, skipped);
     if (stats != nullptr)
     {
         *stats = {.iterations = raw.steps, .skipped = skipped};

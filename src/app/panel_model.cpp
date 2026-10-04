@@ -98,7 +98,11 @@ RenderSettings previewSettings(const FractalSpec& spec, Complex seed,
 {
     RenderSettings settings;
     settings.fractal = {
-        .family = spec.family, .exponent = spec.exponent, .julia = true, .seed = seed};
+        .family   = spec.family,
+        .exponent = spec.exponent,
+        .julia    = true,
+        .seed     = seed,
+    };
     settings.view           = defaultView(settings.fractal);
     settings.maxIterations  = kPreviewIterations;
     settings.autoIterations = false;

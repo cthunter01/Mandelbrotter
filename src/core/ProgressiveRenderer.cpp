@@ -138,8 +138,10 @@ bool renderPass(const Scene& scene, TileState& tile, int step, int previousStep,
             if (reuse)
             {
                 const std::size_t i = tile.index(lx, ly);
-                r                   = {.smoothIter = static_cast<double>(tile.smoothIter[i]),
-                                       .interior   = tile.interior[i] != 0};
+                r                   = {
+                    .smoothIter = static_cast<double>(tile.smoothIter[i]),
+                    .interior   = tile.interior[i] != 0,
+                };
             }
             else
             {
@@ -153,11 +155,13 @@ bool renderPass(const Scene& scene, TileState& tile, int step, int previousStep,
 
 TileResult toResult(const TileState& tile, std::uint64_t generation, int pass)
 {
-    return {.generation = generation,
-            .pass       = pass,
-            .rect       = tile.rect,
-            .smoothIter = tile.smoothIter,
-            .interior   = tile.interior};
+    return {
+        .generation = generation,
+        .pass       = pass,
+        .rect       = tile.rect,
+        .smoothIter = tile.smoothIter,
+        .interior   = tile.interior,
+    };
 }
 
 /// Runs `work(tileIndex)` over all tiles on `threads` workers until done or canceled.
@@ -348,8 +352,12 @@ std::vector<PixelRect> tileGrid(PixelRect area, int tileSize)
     {
         for (int x = area.x; x < area.right(); x += tileSize)
         {
-            tiles.push_back({x, y, std::min(tileSize, area.right() - x),
-                             std::min(tileSize, area.bottom() - y)});
+            tiles.push_back({
+                x,
+                y,
+                std::min(tileSize, area.right() - x),
+                std::min(tileSize, area.bottom() - y),
+            });
         }
     }
     const double centerX  = area.x + area.width / 2.0;

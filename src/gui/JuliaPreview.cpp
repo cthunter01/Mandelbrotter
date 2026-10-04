@@ -86,8 +86,10 @@ void JuliaPreview::render()
         return;
     }
     const double    scale = GetContentScaleFactor();
-    const PixelSize size{std::max(1, static_cast<int>(std::lround(client.x * scale))),
-                         std::max(1, static_cast<int>(std::lround(client.y * scale)))};
+    const PixelSize size{
+        std::max(1, static_cast<int>(std::lround(client.x * scale))),
+        std::max(1, static_cast<int>(std::lround(client.y * scale))),
+    };
 
     const auto buffer = renderSync(app::previewSettings(m_spec, *m_seed, m_coloring), size);
     if (!buffer)

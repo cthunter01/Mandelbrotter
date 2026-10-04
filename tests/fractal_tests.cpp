@@ -57,7 +57,11 @@ TEST(Fractal, DefaultViewsAreValid)
 TEST(Fractal, SpecEquality)
 {
     const FractalSpec a{
-        .family = FractalFamily::TRICORN, .exponent = 3, .julia = true, .seed = {0.1, 0.2}};
+        .family   = FractalFamily::TRICORN,
+        .exponent = 3,
+        .julia    = true,
+        .seed     = {0.1, 0.2},
+    };
     FractalSpec b = a;
     EXPECT_EQ(a, b);
     b.seed.im = 0.3;

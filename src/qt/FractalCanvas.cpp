@@ -98,25 +98,27 @@ std::optional<app::MouseButton> mouseButton(Qt::MouseButton button)
 FractalCanvas::FractalCanvas(QWidget* parent, RenderSettings initial)
   : QWidget(parent),
     m_controller(std::move(initial),
-                 {.post =
-                      [this](std::function<void()> work) {
-                          // Thread-safe and never blocking; dropped once the canvas is gone.
-                          QMetaObject::invokeMethod(this, std::move(work), Qt::QueuedConnection);
-                      },
-                  .requestRepaint = [this] { update(); },
-                  .setCursor =
-                      [this](app::CanvasCursor cursor) {
-                          if (cursor == app::CanvasCursor::BULLSEYE)
-                          {
-                              setCursor(bullseyeCursor());
-                          }
-                          else
-                          {
-                              setCursor(Qt::CrossCursor);
-                          }
-                      },
-                  // Qt grabs the mouse by itself between a press and its release.
-                  .captureMouse = {}})
+                 {
+                     .post =
+                         [this](std::function<void()> work) {
+                             // Thread-safe and never blocking; dropped once the canvas is gone.
+                             QMetaObject::invokeMethod(this, std::move(work), Qt::QueuedConnection);
+                         },
+                     .requestRepaint = [this] { update(); },
+                     .setCursor =
+                         [this](app::CanvasCursor cursor) {
+                             if (cursor == app::CanvasCursor::BULLSEYE)
+                             {
+                                 setCursor(bullseyeCursor());
+                             }
+                             else
+                             {
+                                 setCursor(Qt::CrossCursor);
+                             }
+                         },
+                     // Qt grabs the mouse by itself between a press and its release.
+                     .captureMouse = {},
+                 })
 {
     setObjectName(u"FractalCanvas"_s);
     // Without mouse tracking Qt reports moves only while a button is held: the pointer field, the
@@ -151,9 +153,12 @@ void FractalCanvas::updateSize()
     }
     if (m_devicePixels)
     {
-        m_controller.setSize({static_cast<int>(std::lround(width() * m_ratio)),
-                              static_cast<int>(std::lround(height() * m_ratio))},
-                             1.0);
+        m_controller.setSize(
+            {
+                static_cast<int>(std::lround(width() * m_ratio)),
+                static_cast<int>(std::lround(height() * m_ratio)),
+            },
+            1.0);
     }
     else
     {
@@ -170,8 +175,10 @@ PixelPoint FractalCanvas::toController(QPointF position) const
 {
     if (m_devicePixels)
     {
-        return {static_cast<int>(std::lround(position.x() * m_ratio)),
-                static_cast<int>(std::lround(position.y() * m_ratio))};
+        return {
+            static_cast<int>(std::lround(position.x() * m_ratio)),
+            static_cast<int>(std::lround(position.y() * m_ratio)),
+        };
     }
     return fromQt(position.toPoint());
 }

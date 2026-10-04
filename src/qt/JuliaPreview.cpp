@@ -86,9 +86,11 @@ void JuliaPreview::render()
         return;
     }
     const double    ratio = devicePixelRatio();
-    const PixelSize size{std::max(1, static_cast<int>(std::lround(area.width() * ratio))),
-                         std::max(1, static_cast<int>(std::lround(area.height() * ratio)))};
-    const auto      buffer = renderSync(app::previewSettings(m_spec, *m_seed, m_coloring), size);
+    const PixelSize size{
+        std::max(1, static_cast<int>(std::lround(area.width() * ratio))),
+        std::max(1, static_cast<int>(std::lround(area.height() * ratio))),
+    };
+    const auto buffer = renderSync(app::previewSettings(m_spec, *m_seed, m_coloring), size);
     if (!buffer)
     {
         return;

@@ -40,8 +40,12 @@ PixelPoint difference(PixelPoint a, PixelPoint b)
 /// The rectangle from `a` to `b`, both corners included, as wxRect(a, b) spans it.
 PixelRect spanning(PixelPoint a, PixelPoint b)
 {
-    return {std::min(a.x, b.x), std::min(a.y, b.y), std::abs(b.x - a.x) + 1,
-            std::abs(b.y - a.y) + 1};
+    return {
+        std::min(a.x, b.x),
+        std::min(a.y, b.y),
+        std::abs(b.x - a.x) + 1,
+        std::abs(b.y - a.y) + 1,
+    };
 }
 
 }  // namespace
@@ -110,8 +114,10 @@ void CanvasController::resizeSettled()
 
 PixelSize CanvasController::renderSize() const noexcept
 {
-    return {std::max(1, static_cast<int>(std::lround(m_logicalSize.width * m_scale))),
-            std::max(1, static_cast<int>(std::lround(m_logicalSize.height * m_scale)))};
+    return {
+        std::max(1, static_cast<int>(std::lround(m_logicalSize.width * m_scale))),
+        std::max(1, static_cast<int>(std::lround(m_logicalSize.height * m_scale))),
+    };
 }
 
 Viewport CanvasController::viewport() const
@@ -121,14 +127,18 @@ Viewport CanvasController::viewport() const
 
 PixelPoint CanvasController::toDevice(PixelPoint logical) const noexcept
 {
-    return {static_cast<int>(std::floor(logical.x * m_scale)),
-            static_cast<int>(std::floor(logical.y * m_scale))};
+    return {
+        static_cast<int>(std::floor(logical.x * m_scale)),
+        static_cast<int>(std::floor(logical.y * m_scale)),
+    };
 }
 
 PixelPoint CanvasController::toLogical(PixelPoint device) const noexcept
 {
-    return {static_cast<int>(std::lround(device.x / m_scale)),
-            static_cast<int>(std::lround(device.y / m_scale))};
+    return {
+        static_cast<int>(std::lround(device.x / m_scale)),
+        static_cast<int>(std::lround(device.y / m_scale)),
+    };
 }
 
 Complex CanvasController::complexAt(PixelPoint logical) const
@@ -268,7 +278,7 @@ void CanvasController::startRender()
     m_generation                          = m_renderer.start(
         std::move(job),
         [this, alive](const TileResult& tile) {
-            auto copy = std::make_shared<const TileResult>(tile);
+            const auto copy = std::make_shared<const TileResult>(tile);
             post([this, alive, copy] {
                 if (alive.lock())
                 {
@@ -335,9 +345,11 @@ void CanvasController::reportStatus(bool rendering, std::chrono::milliseconds el
 {
     if (onRenderStatus)
     {
-        onRenderStatus({.rendering  = rendering,
-                        .elapsed    = elapsed,
-                        .iterations = effectiveIterations(m_settings)});
+        onRenderStatus({
+            .rendering  = rendering,
+            .elapsed    = elapsed,
+            .iterations = effectiveIterations(m_settings),
+        });
     }
 }
 
@@ -459,8 +471,12 @@ void CanvasController::finishRubberBand(PixelPoint at)
     const PixelRect  logical     = spanning(m_dragStart, at);
     const PixelPoint topLeft     = toDevice({logical.x, logical.y});
     const PixelPoint bottomRight = toDevice({logical.right(), logical.bottom()});
-    const PixelRect  rect{topLeft.x, topLeft.y, bottomRight.x - topLeft.x,
-                          bottomRight.y - topLeft.y};
+    const PixelRect  rect{
+        topLeft.x,
+        topLeft.y,
+        bottomRight.x - topLeft.x,
+        bottomRight.y - topLeft.y,
+    };
     changeView(viewport().zoomedToRect(rect).view());
 }
 

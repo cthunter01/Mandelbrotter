@@ -72,11 +72,13 @@ struct SupersampleChoice
     int              factor;
     std::string_view label;
 };
-inline constexpr std::array<SupersampleChoice, 3> kSupersampleChoices{{
-    {1, "1x (none)"},
-    {2, "2x2 samples per pixel"},
-    {4, "4x4 samples per pixel"},
-}};
+inline constexpr std::array<SupersampleChoice, 3> kSupersampleChoices{
+    {
+        {1, "1x (none)"},
+        {2, "2x2 samples per pixel"},
+        {4, "4x4 samples per pixel"},
+    },
+};
 
 // ---- the side panel
 /// The title of a section's box: "Fractal", "Iterations", ...

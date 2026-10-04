@@ -33,16 +33,25 @@ RenderSettings at(mandelbrotter::Complex center, double zoom)
 /// Two seconds: a one-second zoom from 1x to 16x, then a one-second pan.
 Flight testFlight()
 {
-    return {.id          = "test",
-            .title       = "Test flight",
-            .description = "",
-            .keyframes   = {{.settings = at({-0.5, 0.0}, 1.0)},
-                            {.settings = at({-0.5, 0.0}, 16.0),
-                             .duration = milliseconds(1000),
-                             .easing   = mandelbrotter::Easing::LINEAR},
-                            {.settings = at({-0.25, 0.0}, 16.0),
-                             .duration = milliseconds(1000),
-                             .easing   = mandelbrotter::Easing::LINEAR}}};
+    return {
+        .id          = "test",
+        .title       = "Test flight",
+        .description = "",
+        .keyframes =
+            {
+                {.settings = at({-0.5, 0.0}, 1.0)},
+                {
+                    .settings = at({-0.5, 0.0}, 16.0),
+                    .duration = milliseconds(1000),
+                    .easing   = mandelbrotter::Easing::LINEAR,
+                },
+                {
+                    .settings = at({-0.25, 0.0}, 16.0),
+                    .duration = milliseconds(1000),
+                    .easing   = mandelbrotter::Easing::LINEAR,
+                },
+            },
+    };
 }
 
 /// Records every hook call; the clock only moves when a test advances it.
@@ -59,12 +68,14 @@ struct Recorder
 
     [[nodiscard]] DemoPlayer::Hooks hooks()
     {
-        return {.applyFrame      = [this](const RenderSettings& s) { frames.push_back(s); },
-                .canvasReady     = [this] { return ready; },
-                .showStatus      = [this](std::string_view s) { statuses.emplace_back(s); },
-                .finished        = [this] { ++finished; },
-                .setTimerRunning = [this](bool on) { timer.push_back(on); },
-                .now             = [this] { return clock; }};
+        return {
+            .applyFrame      = [this](const RenderSettings& s) { frames.push_back(s); },
+            .canvasReady     = [this] { return ready; },
+            .showStatus      = [this](std::string_view s) { statuses.emplace_back(s); },
+            .finished        = [this] { ++finished; },
+            .setTimerRunning = [this](bool on) { timer.push_back(on); },
+            .now             = [this] { return clock; },
+        };
     }
 };
 
@@ -248,12 +259,14 @@ TEST(DemoPlayer, PlayingAgainRestartsFromTheBeginning)
 TEST(DemoPlayer, HooksBeyondTheEssentialOnesAreOptional)
 {
     int          applied = 0;
-    DemoPlayer   player({.applyFrame      = [&](const RenderSettings&) { ++applied; },
-                         .canvasReady     = {},
-                         .showStatus      = [](std::string_view) { },
-                         .finished        = {},
-                         .setTimerRunning = {},
-                         .now             = {}});
+    DemoPlayer   player({
+        .applyFrame      = [&](const RenderSettings&) { ++applied; },
+        .canvasReady     = {},
+        .showStatus      = [](std::string_view) { },
+        .finished        = {},
+        .setTimerRunning = {},
+        .now             = {},
+    });
     const Flight flight = testFlight();
     player.play(flight);
     player.tick();

@@ -86,8 +86,10 @@ BigComplex Viewport::pixelCenterBig(PixelPoint p) const
 PixelPoint Viewport::pixelAtOffset(Complex offset) const noexcept
 {
     const double s = unitsPerPixel();
-    return {clampedPixel(offset.re / s + m_size.width / 2.0),
-            clampedPixel(-offset.im / s + m_size.height / 2.0)};
+    return {
+        clampedPixel(offset.re / s + m_size.width / 2.0),
+        clampedPixel(-offset.im / s + m_size.height / 2.0),
+    };
 }
 
 PixelPoint Viewport::toPixel(Complex c) const noexcept

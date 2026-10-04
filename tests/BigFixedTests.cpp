@@ -47,8 +47,21 @@ TEST(BigFixed, FractionBitsRoundUpToWholeLimbsAndAreClamped)
 
 TEST(BigFixed, DoubleRoundTripsExactlyWhenTheBitsFit)
 {
-    for (const double value : {0.0, 1.0, -1.0, 0.5, -0.75, 3.15625, 1e-10, -123456.789, 255.999,
-                               1e20, -2.5e-20, std::ldexp(1.0, 90), -std::ldexp(1.0, 90)})
+    for (const double value : {
+             0.0,
+             1.0,
+             -1.0,
+             0.5,
+             -0.75,
+             3.15625,
+             1e-10,
+             -123456.789,
+             255.999,
+             1e20,
+             -2.5e-20,
+             std::ldexp(1.0, 90),
+             -std::ldexp(1.0, 90),
+         })
     {
         EXPECT_EQ(dbl(value, 128).toDouble(), value) << value;
     }
@@ -233,8 +246,25 @@ TEST(BigFixed, ParsesEveryDecimalForm)
 
 TEST(BigFixed, RejectsMalformedDecimals)
 {
-    for (const std::string_view text : {"", "+", "-", ".", "e5", "1e", "1e+", "1.2.3", " 1", "1 ",
-                                        "1,5", "abc", "0x10", "1e999999", "--1", "1e5.5", "1-2"})
+    for (const std::string_view text : {
+             "",
+             "+",
+             "-",
+             ".",
+             "e5",
+             "1e",
+             "1e+",
+             "1.2.3",
+             " 1",
+             "1 ",
+             "1,5",
+             "abc",
+             "0x10",
+             "1e999999",
+             "--1",
+             "1e5.5",
+             "1-2",
+         })
     {
         EXPECT_FALSE(BigFixed::fromDecimal(text, kBits).has_value()) << "'" << text << "'";
     }

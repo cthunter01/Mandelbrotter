@@ -26,7 +26,11 @@ RenderSettings fancySettings()
 {
     RenderSettings s;
     s.fractal = {
-        .family = FractalFamily::BURNING_SHIP, .exponent = 3, .julia = true, .seed = {-0.8, 0.156}};
+        .family   = FractalFamily::BURNING_SHIP,
+        .exponent = 3,
+        .julia    = true,
+        .seed     = {-0.8, 0.156},
+    };
     s.view           = {{-1.7433419053, -0.0280023654}, 12345.678};
     s.maxIterations  = 4321;
     s.autoIterations = false;
@@ -67,9 +71,12 @@ TEST(Bookmarks, CenterIsWrittenAsDecimalsAndVersionOneNumbersStillLoad)
     RenderSettings deep;
     const int      bits = mandelbrotter::fractionBitsFor(mandelbrotter::kMaxZoom);
     deep.view           = {
-        {*mandelbrotter::BigFixed::fromDecimal("-0.7436438870371587047521915061147740", bits),
-         *mandelbrotter::BigFixed::fromDecimal("0.1318259042053119704931320563851390", bits)},
-        mandelbrotter::kMaxZoom};
+        {
+            *mandelbrotter::BigFixed::fromDecimal("-0.7436438870371587047521915061147740", bits),
+            *mandelbrotter::BigFixed::fromDecimal("0.1318259042053119704931320563851390", bits),
+        },
+        mandelbrotter::kMaxZoom,
+    };
     const std::string json = mandelbrotter::toJson(deep);
     EXPECT_NE(json.find("\"re\": \"-0.7436438870371587"), std::string::npos);
     EXPECT_NE(json.find("\"im\": \"0.1318259042053119"), std::string::npos);
@@ -125,9 +132,11 @@ TEST(Bookmarks, MalformedInputThrows)
 
 TEST(Bookmarks, ListRoundTrips)
 {
-    const std::vector<Bookmark> original{{"Seahorse valley", fancySettings()},
-                                         {"Home", RenderSettings{}}};
-    const std::string           json = mandelbrotter::serializeBookmarks(original);
+    const std::vector<Bookmark> original{
+        {"Seahorse valley", fancySettings()},
+        {"Home", RenderSettings{}},
+    };
+    const std::string json = mandelbrotter::serializeBookmarks(original);
     EXPECT_EQ(mandelbrotter::parseBookmarks(json), original);
     EXPECT_TRUE(mandelbrotter::parseBookmarks(R"({"version": 1, "bookmarks": []})").empty());
     EXPECT_THROW(static_cast<void>(mandelbrotter::parseBookmarks(R"({"version": 1})")),

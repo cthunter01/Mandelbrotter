@@ -130,9 +130,11 @@ RgbImage downsample(const RgbImage& image, int factor)
             }
             const unsigned half = samples / 2;
             out.set(x, y,
-                    {static_cast<std::uint8_t>((sumR + half) / samples),
-                     static_cast<std::uint8_t>((sumG + half) / samples),
-                     static_cast<std::uint8_t>((sumB + half) / samples)});
+                    {
+                        static_cast<std::uint8_t>((sumR + half) / samples),
+                        static_cast<std::uint8_t>((sumG + half) / samples),
+                        static_cast<std::uint8_t>((sumB + half) / samples),
+                    });
         }
     }
     return out;

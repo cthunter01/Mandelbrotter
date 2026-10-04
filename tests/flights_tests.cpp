@@ -136,9 +136,13 @@ TEST(Flights, FlightSettingsAtWalksTheKeyframes)
         .id          = "test",
         .title       = "Test",
         .description = "",
-        .keyframes   = {{.settings = a, .duration = milliseconds{0}},
-                        {.settings = b, .duration = seconds{2}},
-                        {.settings = c, .duration = seconds{2}, .easing = Easing::LINEAR}}};
+        .keyframes =
+            {
+                {.settings = a, .duration = milliseconds{0}},
+                {.settings = b, .duration = seconds{2}},
+                {.settings = c, .duration = seconds{2}, .easing = Easing::LINEAR},
+            },
+    };
     EXPECT_EQ(mandelbrotter::totalDuration(flight), seconds{4});
     EXPECT_EQ(flightSettingsAt(flight, seconds{-1}), a);
     EXPECT_EQ(flightSettingsAt(flight, seconds{0}), a);
@@ -161,9 +165,13 @@ TEST(Flights, ZeroLengthLegsSwitchInstantly)
         .id          = "test",
         .title       = "Test",
         .description = "",
-        .keyframes   = {{.settings = a, .duration = milliseconds{0}},
-                        {.settings = b, .duration = milliseconds{0}},
-                        {.settings = c, .duration = seconds{2}, .easing = Easing::LINEAR}}};
+        .keyframes =
+            {
+                {.settings = a, .duration = milliseconds{0}},
+                {.settings = b, .duration = milliseconds{0}},
+                {.settings = c, .duration = seconds{2}, .easing = Easing::LINEAR},
+            },
+    };
     EXPECT_EQ(flightSettingsAt(flight, milliseconds{0}), a);
     const RenderSettings early = flightSettingsAt(flight, milliseconds{1});
     EXPECT_EQ(early.coloring.palette, "fire");

@@ -69,9 +69,10 @@ std::string escaped(std::span<const unsigned char> bytes)
         else
         {
             out.push_back('\\');
-            out.push_back(static_cast<char>('0' + ((byte >> 6) & 7U)));
-            out.push_back(static_cast<char>('0' + ((byte >> 3) & 7U)));
-            out.push_back(static_cast<char>('0' + (byte & 7U)));
+            const unsigned bits = byte;  // not the int a byte promotes to
+            out.push_back(static_cast<char>('0' + ((bits >> 6) & 7U)));
+            out.push_back(static_cast<char>('0' + ((bits >> 3) & 7U)));
+            out.push_back(static_cast<char>('0' + (bits & 7U)));
         }
         afterEscape = !plain;
     }

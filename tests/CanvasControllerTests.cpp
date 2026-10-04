@@ -57,10 +57,12 @@ struct Canvas
 {
     explicit Canvas(RenderSettings initial = scene(), PixelSize size = kSize, double scale = 1.0)
       : controller(std::move(initial),
-                   {.post           = queue.hook(),
-                    .requestRepaint = [this] { ++repaints; },
-                    .setCursor      = [this](CanvasCursor cursor) { cursors.push_back(cursor); },
-                    .captureMouse   = [this](bool on) { captures.push_back(on); }})
+                   {
+                       .post           = queue.hook(),
+                       .requestRepaint = [this] { ++repaints; },
+                       .setCursor      = [this](CanvasCursor cursor) { cursors.push_back(cursor); },
+                       .captureMouse   = [this](bool on) { captures.push_back(on); },
+                   })
     {
         controller.onViewChanged  = [this](const ViewSpec& view) { views.push_back(view); };
         controller.onPointerMoved = [this](const std::optional<BigComplex>& pointer) {

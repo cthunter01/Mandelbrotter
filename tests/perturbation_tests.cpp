@@ -80,8 +80,10 @@ Disagreements disagreements(const FractalSpec& spec, Complex center, double zoom
     {
         for (int i = 0; i < kSample; ++i)
         {
-            const PixelPoint      p{i * kGrid / kSample + kGrid / (2 * kSample),
-                                    j * kGrid / kSample + kGrid / (2 * kSample)};
+            const PixelPoint p{
+                i * kGrid / kSample + kGrid / (2 * kSample),
+                j * kGrid / kSample + kGrid / (2 * kSample),
+            };
             const IterationResult truth =
                 exactResult(spec, vp.pixelCenterBig(p).withFractionBits(kTruthBits), kIter);
             const IterationResult direct =
@@ -121,9 +123,11 @@ TEST(Perturbation, NoLessAccurateThanDirectIterationForEveryFamily)
         {"cubic", FractalSpec{.exponent = 3}, {-0.38, 0.05}},
         {"quintic", FractalSpec{.exponent = 5}, {-0.7, 0.2}},
         {"burning ship", FractalSpec{.family = FractalFamily::BURNING_SHIP}, {-1.75, -0.03}},
-        {"burning ship chaotic",
-         FractalSpec{.family = FractalFamily::BURNING_SHIP},
-         {-1.62, -0.02}},
+        {
+            "burning ship chaotic",
+            FractalSpec{.family = FractalFamily::BURNING_SHIP},
+            {-1.62, -0.02},
+        },
         {"tricorn", FractalSpec{.family = FractalFamily::TRICORN}, {-1.3, 0.2}},
         {"julia", FractalSpec{.julia = true, .seed = {-0.8, 0.156}}, {0.1, 0.2}},
     });
@@ -197,11 +201,21 @@ TEST(Perturbation, MatchesBigNumberIterationFarBeyondDoublePrecision)
         {"mandelbrot at -2", FractalSpec{}, "-2", "0", 0.5},
         {"cubic", FractalSpec{.exponent = 3}, "-0.39", "0", 0.5},
         {"quintic", FractalSpec{.exponent = 5}, "0.3", "0.2", 0.5},
-        {"burning ship at -2", FractalSpec{.family = FractalFamily::BURNING_SHIP}, "-2", "0",
-         0.0},  // Im Z = 0: every delta crosses the fold
+        {
+            "burning ship at -2",
+            FractalSpec{.family = FractalFamily::BURNING_SHIP},
+            "-2",
+            "0",
+            0.0,
+        },  // Im Z = 0: every delta crosses the fold
         {"tricorn at -2", FractalSpec{.family = FractalFamily::TRICORN}, "-2", "0", 0.5},
-        {"julia inside", FractalSpec{.julia = true, .seed = {-1.0, 0.0}}, "0.1", "0.2",
-         0.01},  // Z hits the superattracting cycle exactly
+        {
+            "julia inside",
+            FractalSpec{.julia = true, .seed = {-1.0, 0.0}},
+            "0.1",
+            "0.2",
+            0.01,
+        },  // Z hits the superattracting cycle exactly
         {"julia outside", FractalSpec{.julia = true, .seed = {-1.0, 0.0}}, "1.5", "0.5", 0.5},
     });
     for (const Case& c : cases)
@@ -213,8 +227,12 @@ TEST(Perturbation, MatchesBigNumberIterationFarBeyondDoublePrecision)
         const BlaTable       table(ref, c.spec.julia ? 0.0 : maxDeltaC(vp));
         int                  iterations = 0;
         int                  skipped    = 0;
-        for (const PixelPoint p : {PixelPoint{0, 0}, PixelPoint{kGrid - 1, kGrid - 1},
-                                   PixelPoint{kGrid / 2, kGrid / 2}, PixelPoint{7, 40}})
+        for (const PixelPoint p : {
+                 PixelPoint{0, 0},
+                 PixelPoint{kGrid - 1, kGrid - 1},
+                 PixelPoint{kGrid / 2, kGrid / 2},
+                 PixelPoint{7, 40},
+             })
         {
             const IterationResult expected = exactResult(c.spec, vp.pixelCenterBig(p), kIter);
             const Complex         offset   = vp.offsetFromCenter(p.x + 0.5, p.y + 0.5);

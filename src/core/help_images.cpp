@@ -130,8 +130,10 @@ void writeHelpImages(const std::filesystem::path&                 dir,
         const auto scaled = [sizeScale](int pixels) {
             return std::max(1, static_cast<int>(std::lround(pixels * sizeScale)));
         };
-        const ExportOptions options{.size = {scaled(image.size.width), scaled(image.size.height)},
-                                    .supersample = image.supersample};
+        const ExportOptions options{
+            .size        = {scaled(image.size.width), scaled(image.size.height)},
+            .supersample = image.supersample,
+        };
         const std::optional<RgbImage> rendered = renderForExport(image.settings, options);
         if (!rendered)
         {

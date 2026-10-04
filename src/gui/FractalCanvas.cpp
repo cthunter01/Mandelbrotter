@@ -23,24 +23,26 @@ FractalCanvas::FractalCanvas(wxWindow* parent, RenderSettings initial)
              wxWANTS_CHARS | wxFULL_REPAINT_ON_RESIZE),
     m_controller(
         std::move(initial),
-        {.post           = [this](const std::function<void()>& work) { CallAfter(work); },
-         .requestRepaint = [this] { Refresh(false); },
-         .setCursor =
-             [this](app::CanvasCursor cursor) {
-                 SetCursor(wxCursor(cursor == app::CanvasCursor::BULLSEYE ? wxCURSOR_BULLSEYE
-                                                                          : wxCURSOR_CROSS));
-             },
-         .captureMouse =
-             [this](bool on) {
-                 if (on && !HasCapture())
-                 {
-                     CaptureMouse();
-                 }
-                 else if (!on && HasCapture())
-                 {
-                     ReleaseMouse();
-                 }
-             }}),
+        {
+            .post           = [this](const std::function<void()>& work) { CallAfter(work); },
+            .requestRepaint = [this] { Refresh(false); },
+            .setCursor =
+                [this](app::CanvasCursor cursor) {
+                    SetCursor(wxCursor(cursor == app::CanvasCursor::BULLSEYE ? wxCURSOR_BULLSEYE
+                                                                             : wxCURSOR_CROSS));
+                },
+            .captureMouse =
+                [this](bool on) {
+                    if (on && !HasCapture())
+                    {
+                        CaptureMouse();
+                    }
+                    else if (!on && HasCapture())
+                    {
+                        ReleaseMouse();
+                    }
+                },
+        }),
     m_resizeTimer(this)
 {
     SetBackgroundStyle(wxBG_STYLE_PAINT);

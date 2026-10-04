@@ -23,6 +23,7 @@ namespace mandelbrotter
 namespace
 {
 
+// NOLINTNEXTLINE(misc-const-correctness): stb's callback type (stbi_write_func) takes a void*
 void appendBytes(void* context, void* data, int size)
 {
     auto*                               out = static_cast<std::vector<std::uint8_t>*>(context);

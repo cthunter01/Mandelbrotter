@@ -68,17 +68,19 @@ AppController::~AppController()
 
 DemoPlayer::Hooks AppController::demoHooks()
 {
-    return {.applyFrame =
-                [this](const RenderSettings& frame) {
-                    m_settings = frame;
-                    m_canvas.setSettings(frame);
-                    updateStatusBar();  // the panel catches up when the flight ends
-                },
-            .canvasReady = [this] { return m_canvas.hasCoarsePicture(); },
-            .showStatus  = [this](std::string_view text) { setStatus(StatusField::POINTER, text); },
-            .finished    = [this] { call(m_shell.panelSettings, m_settings); },
-            .setTimerRunning = [this](bool on) { call(m_shell.demoTimer, on); },
-            .now             = m_shell.now};
+    return {
+        .applyFrame =
+            [this](const RenderSettings& frame) {
+                m_settings = frame;
+                m_canvas.setSettings(frame);
+                updateStatusBar();  // the panel catches up when the flight ends
+            },
+        .canvasReady     = [this] { return m_canvas.hasCoarsePicture(); },
+        .showStatus      = [this](std::string_view text) { setStatus(StatusField::POINTER, text); },
+        .finished        = [this] { call(m_shell.panelSettings, m_settings); },
+        .setTimerRunning = [this](bool on) { call(m_shell.demoTimer, on); },
+        .now             = m_shell.now,
+    };
 }
 
 void AppController::wireCanvas()

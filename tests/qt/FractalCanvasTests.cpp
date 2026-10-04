@@ -44,8 +44,10 @@ namespace qt  = mandelbrotter::qt;
 PixelSize devicePixels(const qt::FractalCanvas& canvas)
 {
     const double ratio = canvas.devicePixelRatio();
-    return {static_cast<int>(std::lround(canvas.width() * ratio)),
-            static_cast<int>(std::lround(canvas.height() * ratio))};
+    return {
+        static_cast<int>(std::lround(canvas.width() * ratio)),
+        static_cast<int>(std::lround(canvas.height() * ratio)),
+    };
 }
 
 /// A shown main window whose picture has been rendered at the canvas's size (the first render, at
@@ -287,8 +289,10 @@ TEST(FractionalRatio, APanMovesByDevicePixelsWithoutAJump)
     const Viewport before = h.viewport();
     QTest::mousePress(&h.canvas(), Qt::LeftButton, {}, QPoint(100, 100));
     QTest::mouseMove(&h.canvas(), QPoint(110, 104));
-    const PixelPoint offset{static_cast<int>(std::lround(110 * ratio) - std::lround(100 * ratio)),
-                            static_cast<int>(std::lround(104 * ratio) - std::lround(100 * ratio))};
+    const PixelPoint offset{
+        static_cast<int>(std::lround(110 * ratio) - std::lround(100 * ratio)),
+        static_cast<int>(std::lround(104 * ratio) - std::lround(100 * ratio)),
+    };
     EXPECT_EQ(h.canvas().controller().panOffset(), offset);
     QTest::mouseRelease(&h.canvas(), Qt::LeftButton, {}, QPoint(110, 104));
     // The view moves by exactly what the drag showed.

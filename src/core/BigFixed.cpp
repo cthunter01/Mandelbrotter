@@ -24,8 +24,9 @@ namespace
 using Limb  = std::uint32_t;
 using Limbs = std::vector<Limb>;
 
-constexpr int  kLimbBits = BigFixed::kLimbBits;
-constexpr Limb kSignBit  = 0x8000'0000U;
+constexpr int  kLimbBits  = BigFixed::kLimbBits;
+constexpr auto kLimbShift = static_cast<unsigned>(kLimbBits);  ///< kLimbBits as a shift count
+constexpr Limb kSignBit   = 0x8000'0000U;
 /// All bits of a limb, as the wide type the arithmetic runs in.
 constexpr std::uint64_t kLimbMask     = std::numeric_limits<Limb>::max();
 constexpr Limb          kDecimalBase  = 10;
@@ -58,7 +59,7 @@ void negate(Limbs& limbs) noexcept
         // The limb's complement, already 64 bits wide (MSVC warns, C4319, when ~limb is widened).
         const std::uint64_t sum = (static_cast<std::uint64_t>(limb) ^ kLimbMask) + carry;
         limb                    = static_cast<Limb>(sum);
-        carry                   = sum >> kLimbBits;
+        carry                   = sum >> kLimbShift;
     }
 }
 
@@ -80,7 +81,7 @@ void addInto(Limbs& a, const Limbs& b) noexcept
     {
         const std::uint64_t sum = static_cast<std::uint64_t>(a[i]) + b[i] + carry;
         a[i]                    = static_cast<Limb>(sum);
-        carry                   = sum >> kLimbBits;
+        carry                   = sum >> kLimbShift;
     }
 }
 
@@ -92,7 +93,7 @@ void subtractFrom(Limbs& a, const Limbs& b) noexcept
     {
         const std::uint64_t difference = static_cast<std::uint64_t>(a[i]) - b[i] - borrow;
         a[i]                           = static_cast<Limb>(difference);
-        borrow                         = (difference >> kLimbBits) & 1U;
+        borrow                         = (difference >> kLimbShift) & 1U;
     }
 }
 
@@ -104,7 +105,7 @@ Limb multiplySmall(Limbs& limbs, Limb factor) noexcept
     {
         const std::uint64_t product = static_cast<std::uint64_t>(limb) * factor + carry;
         limb                        = static_cast<Limb>(product);
-        carry                       = product >> kLimbBits;
+        carry                       = product >> kLimbShift;
     }
     return static_cast<Limb>(carry);
 }
@@ -121,7 +122,7 @@ void addSmall(Limbs& limbs, Limb value) noexcept
         }
         const std::uint64_t sum = static_cast<std::uint64_t>(limb) + carry;
         limb                    = static_cast<Limb>(sum);
-        carry                   = sum >> kLimbBits;
+        carry                   = sum >> kLimbShift;
     }
 }
 
@@ -131,7 +132,7 @@ Limb divideSmall(Limbs& limbs, Limb divisor) noexcept
     std::uint64_t remainder = 0;
     for (Limb& limb : std::views::reverse(limbs))
     {
-        const std::uint64_t current = (remainder << kLimbBits) | limb;
+        const std::uint64_t current = (remainder << kLimbShift) | limb;
         limb                        = static_cast<Limb>(current / divisor);
         remainder                   = current % divisor;
     }
@@ -145,7 +146,7 @@ void halve(Limbs& limbs) noexcept
     for (Limb& limb : std::views::reverse(limbs))
     {
         const Limb lowBit = limb & 1U;
-        limb              = (limb >> 1U) | (carry << (kLimbBits - 1));
+        limb              = (limb >> 1U) | (carry << (kLimbShift - 1U));
         carry             = lowBit;
     }
 }
@@ -177,11 +178,14 @@ Limbs withFractionLimbs(const Limbs& limbs, std::size_t fractionLimbs)
 void orShifted(Limbs& limbs, std::uint64_t value, int bitPosition) noexcept
 {
     const auto          index  = static_cast<std::size_t>(bitPosition / kLimbBits);
-    const int           offset = bitPosition % kLimbBits;
+    const auto          offset = static_cast<unsigned>(bitPosition % kLimbBits);
     const std::uint64_t low    = value << offset;
-    const std::uint64_t high   = offset == 0 ? 0 : value >> (2 * kLimbBits - offset);
-    const std::array    parts{static_cast<Limb>(low), static_cast<Limb>(low >> kLimbBits),
-                              static_cast<Limb>(high)};
+    const std::uint64_t high   = offset == 0 ? 0 : value >> (2 * kLimbShift - offset);
+    const std::array    parts{
+        static_cast<Limb>(low),
+        static_cast<Limb>(low >> kLimbShift),
+        static_cast<Limb>(high),
+    };
     for (std::size_t k = 0; k < parts.size(); ++k)
     {
         if (index + k < limbs.size())
@@ -328,7 +332,7 @@ BigFixed BigFixed::fromDouble(double value, int fractionBits)
     const int shift = exponent - kMantissaBits + result.fractionBits();
     if (shift < 0)
     {
-        significand = -shift >= 2 * kLimbBits ? 0 : significand >> -shift;
+        significand = -shift >= 2 * kLimbBits ? 0 : significand >> static_cast<unsigned>(-shift);
         orShifted(result.m_limbs, significand, 0);
     }
     else
@@ -549,7 +553,7 @@ BigFixed& BigFixed::operator*=(const BigFixed& other)
             const std::uint64_t term =
                 static_cast<std::uint64_t>(a[i]) * b[j] + product[i + j] + carry;
             product[i + j] = static_cast<Limb>(term);
-            carry          = term >> kLimbBits;
+            carry          = term >> kLimbShift;
         }
         product[i + n] = static_cast<Limb>(carry);
     }

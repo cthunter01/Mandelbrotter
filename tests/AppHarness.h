@@ -119,27 +119,32 @@ struct RecordingShell
                     ++hookCalls;
                     demoTimer = on;
                 },
-            .now  = [this] { return clock; },
-            .tour = {.showCard =
-                         [this](const app::TourStep& step, std::size_t index, std::size_t count) {
-                             ++hookCalls;
-                             cards.push_back({.title       = step.title,
-                                              .index       = index,
-                                              .count       = count,
-                                              .hasHelpPage = !step.helpPage.empty(),
-                                              .anchor      = step.anchor});
-                             cardShown = true;
-                         },
-                     .hideCard =
-                         [this] {
-                             ++hookCalls;
-                             cardShown = false;
-                         },
-                     .highlight =
-                         [this](std::optional<app::TourTarget> target) {
-                             ++hookCalls;
-                             highlights.push_back(target);
-                         }},
+            .now = [this] { return clock; },
+            .tour =
+                {
+                    .showCard =
+                        [this](const app::TourStep& step, std::size_t index, std::size_t count) {
+                            ++hookCalls;
+                            cards.push_back({
+                                .title       = step.title,
+                                .index       = index,
+                                .count       = count,
+                                .hasHelpPage = !step.helpPage.empty(),
+                                .anchor      = step.anchor,
+                            });
+                            cardShown = true;
+                        },
+                    .hideCard =
+                        [this] {
+                            ++hookCalls;
+                            cardShown = false;
+                        },
+                    .highlight =
+                        [this](std::optional<app::TourTarget> target) {
+                            ++hookCalls;
+                            highlights.push_back(target);
+                        },
+                },
         };
     }
 

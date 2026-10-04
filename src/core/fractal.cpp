@@ -14,8 +14,11 @@ namespace mandelbrotter
 namespace
 {
 
-constexpr std::array kFamilies{FractalFamily::MANDELBROT, FractalFamily::BURNING_SHIP,
-                               FractalFamily::TRICORN};
+constexpr std::array kFamilies{
+    FractalFamily::MANDELBROT,
+    FractalFamily::BURNING_SHIP,
+    FractalFamily::TRICORN,
+};
 
 }  // namespace
 

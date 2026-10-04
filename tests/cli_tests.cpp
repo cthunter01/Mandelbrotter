@@ -64,15 +64,25 @@ TEST(Cli, HelpAndRenderDoNotOpenTheGui)
 
 TEST(Cli, EveryOptionParsesInBothSpellings)
 {
-    const auto spaced =
-        parse({"--render",   "a.png",   "--view",        "v.json",     "--fractal", "burning-ship",
-               "--exponent", "3",       "--julia",       "-0.8,0.156", "--center",  "-0.75,0.1",
-               "--zoom",     "5e3",     "--iterations",  "1000",       "--palette", "fire",
-               "--size",     "800x600", "--supersample", "4"});
-    const auto equals =
-        parse({"--render=a.png", "--view=v.json", "--fractal=burning-ship", "--exponent=3",
-               "--julia=-0.8,0.156", "--center=-0.75,0.1", "--zoom=5e3", "--iterations=1000",
-               "--palette=fire", "--size=800x600", "--supersample=4"});
+    const auto spaced = parse({
+        "--render",   "a.png",   "--view",        "v.json",     "--fractal", "burning-ship",
+        "--exponent", "3",       "--julia",       "-0.8,0.156", "--center",  "-0.75,0.1",
+        "--zoom",     "5e3",     "--iterations",  "1000",       "--palette", "fire",
+        "--size",     "800x600", "--supersample", "4",
+    });
+    const auto equals = parse({
+        "--render=a.png",
+        "--view=v.json",
+        "--fractal=burning-ship",
+        "--exponent=3",
+        "--julia=-0.8,0.156",
+        "--center=-0.75,0.1",
+        "--zoom=5e3",
+        "--iterations=1000",
+        "--palette=fire",
+        "--size=800x600",
+        "--supersample=4",
+    });
     ASSERT_TRUE(spaced.has_value()) << spaced.error();
     ASSERT_TRUE(equals.has_value()) << equals.error();
     EXPECT_EQ(spaced->renderOutput, std::filesystem::path("a.png"));
@@ -192,9 +202,20 @@ TEST(Cli, ViewFileIsLoadedThenOverridden)
 TEST(Cli, UsageMentionsEveryOptionAndPalette)
 {
     const std::string usage = mandelbrotter::usageText();
-    for (const std::string_view option :
-         {"--help", "--render", "--view", "--fractal", "--exponent", "--julia", "--center",
-          "--zoom", "--iterations", "--palette", "--size", "--supersample"})
+    for (const std::string_view option : {
+             "--help",
+             "--render",
+             "--view",
+             "--fractal",
+             "--exponent",
+             "--julia",
+             "--center",
+             "--zoom",
+             "--iterations",
+             "--palette",
+             "--size",
+             "--supersample",
+         })
     {
         EXPECT_NE(usage.find(option), std::string::npos) << option;
     }
@@ -279,10 +300,14 @@ TEST(Cli, FlightFramesIsAHiddenDeveloperOption)
         {{"--flight", "nowhere", "--flight-frames", "frames"}, "--flight expects one of"},
         {{"--fps", "5"}, "--fps only applies"},
         {{"--flight", "palette-sweep", "--flight-frames", "frames", "--fps", "0"}, "--fps expects"},
-        {{"--flight", "palette-sweep", "--flight-frames", "frames", "--render", "x.png"},
-         "cannot be combined"},
-        {{"--screenshots", "shots", "--flight", "palette-sweep", "--flight-frames", "frames"},
-         "--screenshots needs the window"},
+        {
+            {"--flight", "palette-sweep", "--flight-frames", "frames", "--render", "x.png"},
+            "cannot be combined",
+        },
+        {
+            {"--screenshots", "shots", "--flight", "palette-sweep", "--flight-frames", "frames"},
+            "--screenshots needs the window",
+        },
     };
     for (const auto& [args, message] : rejected)
     {
@@ -295,8 +320,16 @@ TEST(Cli, FlightFramesIsAHiddenDeveloperOption)
 TEST(Cli, FlightFramesRendersEveryFrameOfTheFlight)
 {
     const mandelbrotter::test::TempDir dir;
-    const auto options = parse({"--flight", "palette-sweep", "--flight-frames",
-                                (dir / "frames").string(), "--fps", "1", "--size", "8x6"});
+    const auto                         options = parse({
+        "--flight",
+        "palette-sweep",
+        "--flight-frames",
+        (dir / "frames").string(),
+        "--fps",
+        "1",
+        "--size",
+        "8x6",
+    });
     ASSERT_TRUE(options.has_value()) << options.error();
     std::ostringstream out;
     std::ostringstream err;

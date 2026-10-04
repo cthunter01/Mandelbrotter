@@ -83,11 +83,18 @@ TEST(HelpSitemap, NestedListsBelongToTheEntryBeforeThem)
 </UL>
 </BODY></HTML>)");
     const std::vector<HelpTopic> expected{
-        {.name     = "One",
-         .local    = "one.html",
-         .children = {{.name     = "One & a half",
-                       .local    = "one.html#half",
-                       .children = {{.name = "Deep", .local = "deep.html", .children = {}}}}}},
+        {
+            .name  = "One",
+            .local = "one.html",
+            .children =
+                {
+                    {
+                        .name     = "One & a half",
+                        .local    = "one.html#half",
+                        .children = {{.name = "Deep", .local = "deep.html", .children = {}}},
+                    },
+                },
+        },
         {.name = "Two", .local = "two.html", .children = {}},
     };
     EXPECT_EQ(topics, expected);

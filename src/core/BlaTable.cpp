@@ -75,10 +75,12 @@ Bla singleStepBla(const ReferenceOrbit& reference, int index, double epsilon)
     // Dropping the second-order term of (w + dw)^n - w^n keeps the relative error below epsilon
     // while |dw| < 2 epsilon |w| / (n - 1); the twist preserves lengths.
     const double linearLimit = 2.0 * epsilon * std::hypot(w.re, w.im) / (n - 1);
-    return {.m      = Mat2::scaling(powerDerivative(w, n)) * twist,
-            .n      = spec.julia ? Mat2{} : Mat2::identity(),
-            .radius = std::min(linearLimit, foldLimit),
-            .length = 1};
+    return {
+        .m      = Mat2::scaling(powerDerivative(w, n)) * twist,
+        .n      = spec.julia ? Mat2{} : Mat2::identity(),
+        .radius = std::min(linearLimit, foldLimit),
+        .length = 1,
+    };
 }
 
 Bla mergeBla(const Bla& x, const Bla& y, double maxDeltaC) noexcept
@@ -137,7 +139,7 @@ const Bla* BlaTable::longestValid(int index, double deltaNormSquared, int maxLen
     for (int j = std::min(levels(), alignment); j >= 1; --j)
     {
         const std::vector<Bla>& level = m_levels[static_cast<std::size_t>(j - 1)];
-        const std::size_t       i     = unsignedIndex >> j;
+        const std::size_t       i     = unsignedIndex >> static_cast<unsigned>(j);
         if (i >= level.size())
         {
             continue;  // past the end of the orbit at this length

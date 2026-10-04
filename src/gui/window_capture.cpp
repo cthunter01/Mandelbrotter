@@ -36,6 +36,7 @@ CaptureResult failure(std::string why)
 
 #ifdef __WXGTK__
 
+// NOLINTNEXTLINE(misc-const-correctness): one signature for every platform; macOS draws through it
 CaptureResult captureWindow(wxWindow& window)
 {
     GtkWidget* widget = window.GetHandle();  // WXWidget is GtkWidget* on wxGTK

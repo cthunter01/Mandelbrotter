@@ -36,13 +36,13 @@ namespace
 {
 
 /// `rect` (client coordinates of `window`) in screen coordinates, with the margin.
-wxRect screenRectOf(wxWindow& window, const wxRect& rect)
+wxRect screenRectOf(const wxWindow& window, const wxRect& rect)
 {
     wxRect screen(window.ClientToScreen(rect.GetPosition()), rect.GetSize());
     return screen.Inflate(app::kScreenshotMarginPx);
 }
 
-wxRect screenRectOf(wxWindow& window)
+wxRect screenRectOf(const wxWindow& window)
 {
     return screenRectOf(window, wxRect(window.GetClientSize()));
 }

@@ -426,10 +426,12 @@ std::expected<HelpProject, std::string> parseHelpProject(std::string_view hhp)
         }
         start = end + 1;
     }
-    for (const auto& [value, key] :
-         {std::pair{&project.title, "Title"}, std::pair{&project.defaultTopic, "Default topic"},
-          std::pair{&project.contentsFile, "Contents file"},
-          std::pair{&project.indexFile, "Index file"}})
+    for (const auto& [value, key] : {
+             std::pair{&project.title, "Title"},
+             std::pair{&project.defaultTopic, "Default topic"},
+             std::pair{&project.contentsFile, "Contents file"},
+             std::pair{&project.indexFile, "Index file"},
+         })
     {
         if (value->empty())
         {
@@ -496,10 +498,12 @@ HelpSearch::HelpSearch(std::span<const std::pair<std::string, std::string>> page
     {
         std::string text  = pageText(html);
         std::string lower = lowered(text);
-        m_pages.push_back({.file      = file,
-                           .title     = pageTitle(html),
-                           .text      = std::move(text),
-                           .lowerText = std::move(lower)});
+        m_pages.push_back({
+            .file      = file,
+            .title     = pageTitle(html),
+            .text      = std::move(text),
+            .lowerText = std::move(lower),
+        });
     }
 }
 

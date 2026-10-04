@@ -26,7 +26,7 @@ using namespace Qt::StringLiterals;
 
 int runGui(const app::StartupOptions& options, char* argv0)
 {
-    if (const std::string missing = qt::missingDisplay(); !missing.empty())
+    if (const std::string_view missing = qt::missingDisplay(); !missing.empty())
     {
         std::cerr << "error: " << missing << '\n';
         return 1;

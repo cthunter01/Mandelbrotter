@@ -72,8 +72,10 @@ ExportOptions ExportDialog::options() const
 {
     const int choice = std::clamp(m_supersample->currentIndex(), 0,
                                   static_cast<int>(app::kSupersampleChoices.size()) - 1);
-    return {.size        = {m_width->value(), m_height->value()},
-            .supersample = app::kSupersampleChoices.at(static_cast<std::size_t>(choice)).factor};
+    return {
+        .size        = {m_width->value(), m_height->value()},
+        .supersample = app::kSupersampleChoices.at(static_cast<std::size_t>(choice)).factor,
+    };
 }
 
 }  // namespace mandelbrotter::qt

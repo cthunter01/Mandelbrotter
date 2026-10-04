@@ -1,7 +1,7 @@
 #pragma once
 
 #include <filesystem>
-#include <string>
+#include <string_view>
 
 /// What the Qt layer needs to know about the platforms; the layer's only #ifdef split
 /// (platform.cpp).
@@ -17,6 +17,6 @@ namespace mandelbrotter::qt
 /// Why no window can be opened, or empty when one can: on Linux and FreeBSD without an X11 or
 /// Wayland display (and no QT_QPA_PLATFORM) Qt would abort instead of reporting it. Always empty
 /// on macOS and Windows.
-[[nodiscard]] std::string missingDisplay();
+[[nodiscard]] std::string_view missingDisplay();
 
 }  // namespace mandelbrotter::qt

@@ -76,17 +76,19 @@ struct FakeToolkit
             .capture =
                 [this](ShotTarget target, ShotRegion region,
                        const std::filesystem::path& path) -> std::expected<PixelSize, std::string> {
-                captures.push_back({.target             = target,
-                                    .region             = region,
-                                    .path               = path,
-                                    .settings           = h->app.settings(),
-                                    .showOrbit          = h->app.showOrbit(),
-                                    .exportDialogOpen   = h->shell.exportDialogOpen,
-                                    .bookmarkDialogOpen = bookmarkDialogOpen,
-                                    .bookmarkText       = bookmarkText,
-                                    .helpOpen           = helpOpen,
-                                    .tourRunning        = h->app.tourRunning(),
-                                    .tourStep           = h->app.tour().currentStep()});
+                captures.push_back({
+                    .target             = target,
+                    .region             = region,
+                    .path               = path,
+                    .settings           = h->app.settings(),
+                    .showOrbit          = h->app.showOrbit(),
+                    .exportDialogOpen   = h->shell.exportDialogOpen,
+                    .bookmarkDialogOpen = bookmarkDialogOpen,
+                    .bookmarkText       = bookmarkText,
+                    .helpOpen           = helpOpen,
+                    .tourRunning        = h->app.tourRunning(),
+                    .tourStep           = h->app.tour().currentStep(),
+                });
                 if (path.filename() == failOn)
                 {
                     return std::unexpected("boom");

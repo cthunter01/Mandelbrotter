@@ -135,3 +135,17 @@ CheckOptions:
   readability-implicit-bool-conversion.AllowIntegerConditions: false
   # Single-arg constructors must be `explicit`.
   google-explicit-constructor.IgnoredConversionOperators: ''
+
+  # ---------------------------------------------------------------------------
+  # Trailing commas (clang-tidy 23+): multi-line initializer lists end in a comma, so clang-format puts one
+  # element per line. Single-line lists are left alone: there the check is buggy (it takes the comma after
+  # `RenderSettings{}` in a call's argument list for a trailing one, and its fix-it removes it).
+  # ---------------------------------------------------------------------------
+  readability-trailing-comma.MultiLineCommaPolicy: Append
+  readability-trailing-comma.SingleLineCommaPolicy: Ignore
+
+  # ---------------------------------------------------------------------------
+  # Bitwise operators (clang-tidy 23+): operands must be unsigned, shift counts included, but a positive literal
+  # (1 << 16, code >> 6, 0xC0 | x) may stay an int.
+  # ---------------------------------------------------------------------------
+  bugprone-signed-bitwise.IgnorePositiveIntegerLiterals: true

@@ -72,8 +72,12 @@ TEST(PanelModel, CommittingTheSeedFields)
     EXPECT_EQ(app::commitSeedFields("-0.8", "0.156", current).kind, Kind::UNCHANGED);
     EXPECT_EQ(app::commitSeedFields(" -0.8", "0.156 ", current).kind, Kind::UNCHANGED);
 
-    for (const auto& [re, im] : {std::pair{"abc", "0.1"}, std::pair{"0.1", ""}, std::pair{"", ""},
-                                 std::pair{"0.1", "1e999"}})
+    for (const auto& [re, im] : {
+             std::pair{"abc", "0.1"},
+             std::pair{"0.1", ""},
+             std::pair{"", ""},
+             std::pair{"0.1", "1e999"},
+         })
     {
         const app::SeedEdit bad = app::commitSeedFields(re, im, current);
         EXPECT_EQ(bad.kind, Kind::RESTORE) << re << " " << im;
@@ -123,7 +127,10 @@ TEST(PanelModel, PreviewSettingsAreASmallJuliaSetOfTheFamily)
     spec.exponent = 3;
     spec.seed     = {9.0, 9.0};  // ignored
     const mandelbrotter::ColoringSettings coloring{
-        .palette = "ocean", .density = 12.0, .offset = 0.5};
+        .palette = "ocean",
+        .density = 12.0,
+        .offset  = 0.5,
+    };
 
     const mandelbrotter::RenderSettings settings =
         app::previewSettings(spec, {-0.8, 0.156}, coloring);

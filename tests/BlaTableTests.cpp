@@ -155,9 +155,9 @@ TEST(BlaTable, LevelsCoverTheOrbitInPowersOfTwo)
     const BlaTable table(tipOrbit(1000), 0.0);
     EXPECT_EQ(table.levels(), 9);  // 1000 >> 9 == 1, 1000 >> 10 == 0
     std::size_t expected = 0;
-    for (int j = 1; j <= 9; ++j)
+    for (unsigned j = 1; j <= 9; ++j)
     {
-        expected += static_cast<std::size_t>(1000 >> j);
+        expected += std::size_t{1000} >> j;
     }
     EXPECT_EQ(table.entryCount(), expected);
 

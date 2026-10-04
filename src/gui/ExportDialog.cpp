@@ -69,8 +69,10 @@ ExportOptions ExportDialog::options() const
 {
     const int choice = std::clamp(m_supersample->GetSelection(), 0,
                                   static_cast<int>(app::kSupersampleChoices.size()) - 1);
-    return {.size        = {m_width->GetValue(), m_height->GetValue()},
-            .supersample = app::kSupersampleChoices.at(static_cast<std::size_t>(choice)).factor};
+    return {
+        .size        = {m_width->GetValue(), m_height->GetValue()},
+        .supersample = app::kSupersampleChoices.at(static_cast<std::size_t>(choice)).factor,
+    };
 }
 
 }  // namespace mandelbrotter::gui

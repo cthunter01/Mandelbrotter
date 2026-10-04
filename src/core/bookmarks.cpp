@@ -51,17 +51,27 @@ json centerToJson(const BigComplex& center, double zoom)
 
 json settingsToJson(const RenderSettings& s)
 {
-    return {{"fractal",
-             {{"family", toString(s.fractal.family)},
-              {"exponent", s.fractal.exponent},
-              {"julia", s.fractal.julia},
-              {"seed", complexToJson(s.fractal.seed)}}},
-            {"view", {{"center", centerToJson(s.view.center, s.view.zoom)}, {"zoom", s.view.zoom}}},
-            {"iterations", {{"max", s.maxIterations}, {"auto", s.autoIterations}}},
-            {"coloring",
-             {{"palette", s.coloring.palette},
-              {"density", s.coloring.density},
-              {"offset", s.coloring.offset}}}};
+    return {
+        {
+            "fractal",
+            {
+                {"family", toString(s.fractal.family)},
+                {"exponent", s.fractal.exponent},
+                {"julia", s.fractal.julia},
+                {"seed", complexToJson(s.fractal.seed)},
+            },
+        },
+        {"view", {{"center", centerToJson(s.view.center, s.view.zoom)}, {"zoom", s.view.zoom}}},
+        {"iterations", {{"max", s.maxIterations}, {"auto", s.autoIterations}}},
+        {
+            "coloring",
+            {
+                {"palette", s.coloring.palette},
+                {"density", s.coloring.density},
+                {"offset", s.coloring.offset},
+            },
+        },
+    };
 }
 
 const json& require(const json& object, const char* key)
@@ -299,8 +309,10 @@ std::vector<Bookmark> parseBookmarks(std::string_view text)
     std::vector<Bookmark> bookmarks;
     for (const json& entry : list)
     {
-        bookmarks.push_back({.name     = get<std::string>(entry, "name", "Untitled"),
-                             .settings = settingsFromJson(require(entry, "settings"))});
+        bookmarks.push_back({
+            .name     = get<std::string>(entry, "name", "Untitled"),
+            .settings = settingsFromJson(require(entry, "settings")),
+        });
     }
     return bookmarks;
 }

@@ -111,8 +111,10 @@ MainWindow::MainWindow(RenderSettings initial, std::filesystem::path bookmarksPa
     connect(&m_demoTimer, &QTimer::timeout, this, [this] { m_app.tickDemo(); });
     m_keyFilter = new GlobalKeyFilter(
         *this,
-        {.key            = [this](app::GlobalKey key) { return m_app.handleGlobalKey(key); },
-         .isMenuShortcut = [this](const QKeyEvent& event) { return isMenuShortcut(event); }});
+        {
+            .key            = [this](app::GlobalKey key) { return m_app.handleGlobalKey(key); },
+            .isMenuShortcut = [this](const QKeyEvent& event) { return isMenuShortcut(event); },
+        });
     QApplication::instance()->installEventFilter(m_keyFilter);
 
     m_app.start();
@@ -179,14 +181,15 @@ app::AppController::Shell MainWindow::makeShell()
                     m_demoTimer.stop();
                 }
             },
-        .now  = {},
-        .tour = {.showCard = [this](const app::TourStep& step, std::size_t index,
-                                    std::size_t count) { m_tourView.showCard(step, index, count); },
-                 .hideCard = [this] { m_tourView.hideCard(); },
-                 .highlight =
-                     [this](std::optional<app::TourTarget> target) {
-                         m_tourView.highlight(target);
-                     }},
+        .now = {},
+        .tour =
+            {
+                .showCard = [this](const app::TourStep& step, std::size_t index,
+                                   std::size_t count) { m_tourView.showCard(step, index, count); },
+                .hideCard = [this] { m_tourView.hideCard(); },
+                .highlight =
+                    [this](std::optional<app::TourTarget> target) { m_tourView.highlight(target); },
+            },
     };
 }
 

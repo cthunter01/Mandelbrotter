@@ -140,14 +140,15 @@ app::AppController::Shell MainFrame::makeShell()
                     m_demoTimer.Stop();
                 }
             },
-        .now  = {},
-        .tour = {.showCard = [this](const app::TourStep& step, std::size_t index,
-                                    std::size_t count) { m_tourView.showCard(step, index, count); },
-                 .hideCard = [this] { m_tourView.hideCard(); },
-                 .highlight =
-                     [this](std::optional<app::TourTarget> target) {
-                         m_tourView.highlight(target);
-                     }},
+        .now = {},
+        .tour =
+            {
+                .showCard = [this](const app::TourStep& step, std::size_t index,
+                                   std::size_t count) { m_tourView.showCard(step, index, count); },
+                .hideCard = [this] { m_tourView.hideCard(); },
+                .highlight =
+                    [this](std::optional<app::TourTarget> target) { m_tourView.highlight(target); },
+            },
     };
 }
 
