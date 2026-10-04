@@ -7,7 +7,6 @@
 #include <optional>
 #include <string>
 #include <string_view>
-#include <thread>
 #include <utility>
 #include <vector>
 
@@ -165,21 +164,6 @@ struct FakeToolkit
     return h.queue.waitAndDrainUntil([&] { return toolkit.watchdogStarts == shot; });
 }
 
-/// A finished render's worker may still be winding down; wait until it is.
-[[nodiscard]] bool rendererIdle(Harness& h)
-{
-    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
-    while (h.canvas.rendering())
-    {
-        if (std::chrono::steady_clock::now() > deadline)
-        {
-            return false;
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-    return true;
-}
-
 TEST(ScreenshotScript, ListsTheFifteenPicturesInOrder)
 {
     const auto files = ScreenshotScript::files();
@@ -294,7 +278,6 @@ TEST(ScreenshotScript, AShotThatRendersWaitsForItsRender)
     h.canvas.setSize({800, 600}, 1.0);  // renders that take a while
     h.app.start();
     ASSERT_TRUE(h.finishRender());
-    ASSERT_TRUE(rendererIdle(h));
     FakeToolkit      toolkit(h);
     ScreenshotScript script(h.app, h.dir / "shots", toolkit.hooks());
     script.start();
@@ -311,7 +294,6 @@ TEST(ScreenshotScript, WithoutARenderTheShotSettlesAtOnce)
     Harness h;
     h.app.start();
     ASSERT_TRUE(h.finishRender());
-    ASSERT_TRUE(rendererIdle(h));
     FakeToolkit      toolkit(h);
     ScreenshotScript script(h.app, h.dir / "shots", toolkit.hooks());
     script.start();
@@ -324,7 +306,6 @@ TEST(ScreenshotScript, TheNextShotComesThroughTheEventLoop)
     Harness h;
     h.app.start();
     ASSERT_TRUE(h.finishRender());
-    ASSERT_TRUE(rendererIdle(h));
     FakeToolkit      toolkit(h);
     ScreenshotScript script(h.app, h.dir / "shots", toolkit.hooks());
     script.start();

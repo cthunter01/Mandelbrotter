@@ -120,7 +120,11 @@ public:
     /// True once the render in progress has shown its coarsest pass (or finished): the moment a
     /// new frame can replace it without waiting (demo playback).
     [[nodiscard]] bool hasCoarsePicture() const noexcept { return m_coarsePass; }
-    [[nodiscard]] bool rendering() const noexcept { return m_renderer.busy(); }
+    /// True from the start of a render until its completion has arrived on the toolkit's thread
+    /// (when onRenderStatus reports it finished), or until cancelRender(). The controller's own
+    /// state, not the worker's: a worker is still busy for a moment after it has posted its
+    /// completion, so whoever saw the render finish must not be told it is still running.
+    [[nodiscard]] bool rendering() const noexcept { return m_rendering; }
     /// Stops the workers (the toolkit calls it before tearing the window down).
     void cancelRender();
 
@@ -210,6 +214,7 @@ private:
     bool                    m_highlighted{false};
     std::vector<PixelPoint> m_orbit;
 
+    bool        m_rendering{false};  ///< see rendering()
     bool        m_coarsePass{true};  ///< see hasCoarsePicture()
     int         m_firstPass{0};
     std::size_t m_firstPassTilesLeft{0};

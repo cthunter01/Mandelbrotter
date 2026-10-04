@@ -151,6 +151,33 @@ TEST(CanvasController, RenderReportsRenderingThenRendered)
     EXPECT_GT(canvas.repaints, 0);
 }
 
+TEST(CanvasController, RenderingFollowsTheStatusItReports)
+{
+    Canvas            canvas;
+    std::vector<bool> seen;  // rendering() as each status arrives
+    canvas.controller.onRenderStatus = [&](const RenderStatus& status) {
+        canvas.statuses.push_back(status);
+        seen.push_back(canvas.controller.rendering());
+    };
+    canvas.controller.resizeSettled();
+    EXPECT_TRUE(canvas.controller.rendering());
+    ASSERT_TRUE(canvas.finishRender());
+    // Over for whoever is told so, though the worker may still be winding down.
+    EXPECT_EQ(seen, (std::vector<bool>{true, false}));
+    EXPECT_FALSE(canvas.controller.rendering());
+}
+
+TEST(CanvasController, ACanceledRenderIsNoLongerRendering)
+{
+    Canvas canvas;
+    canvas.controller.resizeSettled();
+    ASSERT_TRUE(canvas.controller.rendering());
+    canvas.controller.cancelRender();
+    EXPECT_FALSE(canvas.controller.rendering());
+    canvas.queue.drainAll();  // whatever the render had posted changes nothing
+    EXPECT_FALSE(canvas.controller.rendering());
+}
+
 TEST(CanvasController, TheImageIsInDevicePixels)
 {
     Canvas canvas(scene(), {20, 15}, 2.0);

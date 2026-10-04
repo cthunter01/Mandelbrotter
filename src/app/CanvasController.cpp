@@ -227,6 +227,7 @@ void CanvasController::clearPinnedOrbit()
 void CanvasController::cancelRender()
 {
     m_renderer.cancel();
+    m_rendering = false;  // a canceled render reports no completion
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -258,6 +259,7 @@ void CanvasController::startRender()
     RenderJob job;
     job.settings = m_settings;
     job.size     = size;
+    m_rendering  = true;
     m_coarsePass = false;
     m_firstPass  = job.passes.empty() ? 1 : job.passes.front();
     m_firstPassTilesLeft =
@@ -312,6 +314,7 @@ void CanvasController::finishRender(const RenderCompletion& completion)
     {
         return;
     }
+    m_rendering  = false;
     m_coarsePass = true;
     reportStatus(false, completion.elapsed);
 }
