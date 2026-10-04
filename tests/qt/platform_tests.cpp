@@ -17,7 +17,7 @@ namespace qt = mandelbrotter::qt;
 TEST(Platform, BookmarksLiveWhereTheWxBuildKeepsThem)
 {
     const std::filesystem::path dir = qt::userDataDir();
-#ifdef __linux__
+#if defined(__linux__) || defined(__FreeBSD__)
     EXPECT_EQ(dir, qt::toPath(QDir::homePath()) / ".Mandelbrotter");
 #elifdef __APPLE__
     EXPECT_EQ(dir,

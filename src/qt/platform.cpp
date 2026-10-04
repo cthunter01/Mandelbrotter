@@ -8,7 +8,7 @@
 
 #include "qt/qt_util.h"
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__FreeBSD__)
 #elifdef __APPLE__
 #elifdef _WIN32
 #else
@@ -18,7 +18,7 @@
 namespace mandelbrotter::qt
 {
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__FreeBSD__)  // one branch: X11 or Wayland, and wx's Unix paths
 
 std::filesystem::path userDataDir()
 {

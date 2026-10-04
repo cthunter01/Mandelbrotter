@@ -1,8 +1,8 @@
-# Builds and tests the Qt front end (MANDELBROTTER_GUI=qt) on Linux, macOS and Windows. A workflow of its own,
-# not part of ci.yml: the Release workflow calls ci.yml, and the Qt build does not ship yet, so a Qt problem must
-# not hold up a wx release. Qt comes from each platform's packages (Arch, Homebrew) or from aqtinstall
-# (Windows, pinned to the minimum supported Qt, 6.8), so CI sees both ends of the supported range. The view tests
-# run on Qt's offscreen platform and need no display.
+# Builds and tests the Qt front end (MANDELBROTTER_GUI=qt) on Linux, macOS, Windows and FreeBSD. A workflow of its
+# own, not part of ci.yml: the Release workflow calls ci.yml, and the Qt build does not ship yet, so a Qt problem
+# must not hold up a wx release. Qt comes from each platform's packages (Arch, Homebrew, FreeBSD's pkg) or from
+# aqtinstall (Windows, pinned to the minimum supported Qt, 6.8), so CI sees both ends of the supported range. The
+# view tests run on Qt's offscreen platform and need no display.
 name: CI (Qt)
 
 on:
@@ -97,3 +97,18 @@ jobs:
         run: cmake --workflow --preset ci-msvc-qt
       - name: Compiler cache statistics
         run: ccache -sv
+
+  # A FreeBSD VM on the Linux runner, as in ci.yml (which says why 14.5). No ccache there either.
+  freebsd:
+    name: freebsd / ci-clang-qt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Configure, build and test
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: "14.5"
+          copyback: false   # nothing built in the VM is needed on the runner afterwards
+          # dejavu: the offscreen platform renders text through fontconfig and needs a font.
+          prepare: pkg install -y cmake-core ninja git-lite qt6-base dejavu
+          run: cmake --workflow --preset ci-clang-qt

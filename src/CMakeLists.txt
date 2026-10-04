@@ -74,8 +74,8 @@ if(MANDELBROTTER_GUI STREQUAL "wx")
     add_library(Mandelbrotter::gui ALIAS Mandelbrotter_gui)
     target_include_directories(Mandelbrotter_gui PUBLIC ${PROJECT_SOURCE_DIR}/src)
     target_link_libraries(Mandelbrotter_gui PUBLIC Mandelbrotter::app Mandelbrotter::lib wx::html wx::core wx::base)
-    # window_capture.cpp reads a window's pixels back through GDK on Linux; wx keeps its GTK include directories
-    # private, so the file needs them itself (an imported target: the headers count as system headers).
+    # window_capture.cpp reads a window's pixels back through GDK on Linux and FreeBSD; wx keeps its GTK include
+    # directories private, so the file needs them itself (an imported target: the headers count as system headers).
     if(UNIX AND NOT APPLE)
         find_package(PkgConfig REQUIRED)
         pkg_check_modules(GTK3 REQUIRED IMPORTED_TARGET gtk+-3.0)

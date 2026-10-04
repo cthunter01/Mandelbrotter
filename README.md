@@ -6,13 +6,13 @@
 
 <p align="center">
   <b>An interactive explorer for the Mandelbrot set and its relatives, zooming as deep as 10<sup>300</sup>.</b><br>
-  Multi-threaded and progressive, and sharp at any depth. Linux, macOS and Windows.
+  Multi-threaded and progressive, and sharp at any depth. Linux, macOS, Windows and FreeBSD.
 </p>
 
 <p align="center">
   <a href="https://github.com/cthunter01/Mandelbrotter/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/cthunter01/Mandelbrotter"></a>
   <a href="https://github.com/cthunter01/Mandelbrotter/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/cthunter01/Mandelbrotter/actions/workflows/ci.yml/badge.svg"></a>
-  <img alt="Linux, macOS, Windows" src="https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-informational">
+  <img alt="Linux, macOS, Windows, FreeBSD" src="https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows%20%7C%20FreeBSD-informational">
   <img alt="C++23" src="https://img.shields.io/badge/C%2B%2B-23-blue">
 </p>
 
@@ -67,7 +67,8 @@ Ready-to-run builds are on the [latest release](https://github.com/cthunter01/Ma
   tar -xzf Mandelbrotter-*-linux-x86_64.tar.gz --strip-components=1 -C ~/.local
   ```
 
-Each release also carries a `SHA256SUMS` file. To build it yourself, see [Building from source](#building-from-source).
+Each release also carries a `SHA256SUMS` file. To build it yourself, or to run it on FreeBSD (which has no
+archive), see [Building from source](#building-from-source).
 
 ## A quick tour
 
@@ -147,7 +148,7 @@ the mouse: points inside the set settle into a loop, points outside fly off.
 - **File > Export view** writes a small JSON file, with the center spelled out in as many digits as the zoom needs,
   so a view reloads bit for bit; `Mandelbrotter --view my-view.json` opens it.
 
-Bookmarks live in `~/.Mandelbrotter/bookmarks.json` on Linux,
+Bookmarks live in `~/.Mandelbrotter/bookmarks.json` on Linux and FreeBSD,
 `~/Library/Application Support/Mandelbrotter/bookmarks.json` on macOS and `%APPDATA%\Mandelbrotter\bookmarks.json`
 on Windows.
 
@@ -223,12 +224,15 @@ installed, otherwise downloaded.
   *Desktop development with C++* workload, which includes MSVC, CMake and Ninja. Run every `cmake` command
   from a *Developer PowerShell for VS* (x64) so the compiler is on the PATH. Symlinks need Developer Mode
   turned on; without it the build still works, only the `compile_commands.json` link for clangd is skipped.
+- **FreeBSD**: 14.5 (what CI uses), with the base system's Clang 21 and libc++, plus GTK 3:
+  `pkg install cmake-core ninja git-lite pkgconf gtk3 png`. FreeBSD 15.0 and 15.1 still ship libc++ 19, which
+  cannot build it (no `std::from_chars` for floating point, and `std::jthread` only as an experimental feature).
 - Optional, all platforms: clang-format, ccache (strongly recommended: every preset builds wxWidgets once, and
   ccache shares the result between presets with the same flags), Doxygen. Linux and macOS only: clang-tidy and
   llvm-cov/llvm-profdata for the `tidy` and `coverage` presets (on macOS from `brew install llvm`; the presets
   find them there without touching your PATH).
 
-Linux:
+Linux and FreeBSD:
 
 ```sh
 cmake --workflow --preset dev          # configure + build + test (Clang, Debug)
@@ -261,6 +265,7 @@ source: install Qt 6.8 or later.
 
 - **Linux**: Arch `pacman -S qt6-base`; Debian 13 or Ubuntu 25.04 and later `apt install qt6-base-dev`.
 - **macOS**: `brew install qtbase` (or `qt`), then `export CMAKE_PREFIX_PATH=$(brew --prefix qtbase)`.
+- **FreeBSD**: `pkg install qt6-base`.
 - **Windows**: the Qt online installer or `aqtinstall` (`python -m aqt install-qt windows desktop 6.8.3
   win64_msvc2022_64`); set `CMAKE_PREFIX_PATH` to the kit (`C:\Qt\6.8.3\msvc2022_64`) and put its `bin` on `PATH`,
   which the tests and the program need to find Qt's DLLs.
@@ -281,19 +286,19 @@ Every preset builds into `build/<preset>/`. A preset only exists on the platform
 
 | Preset | Platforms | What it does |
 |---|---|---|
-| `dev` (workflow) | Linux, macOS | Clang, Debug: configure, build, test |
+| `dev` (workflow) | Linux, macOS, FreeBSD | Clang, Debug: configure, build, test |
 | `dev-msvc` (workflow) | Windows | MSVC, Debug: configure, build, test |
-| `clang-debug`, `clang-release` | Linux, macOS | configure/build/test presets per build type |
+| `clang-debug`, `clang-release` | Linux, macOS, FreeBSD | configure/build/test presets per build type |
 | `gcc-debug`, `gcc-release` | Linux | the same with GCC |
 | `msvc-debug`, `msvc-release` | Windows | the same with MSVC |
 | `asan` | Linux, macOS | Clang Debug with AddressSanitizer + UndefinedBehaviorSanitizer |
 | `tsan` | Linux, macOS | Clang RelWithDebInfo with ThreadSanitizer |
 | `tidy` | Linux, macOS | Clang Debug with clang-tidy, warnings as errors |
 | `coverage` | Linux, macOS | Clang Debug with source-based coverage; report in `build/coverage/coverage/` |
-| `ci-gcc`, `ci-clang`, `ci-msvc` | Linux / Linux, macOS / Windows | Release, warnings as errors (what CI runs) |
+| `ci-gcc`, `ci-clang`, `ci-msvc` | Linux / Linux, macOS, FreeBSD / Windows | Release, warnings as errors (what CI runs) |
 | `dist-linux`, `dist-macos`, `dist-windows` | Linux, macOS, Windows | The release archives (see [Releases](#releases)) |
 | `headless` (workflow) | Linux, macOS | Clang Debug without any GUI (the command line only; wxWidgets is not fetched) |
-| `dev-qt`, `dev-msvc-qt` (workflows) | Linux, macOS / Windows | The Qt front end, Debug: configure, build, test |
+| `dev-qt`, `dev-msvc-qt` (workflows) | Linux, macOS, FreeBSD / Windows | The Qt front end, Debug: configure, build, test |
 | `clang-debug-qt`, `clang-release-qt`, `gcc-debug-qt`, `msvc-debug-qt`, `msvc-release-qt` | as their wx twins | The Qt front end per compiler and build type |
 | `ci-gcc-qt`, `ci-clang-qt`, `ci-msvc-qt`, `asan-qt`, `tidy-qt` | as their wx twins | The Qt front end in CI (`asan-qt` and `tidy-qt` skip the slow screenshot test) |
 
@@ -301,9 +306,10 @@ Configure, build and test can also be run separately: `cmake --preset clang-debu
 `cmake --build --preset clang-debug`, `ctest --preset clang-debug`. The `dist-*` workflow presets also package.
 
 CI (GitHub Actions) runs `ci-gcc`, `ci-clang`, `asan`, `tidy` and `headless` on Arch Linux, `ci-clang` on macOS,
-`ci-msvc` on Windows, and a clang-format check (`ci.yml`). The Qt front end has a workflow of its own
-(`ci-qt.yml`: `ci-gcc-qt`, `tidy-qt` and `asan-qt` on Arch Linux, `ci-clang-qt` on macOS with Homebrew's Qt,
-`ci-msvc-qt` on Windows with Qt 6.8), so it never holds up a release.
+`ci-msvc` on Windows, `ci-clang` on FreeBSD 14.5 (in a VM), and a clang-format check (`ci.yml`). The Qt front end
+has a workflow of its own (`ci-qt.yml`: `ci-gcc-qt`, `tidy-qt` and `asan-qt` on Arch Linux, `ci-clang-qt` on macOS
+with Homebrew's Qt and on FreeBSD with its packaged Qt, `ci-msvc-qt` on Windows with Qt 6.8), so it never holds up
+a release. The sanitizer, tidy and coverage presets are not checked on FreeBSD.
 
 ### Releases
 

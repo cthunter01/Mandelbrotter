@@ -1,4 +1,4 @@
-# Builds and tests the CI presets on Linux, macOS and Windows, and checks formatting.
+# Builds and tests the CI presets on Linux, macOS, Windows and FreeBSD, and checks formatting.
 # Linux runs in an Arch Linux container so CI has the same current GCC/Clang as the dev machine.
 # wxWidgets is built from source (statically) inside each preset's build tree; ccache is persisted between runs
 # so that only the first run of a preset pays for it.
@@ -83,6 +83,27 @@ jobs:
         run: cmake --workflow --preset ci-msvc
       - name: Compiler cache statistics
         run: ccache -sv
+
+  # GitHub has no FreeBSD runner, so this boots a FreeBSD VM on the Linux one and runs the preset inside it.
+  # The compiler is the base system's Clang with libc++. 14.5 has Clang 21; the 15.x releases so far (15.0 and
+  # 15.1) still have libc++ 19, which lacks std::from_chars for floating point and std::jthread. wxWidgets builds
+  # on GTK 3, as on Linux. No ccache: the VM starts from the same image every run, so every run compiles wxWidgets.
+  freebsd:
+    name: freebsd / ${{ matrix.preset }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        preset: [ci-clang]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Configure, build and test
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: "14.5"
+          copyback: false   # nothing built in the VM is needed on the runner afterwards
+          prepare: pkg install -y cmake-core ninja git-lite pkgconf gtk3 png
+          run: cmake --workflow --preset ${{ matrix.preset }}
 
   format:
     name: clang-format

@@ -76,7 +76,8 @@ endif()
 
 if(MANDELBROTTER_GUI STREQUAL "wx")
     # wxWidgets 3.2 (MANDELBROTTER_GUI=wx), built in-tree as static libraries on the platform's native toolkit,
-    # which wx picks itself: GTK3 on Linux (GTK stays a system shared library), Cocoa on macOS, Win32 on Windows.
+    # which wx picks itself: GTK3 on Linux and FreeBSD (GTK stays a system shared library), Cocoa on macOS, Win32 on
+    # Windows.
     # Link wx::html wx::core wx::base.
     # Deliberately no FIND_PACKAGE_ARGS: a *shared* system wxWidgets would otherwise be picked up, and we want a
     # static, trimmed build with a known configuration.

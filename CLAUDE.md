@@ -2,8 +2,9 @@
 
 Interactive Mandelbrot-family fractal explorer. C++23 project built with CMake presets + Ninja, wxWidgets 3.2 GUI
 (statically linked, built in-tree via FetchContent), tested with GoogleTest. Cross-platform: Linux (GCC, Clang),
-macOS (Apple Clang) and Windows (MSVC). A second front end in Qt 6 Widgets (an installed Qt 6.8+) duplicates the wx
-GUI; `MANDELBROTTER_GUI` (`wx`, the default, `qt` or `none`) picks one per build tree, and releases are wx only.
+macOS (Apple Clang), Windows (MSVC) and FreeBSD (Clang). A second front end in Qt 6 Widgets (an installed Qt 6.8+)
+duplicates the wx GUI; `MANDELBROTTER_GUI` (`wx`, the default, `qt` or `none`) picks one per build tree, and
+releases are wx only.
 
 ## Commands
 - Build and test (Clang Debug): `cmake --workflow --preset dev`
@@ -44,8 +45,8 @@ Other presets: `clang-release`, `gcc-debug`, `gcc-release`, `tsan`, `coverage`, 
 (`gcc-debug` and the like are configure/build/test presets, not workflows).
 Each builds into `build/<preset>/`; never edit anything under `build/`. The first configure of a preset
 downloads and compiles wxWidgets (minutes); ccache makes later presets fast. A preset is only available on the
-platforms it supports (`gcc-*`: Linux; `clang-*`: Linux and macOS; `msvc-*`: Windows); `cmake --list-presets`
-shows this machine's.
+platforms it supports (`gcc-*`: Linux; `clang-*`: Linux, macOS and FreeBSD; `msvc-*`: Windows);
+`cmake --list-presets` shows this machine's.
 
 Releases: the `Release` GitHub workflow (`.github/workflows/release.yml`) runs only when started by hand. It
 tags `v<project VERSION>` and publishes the `dist-*` archives (wx; the Linux one still needs system GTK 3 at
@@ -88,8 +89,8 @@ does not gate a release.
   the book embedded as resources, with contents, index and search from `help_sitemap.h`), `TourView` +
   `TourCard`, `ScreenshotRun` (over `QWidget::grab()`, which also works offscreen and on Wayland), `run_qt.cpp`
   (`runGui`) and `platform.cpp`, the layer's only per-platform file (`userDataDir()`: the same bookmarks
-  directory as wx, `~/.Mandelbrotter` on Linux). The resources (book and icon) are a library of their own,
-  `Mandelbrotter_qt_resources`, so Qt's generated code never meets our warnings
+  directory as wx, `~/.Mandelbrotter` on Linux and FreeBSD). The resources (book and icon) are a library of their
+  own, `Mandelbrotter_qt_resources`, so Qt's generated code never meets our warnings
 - `src/tools/`: build-time tools; `embed_file.cpp` (`Mandelbrotter_embed`) turns the zipped help book into a C++
   source of string-literal chunks (`cmake/HelpBook.cmake`)
 - `docs/help/`: the help book: `help.hhp`, `contents.hhc`, `index.hhk`, hand-written pages in wxHTML (ASCII, no
@@ -143,9 +144,13 @@ does not gate a release.
 - Warnings are part of the build: code must compile cleanly with `-Werror` under GCC and Clang and with `/WX`
   under MSVC, and pass clang-tidy on Linux (`.clang-tidy`; `src/gui/.clang-tidy`, `src/qt/.clang-tidy`,
   `tests/.clang-tidy` and `tests/qt/.clang-tidy` relax a few checks for wx, Qt and gtest)
-- Code must build and pass its tests on Linux, macOS and Windows (CI runs all three). Use the standard library
-  (`<filesystem>`, `<thread>`, `<chrono>`) over POSIX or Win32 APIs; when an OS API is unavoidable, keep it in one
-  source file behind an `#ifdef _WIN32` / `__APPLE__` / `__linux__` split, with a branch for each platform
+- Code must build and pass its tests on Linux, macOS, Windows and FreeBSD (CI runs all four). Use the standard
+  library (`<filesystem>`, `<thread>`, `<chrono>`) over POSIX or Win32 APIs; when an OS API is unavoidable, keep it
+  in one source file behind an `#ifdef _WIN32` / `__APPLE__` / `__linux__` / `__FreeBSD__` split, with a branch for
+  each platform (Linux and FreeBSD may share one: both are GTK 3 for wx, `__WXGTK__`, and X11 or Wayland for Qt)
+- FreeBSD is built with the base system's Clang and libc++, and CI runs 14.5 (Clang 21): FreeBSD 15.0 and 15.1
+  ship libc++ 19, which lacks `std::from_chars` for floating point and has `std::jthread` only behind
+  `-fexperimental-library`. Leave the jobs at `release: "14.5"` until a 15.x release has libc++ 20 or later
 - Deep zoom: `ViewSpec::center` is a `BigComplex` whose precision follows the zoom (`fractionBitsFor`);
   kernels never see absolute big positions, only double offsets from the center (`Viewport::offsetFromCenter`).
   Above `kPerturbationZoom` (1e8) the renderer iterates every pixel as a delta from the center's
